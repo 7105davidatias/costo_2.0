@@ -1,0 +1,101 @@
+following specifications:
+Project Overview
+Build a comprehensive web application that helps organizations create accurate cost estimates for procurement requests using artificial intelligence. The system should analyze procurement documents, extract relevant data, perform market research, and generate detailed cost estimates with justifications.
+Core Features (MVP)
+Dashboard: Main overview showing cost statistics, recent requests, and performance metrics
+Procurement Request Management: Create, view, and manage procurement requests with document upload capabilities
+AI Document Analysis: Automatically extract item specifications, quantities, and requirements from uploaded documents
+Cost Estimation Engine: Generate detailed cost estimates with justification tables and confidence levels
+Market Research Module: Provide supplier comparisons, price trends, and market insights
+AI Recommendations: Suggest cost-saving opportunities, risk assessments, and procurement strategies
+Technology Stack
+Frontend: React with Material-UI (MUI) components
+Backend: Python Flask with RESTful API architecture
+Database: PostgreSQL (initially mock data for MVP)
+Charts/Visualization: Recharts library
+Routing: React Router for navigation
+Styling: Material-UI with custom dark theme
+Design Requirements
+Theme: Dark mode with dark blue background (#1a237e for main background, #2c387e for paper elements)
+Language Support: Hebrew (RTL) with Arabic numerals for numbers
+Typography: Clean, professional fonts suitable for business applications
+Color Palette:
+Primary: Light blue (#90caf9)
+Secondary: Light pink (#f48fb1)
+Success: Green tones for positive metrics
+Warning: Orange/yellow for alerts
+Error: Red tones for issues
+Key User Interface Components
+1. Dashboard Screen
+Summary cards showing: Total estimated costs, cumulative savings, rising costs
+Line chart for cost trends over time
+Pie chart for estimation accuracy breakdown
+Table of recent procurement requests with status indicators
+Quick action buttons for creating new requests
+2. Procurement Request Detail Screen
+ERP data display (item name, quantity, description, category, dates, responsible parties)
+Document upload and management section
+AI analysis results panel with extracted specifications
+Progress indicators for document analysis
+Action buttons for market research and estimate creation
+3. Cost Estimation Results Screen
+Final estimate display with confidence level visualization
+Detailed justification table with variables, values, sources, and confidence scores
+Market insights panel with price stability and supplier reliability metrics
+AI recommendations list with savings opportunities and risk assessments
+Export and sharing capabilities
+4. Market Research Screen
+Supplier comparison charts
+Price trend analysis over time
+Market position indicators
+Risk assessment matrix
+AI-generated recommendations for formulas, coefficients, and preferred suppliers
+Data Structure (Mock Implementation)
+Create mock data endpoints that simulate:
+
+Procurement requests with Hebrew text
+Cost estimation results with detailed breakdowns
+Market research data with supplier comparisons
+AI analysis results with confidence scores
+Dashboard summary statistics
+API Endpoints Structure
+/api/procurement/
+
+  - GET /dashboard_summary
+
+  - GET /request/:id
+
+  - POST /upload_document
+
+  - POST /analyze_documents
+
+  - POST /create_estimate
+
+/api/ai/
+
+  - GET /estimate_results/:id
+
+  - GET /market_research/:item_id
+Specific Implementation Notes
+Hebrew Support: Ensure all text displays properly in RTL layout
+Responsive Design: Mobile-friendly interface with touch support
+Loading States: Implement progress indicators for AI processing
+Error Handling: Graceful error messages in Hebrew
+Navigation: Intuitive routing between different screens
+Data Visualization: Interactive charts with Hebrew labels
+Success Criteria for MVP
+All four main screens render correctly with dark theme
+Navigation works smoothly between screens
+Mock data displays properly in Hebrew
+Charts and visualizations show sample data
+Responsive design works on different screen sizes
+AI analysis simulation shows progress indicators
+File Structure
+Organize the project with clear separation:
+
+/backend - Flask application with routes and mock data
+/frontend - React application with components
+Separate components for each major screen
+Shared utilities for API calls and data formatting
+
+Please start by setting up the basic project structure with the Flask backend and React frontend, implementing the dashboard as the first screen with mock data. Focus on getting the dark theme and Hebrew RTL support working correctly before adding complex functionality
