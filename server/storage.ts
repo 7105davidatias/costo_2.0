@@ -330,30 +330,44 @@ export class MemStorage implements IStorage {
           {
             variable: "מחיר יחידה בסיסי",
             value: "₪28,200",
-            source: "מחירון HP Z-Series",
+            source: "מחירון HP Z-Series Official Israel - עדכון 15/01/2024",
             confidence: 95,
             impact: "+₪141,000"
           },
           {
             variable: "הנחת כמות (5+ יחידות)",
             value: "₪300",
-            source: "מדיניות ספק",
+            source: "מדיניות ספק TechSource Ltd - הסכם שותפות מתאריך 10/01/2024",
             confidence: 90,
             impact: "-₪300"
           },
           {
             variable: "מע\"ם (17%)",
             value: "₪23,970",
-            source: "חוק מע\"ם ישראל",
+            source: "חוק מע\"ם ישראל תשע\"ו-1975, סעיף 3א - שיעור סטנדרטי",
             confidence: 100,
             impact: "+₪23,970"
           },
           {
-            variable: "עלויות הובלה",
+            variable: "עלויות הובלה והתקנה",
             value: "₪300",
-            source: "מחירון הובלה",
+            source: "מחירון שירותי הובלה DHL Israel - חישוב לפי משקל ומרחק",
             confidence: 85,
             impact: "+₪300"
+          },
+          {
+            variable: "אחריות מורחבת",
+            value: "₪0",
+            source: "כלול במחיר - HP Care Pack 3 שנים סטנדרטי",
+            confidence: 100,
+            impact: "₪0"
+          },
+          {
+            variable: "הנחת תשלום מקדים",
+            value: "2%",
+            source: "תנאי תשלום ספק - הנחה עבור תשלום תוך 10 ימים",
+            confidence: 80,
+            impact: "-₪2,820"
           }
         ],
         recommendedSupplierId: 1,
