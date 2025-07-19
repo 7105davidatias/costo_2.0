@@ -46,10 +46,10 @@ export default function CostTrendsChart({ data }: CostTrendsChartProps) {
         <Line 
           type="monotone" 
           dataKey="cost" 
-          stroke="hsl(var(--primary))" 
+          stroke="#60a5fa" 
           strokeWidth={3}
-          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-          activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+          dot={{ fill: '#60a5fa', strokeWidth: 2, r: 4 }}
+          activeDot={{ r: 6, stroke: '#60a5fa', strokeWidth: 2 }}
         />
       </LineChart>
     </ResponsiveContainer>

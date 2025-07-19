@@ -46,16 +46,16 @@ export default function PriceTrackingChart({ data }: PriceTrackingChartProps) {
         <Line 
           type="monotone" 
           dataKey="price" 
-          stroke="hsl(var(--secondary))" 
+          stroke="#34d399" 
           strokeWidth={3}
-          dot={{ fill: 'hsl(var(--secondary))', strokeWidth: 2, r: 4 }}
-          activeDot={{ r: 6, stroke: 'hsl(var(--secondary))', strokeWidth: 2 }}
+          dot={{ fill: '#34d399', strokeWidth: 2, r: 4 }}
+          activeDot={{ r: 6, stroke: '#34d399', strokeWidth: 2 }}
           fill="url(#colorGradient)"
         />
         <defs>
           <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#34d399" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#34d399" stopOpacity={0.1}/>
           </linearGradient>
         </defs>
       </LineChart>

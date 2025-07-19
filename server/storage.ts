@@ -313,6 +313,72 @@ export class MemStorage implements IStorage {
           ]
         },
         createdAt: new Date(),
+      },
+      // For REQ-2024-005 (Workstations)
+      {
+        id: this.currentId++,
+        procurementRequestId: 5,
+        totalCost: "165000",
+        basePrice: "141000",
+        tax: "23970",
+        shippingCost: "300",
+        discountAmount: "300",
+        confidenceLevel: 92,
+        marketPrice: "175000",
+        potentialSavings: "10000",
+        justifications: [
+          {
+            variable: "מחיר יחידה בסיסי",
+            value: "₪28,200",
+            source: "מחירון HP Z-Series",
+            confidence: 95,
+            impact: "+₪141,000"
+          },
+          {
+            variable: "הנחת כמות (5+ יחידות)",
+            value: "₪300",
+            source: "מדיניות ספק",
+            confidence: 90,
+            impact: "-₪300"
+          },
+          {
+            variable: "מע\"ם (17%)",
+            value: "₪23,970",
+            source: "חוק מע\"ם ישראל",
+            confidence: 100,
+            impact: "+₪23,970"
+          },
+          {
+            variable: "עלויות הובלה",
+            value: "₪300",
+            source: "מחירון הובלה",
+            confidence: 85,
+            impact: "+₪300"
+          }
+        ],
+        recommendedSupplierId: 1,
+        aiAnalysisResults: {
+          priceStability: 89,
+          supplierReliability: 95,
+          marketPosition: 82,
+          savingsOpportunities: [
+            "רכישה בחודש פברואר - הנחה נוספת של 2-4%",
+            "ספק מומלץ: TechSource - 95% דירוג שירות"
+          ],
+          riskAssessment: [
+            "מחירי GPU עשויים לעלות ברבעון השני - מומלץ להזמין מהר"
+          ],
+          reasoning: [
+            { factor: "מחיר יחידה", impact: "תחרותי", description: "₪28,200 ליחידה - מחיר טוב לתחנת עבודה מתקדמת" },
+            { factor: "ביצועים", impact: "מעולה", description: "Intel i7-13700K + RTX 4060 Ti - מתאים לעבודה גרפית" },
+            { factor: "זמינות", impact: "טובה", description: "3-5 יום עסקים למשלוח" }
+          ],
+          sources: [
+            { name: "מחירון HP Israel", price: "₪165,000", date: "2024-01-20" },
+            { name: "השוואת מחירים", price: "₪160,000-₪170,000", date: "2024-01-18" }
+          ]
+        },
+        createdAt: new Date(),
       }
     ];
 

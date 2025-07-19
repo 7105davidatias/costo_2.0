@@ -6,9 +6,9 @@ interface AccuracyChartProps {
 
 export default function AccuracyChart({ data }: AccuracyChartProps) {
   const COLORS = [
-    'hsl(var(--success))',
-    'hsl(var(--warning))',
-    'hsl(var(--destructive))',
+    '#34d399',
+    '#fbbf24',
+    '#f87171',
   ];
 
   const CustomTooltip = ({ active, payload }: any) => {

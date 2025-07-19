@@ -119,6 +119,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get cost estimation by procurement request ID  
+  app.get("/api/cost-estimates/request/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const estimation = await storage.getCostEstimationByRequestId(requestId);
+      if (!estimation) {
+        return res.status(404).json({ message: "Cost estimation not found" });
+      }
+      res.json(estimation);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cost estimation" });
+    }
+  });
+
   // Create cost estimation for specific procurement request
   app.post("/api/procurement-requests/:id/cost-estimate", async (req, res) => {
     try {

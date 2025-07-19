@@ -31,9 +31,9 @@ export default function SupplierChart({ data }: SupplierChartProps) {
   });
 
   const colors = [
-    'hsl(var(--primary))',
-    'hsl(var(--secondary))',
-    'hsl(var(--warning))',
+    '#60a5fa',
+    '#34d399', 
+    '#fbbf24',
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {

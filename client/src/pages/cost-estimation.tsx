@@ -16,7 +16,7 @@ export default function CostEstimation() {
   });
 
   const { data: estimation, isLoading } = useQuery<CostEstimationType>({
-    queryKey: ["/api/cost-estimations/request", id],
+    queryKey: ["/api/cost-estimates/request", id],
     enabled: !!id,
   });
 
