@@ -7,6 +7,10 @@ This is a comprehensive web application that helps organizations create accurate
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Hebrew terminology preferences:
+- "אומדן" instead of "הערכה" for estimates
+- "דרישות רכש" instead of "בקשות רכש" 
+- System title: "מערכת ניהול אומדני עלויות רכש"
 
 ## System Architecture
 
@@ -125,3 +129,14 @@ Preferred communication style: Simple, everyday language.
 - **Path Aliases**: Configured for clean imports across the application
 
 The application uses a monorepo structure with shared TypeScript definitions, ensuring type safety across the full stack. The dark theme with Hebrew language support provides a professional interface for procurement professionals.
+
+## Recent Changes (January 2024)
+
+✓ Complete MVP implementation with all four main modules functional
+✓ Fixed all critical API endpoints and data loading issues
+✓ Implemented comprehensive Hebrew RTL support with terminology preferences
+✓ Added navigation improvements with "חזרה" (back) buttons across all pages
+✓ Fixed chart colors for dark theme compatibility using bright colors: #60a5fa, #34d399, #fbbf24, #f87171
+✓ Updated system title and terminology per user feedback
+✓ Complete cost estimation results page with justification tables and action buttons
+✓ All critical bugs resolved and system ready for deployment

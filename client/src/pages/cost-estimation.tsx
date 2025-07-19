@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3, ArrowRight } from "lucide-react";
+import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3, ArrowRight, CheckCircle, Edit3 } from "lucide-react";
 import { CostEstimation as CostEstimationType, ProcurementRequest } from "@shared/schema";
 
 export default function CostEstimation() {
@@ -279,6 +279,41 @@ export default function CostEstimation() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Action Buttons */}
+      <Card className="bg-card border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">פעולות על האומדן</h3>
+              <p className="text-muted-foreground">בחר את הפעולה הרצויה לביצוע על אומדן זה</p>
+            </div>
+            <div className="flex space-x-reverse space-x-4">
+              <Button 
+                variant="outline" 
+                className="border-primary text-primary hover:bg-primary/10"
+                onClick={() => {
+                  // TODO: Implement edit functionality
+                  alert('פונקציונליות עריכה תתווסף בעתיד');
+                }}
+              >
+                <Edit3 className="w-4 h-4 ml-2" />
+                ערוך אומדן
+              </Button>
+              <Button 
+                className="bg-success text-white hover:bg-success/90"
+                onClick={() => {
+                  // TODO: Implement approval functionality
+                  alert('אומדן אושר בהצלחה! התמחור יועבר לאישור סופי.');
+                }}
+              >
+                <CheckCircle className="w-4 h-4 ml-2" />
+                אשר אומדן
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
