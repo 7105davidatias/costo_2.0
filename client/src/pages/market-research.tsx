@@ -3,7 +3,7 @@ import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal } from "lucide-react";
+import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal, ArrowRight } from "lucide-react";
 import SupplierChart from "@/components/charts/supplier-chart";
 import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
@@ -64,13 +64,23 @@ export default function MarketResearch() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">מחקר שוק</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => window.history.back()}>
+              <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
+              חזרה
+            </Button>
+            <h1 className="text-3xl font-bold text-foreground">מחקר שוק</h1>
+          </div>
           <p className="text-muted-foreground">ניתוח מקיף של שוק {decodedCategory}</p>
         </div>
         <div className="flex space-x-reverse space-x-4">
           <Button variant="outline">
             <RefreshCw className="w-4 h-4 ml-2" />
             רענן נתונים
+          </Button>
+          <Button variant="outline">
+            <Calculator className="w-4 h-4 ml-2" />
+            צור אומדן
           </Button>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Download className="w-4 h-4 ml-2" />

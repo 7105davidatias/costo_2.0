@@ -260,6 +260,64 @@ export class MemStorage implements IStorage {
 
     this.costEstimations.set(costEstimation.id, costEstimation);
 
+    // Add more cost estimations for all requests
+    const moreEstimations: CostEstimation[] = [
+      // For REQ-2024-001 (Dell Laptops)
+      {
+        id: this.currentId++,
+        procurementRequestId: 1,
+        totalCost: "125000",
+        basePrice: "106800",
+        tax: "18156",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 96,
+        marketPrice: "135000",
+        potentialSavings: "10000",
+        estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר יחידה", impact: "סטנדרט", description: "₪4,272 ליחידה - תחרותי" },
+            { factor: "זמינות", impact: "מעולה", description: "במלאי, משלוח מיידי" },
+            { factor: "איכות ספק", impact: "גבוהה", description: "Dell - ספק מהימן" }
+          ],
+          sources: [
+            { name: "מחירון Dell Israel", price: "₪125,000", date: "2024-01-15" },
+            { name: "השוואת מחירים", price: "₪120,000-₪130,000", date: "2024-01-10" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      // For REQ-2024-002 (Office Chairs)
+      {
+        id: this.currentId++,
+        procurementRequestId: 2,
+        totalCost: "75000",
+        basePrice: "64100",
+        tax: "10897",
+        shippingCost: "103",
+        discountAmount: "0",
+        confidenceLevel: 89,
+        marketPrice: "82000",
+        potentialSavings: "7000",
+        estimatedDelivery: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר יחידה", impact: "תחרותי", description: "₪1,282 ליחידה - מתחת לממוצע שוק" },
+            { factor: "איכות", impact: "גבוהה", description: "כסאות ארגונומיים עם אחריות 5 שנים" },
+            { factor: "זמן משלוח", impact: "ארוך", description: "4 שבועות - ייצור לפי הזמנה" }
+          ],
+          sources: [
+            { name: "ספק ריהוט משרדי", price: "₪75,000", date: "2024-01-18" },
+            { name: "מחקר שוק", price: "₪70,000-₪85,000", date: "2024-01-15" }
+          ]
+        },
+        createdAt: new Date(),
+      }
+    ];
+
+    moreEstimations.forEach(estimation => this.costEstimations.set(estimation.id, estimation));
+
     // Create supplier quotes
     const quotes: SupplierQuote[] = [
       {

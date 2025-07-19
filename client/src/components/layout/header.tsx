@@ -28,7 +28,7 @@ export default function Header() {
               <Calculator className="text-primary-foreground w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary">מערכת הערכת עלויות רכש</h1>
+              <h1 className="text-xl font-bold text-primary">מערכת ניהול אומדני עלויות רכש</h1>
               <p className="text-sm text-muted-foreground">AI Procurement Cost Estimation</p>
             </div>
           </div>

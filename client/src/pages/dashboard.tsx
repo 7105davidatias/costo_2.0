@@ -66,7 +66,7 @@ export default function Dashboard() {
         <Link href="/procurement-request">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="w-4 h-4 ml-2" />
-            בקשת רכש חדשה
+            אומדן חדש
           </Button>
         </Link>
       </div>
@@ -77,7 +77,7 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">סה״כ עלויות מוערכות</p>
+                <p className="text-muted-foreground text-sm mb-1">סה"כ הוצאה חזויה</p>
                 <p className="text-2xl font-bold text-foreground">
                   {stats ? formatCurrency(stats.totalEstimatedCosts) : '₪0'}
                 </p>
@@ -117,7 +117,7 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">עלויות עולות</p>
+                <p className="text-muted-foreground text-sm mb-1">עליות מחירים</p>
                 <p className="text-2xl font-bold text-foreground">
                   {stats ? formatCurrency(stats.risingCosts) : '₪0'}
                 </p>
@@ -137,7 +137,7 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">דירוג דיוק AI</p>
+                <p className="text-muted-foreground text-sm mb-1">מדד דיוק AI</p>
                 <p className="text-2xl font-bold text-foreground">
                   {stats ? `${stats.accuracyScore.toFixed(1)}%` : '0%'}
                 </p>
@@ -160,7 +160,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-reverse space-x-2">
               <TrendingUp className="text-primary w-5 h-5" />
-              <span>מגמות עלויות לאורך זמן</span>
+              <span>מגמת עלות חזויה לאורך זמן</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -174,7 +174,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-reverse space-x-2">
               <Calculator className="text-secondary w-5 h-5" />
-              <span>התפלגות דיוק הערכות</span>
+              <span>התפלגות סטיות אומדנים</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -190,7 +190,7 @@ export default function Dashboard() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-reverse space-x-2">
             <Calculator className="text-primary w-5 h-5" />
-            <span>בקשות רכש אחרונות</span>
+            <span>דרישות רכש אחרונות</span>
           </CardTitle>
         </CardHeader>
         <CardContent>

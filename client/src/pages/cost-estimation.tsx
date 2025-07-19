@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3 } from "lucide-react";
+import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3, ArrowRight } from "lucide-react";
 import { CostEstimation as CostEstimationType, ProcurementRequest } from "@shared/schema";
 
 export default function CostEstimation() {
@@ -38,11 +38,16 @@ export default function CostEstimation() {
   if (!estimation || !request) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">הערכת עלות לא נמצאה</h2>
-        <p className="text-muted-foreground mb-6">הערכת עלות עדיין לא נוצרה עבור בקשה זו</p>
-        <Link href="/dashboard">
-          <Button>חזור ללוח הבקרה</Button>
-        </Link>
+        <h2 className="text-2xl font-bold mb-4">אומדן עלות לא נמצא</h2>
+        <p className="text-muted-foreground mb-6">אומדן עלות עדיין לא נוצר עבור בקשה זו</p>
+        <div className="flex gap-4 justify-center">
+          <Link href={`/procurement-request/${id}`}>
+            <Button variant="outline">חזור לדרישת רכש</Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button>חזור ללוח הבקרה</Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -64,9 +69,17 @@ export default function CostEstimation() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">תוצאות הערכת עלות</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <Link href={`/procurement-request/${id}`}>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
+                חזרה
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-foreground">תוצאות אומדן עלות</h1>
+          </div>
           <p className="text-muted-foreground">
-            הערכה מפורטת עבור {request.itemName} - {request.requestNumber}
+            אומדן מפורט עבור {request.itemName} - {request.requestNumber}
           </p>
         </div>
         <div className="flex space-x-reverse space-x-4">
@@ -76,7 +89,7 @@ export default function CostEstimation() {
           </Button>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Download className="w-4 h-4 ml-2" />
-            ייצא PDF
+            צור דוח מפורט
           </Button>
         </div>
       </div>

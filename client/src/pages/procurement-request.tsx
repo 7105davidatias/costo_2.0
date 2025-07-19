@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2 } from "lucide-react";
+import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
@@ -81,9 +81,9 @@ export default function ProcurementRequest() {
 
   const getPriorityBadge = (priority: string) => {
     const priorityMap = {
-      'high': { label: 'גבוהה', className: 'bg-destructive/20 text-destructive' },
-      'medium': { label: 'בינונית', className: 'bg-warning/20 text-warning' },
-      'low': { label: 'נמוכה', className: 'bg-success/20 text-success' },
+      'high': { label: 'דחופה', className: 'bg-destructive/20 text-destructive' },
+      'medium': { label: 'רגילה', className: 'bg-primary/20 text-primary' },
+      'low': { label: 'רגילה', className: 'bg-primary/20 text-primary' },
     };
     return priorityMap[priority as keyof typeof priorityMap] || priorityMap.medium;
   };
@@ -105,9 +105,17 @@ export default function ProcurementRequest() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            פרטי בקשת רכש - {request.requestNumber}
-          </h1>
+          <div className="flex items-center gap-4 mb-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
+                חזרה
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-foreground">
+              פרטי דרישת רכש - {request.requestNumber}
+            </h1>
+          </div>
           <p className="text-muted-foreground">{request.itemName}</p>
         </div>
         <div className="flex space-x-reverse space-x-4">
@@ -120,7 +128,7 @@ export default function ProcurementRequest() {
           <Link href={`/cost-estimation/${request.id}`}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Bot className="w-4 h-4 ml-2" />
-              צור הערכת עלות
+              צור אומדן עלות
             </Button>
           </Link>
         </div>
