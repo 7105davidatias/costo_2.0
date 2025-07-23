@@ -462,46 +462,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Analysis simulation
+  // AI Analysis with contextual data based on request type
   app.post("/api/ai-analysis/:requestId", async (req, res) => {
     try {
       const requestId = parseInt(req.params.requestId);
+      const request = await storage.getProcurementRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+      }
       
       // Simulate AI processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Generate contextual AI analysis based on request type
+      const contextualAnalysis = generateContextualAIAnalysis(request);
+      
       const analysisResults = {
         status: "completed",
-        confidence: 94,
+        confidence: contextualAnalysis.confidence || 94,
         processingTime: "8.7 seconds",
-        extractedSpecs: {
-          processor: "Intel Xeon Silver 4314 (16 cores)",
-          memory: "64GB DDR4 ECC",
-          storage: "2x 1TB NVMe SSD",
-          network: "4x 1GbE + 2x 10GbE",
-          powerSupply: "750W Redundant",
-          rackUnit: "2U",
-          warrantyPeriod: "3 years",
-          operatingSystem: "Windows Server 2022 / Linux",
-        },
-        recommendations: [
-          "מחיר תחרותי זוהה בהשוואה לשוק",
-          "מפרטים תואמים לדרישות הטכניות",
-          "ספק מומלץ זמין עם מלאי מיידי",
-          "שקול שדרוג זיכרון ל-128GB לביצועים מיטביים"
-        ],
-        marketAnalysis: {
-          averagePrice: 68300,
-          pricePosition: "12% מתחת לממוצע השוק",
-          competitionLevel: "גבוה",
-          availableSuppliers: 15,
-        },
-        riskAssessment: {
-          overall: "נמוך",
-          supplyChain: "יציב",
-          priceVolatility: "נמוכה",
-          qualityRisk: "נמוך",
-        }
+        extractedSpecs: contextualAnalysis.extractedSpecs,
+        recommendations: contextualAnalysis.recommendations,
+        marketAnalysis: contextualAnalysis.marketAnalysis,
+        riskAssessment: contextualAnalysis.riskAssessment
       };
 
       // Update the request status to processing
@@ -948,4 +932,254 @@ function determinePricePosition(finalEstimate: number, request: any) {
   if (ratio < 1.0) return 'מחיר טוב';  
   if (ratio < 1.1) return 'מחיר סביר';
   return 'מחיר גבוה';
+}
+
+// Generate contextual AI analysis based on request type
+function generateContextualAIAnalysis(request: any) {
+  const category = request.category?.toLowerCase() || '';
+  const subcategory = request.subcategory?.toLowerCase() || '';
+  const itemName = request.itemName?.toLowerCase() || '';
+  
+  // Determine analysis type based on request characteristics
+  if (subcategory.includes('בנייה') || itemName.includes('מחסן') || itemName.includes('בניית')) {
+    return generateConstructionAnalysis(request);
+  } else if (subcategory.includes('פיתוח') || itemName.includes('אפליקציה') || itemName.includes('מערכת')) {
+    return generateSoftwareAnalysis(request);
+  } else if (subcategory.includes('ציוד מחשוב') || itemName.includes('שרת') || itemName.includes('מחשב')) {
+    return generateComputingAnalysis(request);
+  } else if (subcategory.includes('רכבים') || itemName.includes('רכב') || itemName.includes('משאית')) {
+    return generateVehicleAnalysis(request);
+  } else if (subcategory.includes('ייעוץ') || itemName.includes('ייעוץ') || itemName.includes('שירות')) {
+    return generateConsultingAnalysis(request);
+  } else {
+    return generateGenericAnalysis(request);
+  }
+}
+
+function generateConstructionAnalysis(request: any) {
+  return {
+    confidence: 95,
+    extractedSpecs: {
+      buildingArea: `${request.description?.match(/(\d+)\s*מ[\"׳]ר/) ? request.description.match(/(\d+)\s*מ[\"׳]ר/)[1] : '1000'} מ"ר`,
+      buildingHeight: "12 מטר",
+      foundationType: "בטון מזוין",
+      steelStructure: "80 טון פלדה מבנית",
+      roofingSystem: "גג רעפים",
+      electricalSystems: "מערכת חשמל תעשייתית",
+      ventilationSystem: "מערכת אוורור מרכזית",
+      fireProtection: "מערכת כיבוי אש",
+      constructionPeriod: "8-12 חודשים",
+      permits: "היתרי בנייה נדרשים"
+    },
+    recommendations: [
+      "האומדן מבוסס על מפרטי בנייה עדכניים",
+      "מומלץ לקבל הצעות מחיר מ-3 קבלנים לפחות",
+      "שקול הוספת מרווח 15% לאי-צפויים",
+      "בדוק זמינות חומרי בנייה לפני תחילת הפרויקט"
+    ],
+    marketAnalysis: {
+      averagePrice: 1800000,
+      pricePosition: "15% מתחת לממוצע השוק",
+      competitionLevel: "בינוני",
+      availableSuppliers: 8,
+      marketTrend: "מחירי בנייה יציבים ברבעון האחרון"
+    },
+    riskAssessment: {
+      overall: "בינוני",
+      supplyChain: "יציב - זמינות חומרים טובה",
+      priceVolatility: "נמוכה - מחירי בנייה יציבים",
+      qualityRisk: "נמוך - קבלנים מוסמכים",
+      weatherRisk: "בינוני - תלוי בעונת השנה"
+    }
+  };
+}
+
+function generateSoftwareAnalysis(request: any) {
+  return {
+    confidence: 92,
+    extractedSpecs: {
+      projectScope: "פיתוח אפליקציה מלאה",
+      estimatedHours: "2400 שעות פיתוח",
+      teamSize: "6 מפתחים",
+      frontendTechnology: "React.js + TypeScript",
+      backendTechnology: "Node.js + Express",
+      database: "PostgreSQL",
+      cloudInfrastructure: "AWS/Azure",
+      testingFramework: "Jest + Cypress",
+      developmentPeriod: "8-10 חודשים",
+      maintenancePeriod: "12 חודשים"
+    },
+    recommendations: [
+      "השתמש בטכנולוגיות מודרניות ויציבות",
+      "תכנן ארכיטקטורה מודולרית לגמישות עתידית",
+      "הקצה 20% מהזמן לבדיקות ואבטחת איכות",
+      "שקול אימוץ גישת Agile לניהול הפרויקט"
+    ],
+    marketAnalysis: {
+      averagePrice: 950000,
+      pricePosition: "8% מעל ממוצע השוק",
+      competitionLevel: "גבוה",
+      availableSuppliers: 25,
+      marketTrend: "ביקוש גבוה לפרויקטי פיתוח מותאמים"
+    },
+    riskAssessment: {
+      overall: "בינוני",
+      supplyChain: "יציב - מפתחים זמינים",
+      priceVolatility: "בינונית - תלוי בטכנולוגיות",
+      qualityRisk: "בינוני - תלוי בניסיון הצוות",
+      technicalRisk: "בינוני - טכנולוגיות מתקדמות"
+    }
+  };
+}
+
+function generateComputingAnalysis(request: any) {
+  return {
+    confidence: 94,
+    extractedSpecs: {
+      quantity: `${request.quantity || 1} יחידות`,
+      processor: "Intel Core i7-13700 (16 cores)",
+      memory: "32GB DDR4",
+      storage: "1TB NVMe SSD",
+      graphics: "Intel UHD Graphics",
+      networkCard: "Gigabit Ethernet",
+      warranty: "3 שנות אחריות",
+      operatingSystem: "Windows 11 Pro",
+      formFactor: "Desktop Tower",
+      powerSupply: "650W 80+ Gold"
+    },
+    recommendations: [
+      "מפרטים מתאימים לשימוש משרדי מתקדם",
+      "זמינות מיידית מספקים מקומיים",
+      "שקול שדרוג ל-64GB RAM לעבודה כבדה",
+      "בדוק תאימות עם תוכנות קיימות"
+    ],
+    marketAnalysis: {
+      averagePrice: 4800,
+      pricePosition: "6% מתחת לממוצע השוק",
+      competitionLevel: "גבוה",
+      availableSuppliers: 15,
+      marketTrend: "מחירי ציוד מחשוב יורדים 2% ברבעון"
+    },
+    riskAssessment: {
+      overall: "נמוך",
+      supplyChain: "יציב - זמינות טובה",
+      priceVolatility: "נמוכה - שוק יציב",
+      qualityRisk: "נמוך - ציוד איכותי",
+      technologyObsolescence: "נמוך - טכנולוגיה עדכנית"
+    }
+  };
+}
+
+function generateVehicleAnalysis(request: any) {
+  return {
+    confidence: 91,
+    extractedSpecs: {
+      vehicleType: "משאית חלוקה",
+      capacity: "3.5 טון",
+      fuelType: "דיזל",
+      transmission: "אוטומטי",
+      enginePower: "150 כ\"ס",
+      cargoVolume: "15 מ\"ק",
+      fuelConsumption: "12 ק\"מ/ליטר",
+      warranty: "5 שנות אחריות יצרן",
+      maintenance: "שירות כל 15,000 ק\"מ",
+      safety: "דירוג בטיחות 5 כוכבים"
+    },
+    recommendations: [
+      "רכב מתאים לחלוקה עירונית",
+      "בדוק זמינות חלקי חילוף באזור",
+      "שקול גרסת היברידית לחיסכון בדלק",
+      "ודא קיום רישיונות מתאימים לנהגים"
+    ],
+    marketAnalysis: {
+      averagePrice: 180000,
+      pricePosition: "5% מעל ממוצע השוק",
+      competitionLevel: "בינוני",
+      availableSuppliers: 6,
+      marketTrend: "ביקוש גבוה לרכבי חלוקה"
+    },
+    riskAssessment: {
+      overall: "נמוך",
+      supplyChain: "יציב - יבואן רשמי",
+      priceVolatility: "בינונית - תלוי במחירי דלק",
+      qualityRisk: "נמוך - מותג מוכר",
+      maintenanceRisk: "נמוך - שירות זמין"
+    }
+  };
+}
+
+function generateConsultingAnalysis(request: any) {
+  return {
+    confidence: 88,
+    extractedSpecs: {
+      serviceType: "ייעוץ עסקי אסטרטגי",
+      projectDuration: "6 חודשים",
+      teamSize: "3 יועצים בכירים",
+      hourlyRate: "450 ₪/שעה",
+      totalHours: "720 שעות",
+      deliverables: "דוח אסטרטגי + תכנית יישום",
+      methodology: "ניתוח SWOT + Porter's Five Forces",
+      industryExpertise: "תעשייה רלוונטית",
+      reportLanguage: "עברית + אנגלית",
+      followUpSupport: "3 חודשי ליווי"
+    },
+    recommendations: [
+      "ודא התאמת המתודולוגיה לצרכים",
+      "בקש דוגמאות מפרויקטים דומים",
+      "הגדר מדדי הצלחה ברורים",
+      "תכנן מפגשי מעקב קבועים"
+    ],
+    marketAnalysis: {
+      averagePrice: 324000,
+      pricePosition: "12% מתחת לממוצע השוק",
+      competitionLevel: "גבוה",
+      availableSuppliers: 12,
+      marketTrend: "ביקוש גבוה לייעוץ דיגיטלי"
+    },
+    riskAssessment: {
+      overall: "בינוני",
+      supplyChain: "יציב - יועצים זמינים",
+      priceVolatility: "בינונית - תלוי בביקוש",
+      qualityRisk: "בינוני - תלוי בניסיון היועץ",
+      deliveryRisk: "בינוני - תלוי בשיתוף הלקוח"
+    }
+  };
+}
+
+function generateGenericAnalysis(request: any) {
+  return {
+    confidence: 85,
+    extractedSpecs: {
+      itemName: request.itemName || "פריט לא מוגדר",
+      category: request.category || "קטגוריה כללית",
+      quantity: `${request.quantity || 1} יחידות`,
+      description: request.description || "תיאור לא זמין",
+      estimatedValue: "אומדן ראשוני נדרש",
+      specifications: "מפרטים נוספים נדרשים",
+      deliveryTime: "זמן אספקה לא מוגדר",
+      warranty: "תנאי אחריות לא מוגדרים",
+      supplier: "ספק לא מוגדר",
+      technicalRequirements: "דרישות טכניות נוספות נדרשות"
+    },
+    recommendations: [
+      "נדרש מידע נוסף על המפרטים הטכניים",
+      "מומלץ לקבל הצעות מחיר ממספר ספקים",
+      "בדוק זמינות הפריט בשוק",
+      "ודא התאמה לדרישות הארגון"
+    ],
+    marketAnalysis: {
+      averagePrice: 50000,
+      pricePosition: "נדרש מחקר שוק מפורט",
+      competitionLevel: "לא ידוע",
+      availableSuppliers: 0,
+      marketTrend: "נדרש ניתוח שוק נוסף"
+    },
+    riskAssessment: {
+      overall: "גבוה - מידע חסר",
+      supplyChain: "לא ידוע",
+      priceVolatility: "לא ידועה",
+      qualityRisk: "לא ידוע",
+      generalRisk: "נדרש מידע נוסף להערכת סיכונים"
+    }
+  };
 }

@@ -1,0 +1,665 @@
+# פרומפט לתיקון מסך תוצאות ניתוח AI - הצגת נתונים קונטקסטואליים
+
+תודה על העבודה המצוינת! זוהתה בעיה קריטית נוספת במסך "תוצאות ניתוח AI" שדורשת תיקון מיידי.
+
+## 🔴 בעיה קריטית זוהתה
+
+**הבעיה:** מסך "תוצאות ניתוח AI" מציג תמיד את אותם הנתונים הגנריים (מפרטי שרת) ללא קשר לסוג הדרישה הספציפית ומאפייניה. 
+
+**דוגמה לבעיה:** עבור דרישת רכש "בניית מחסן חדש" (כפי שמוצג בצילום המסך), המסך מציג מפרטי שרת (Intel Xeon, 64GB RAM, וכו') במקום נתונים רלוונטיים לבנייה ותשתיות.
+
+**מה שצריך לקרות:** המסך צריך להציג נתונים רלוונטיים לסוג הדרישה:
+- **לרכש טובין:** נתונים מתוך מפרט טכני של המוצר
+- **לרכש שירותים:** נתונים מתוך מסמך SOW (Statement of Work)
+- **לפרויקטי בנייה:** נתונים מתוך מפרטי בנייה ותשתיות
+
+## 🔧 תיקונים נדרשים
+
+### 1. עדכון API endpoint לניתוח AI קונטקסטואלי
+
+```javascript
+// עדכון ה-API endpoint הקיים
+app.get('/api/ai-analysis/:requestId', (req, res) => {
+  const requestId = parseInt(req.params.requestId);
+  const request = getRequestById(requestId);
+  
+  if (!request) {
+    return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+  }
+  
+  // יצירת ניתוח AI קונטקסטואלי לפי סוג הדרישה
+  const aiAnalysis = generateContextualAIAnalysis(request);
+  
+  res.json({
+    requestId: requestId,
+    requestDetails: {
+      title: request.title,
+      category: request.category,
+      subcategory: request.subcategory
+    },
+    aiInsights: aiAnalysis.insights,
+    extractedSpecs: aiAnalysis.extractedSpecs,
+    recommendedMethods: aiAnalysis.recommendedMethods,
+    riskAssessment: aiAnalysis.riskAssessment,
+    marketAnalysis: aiAnalysis.marketAnalysis
+  });
+});
+
+// פונקציה ליצירת ניתוח AI קונטקסטואלי
+function generateContextualAIAnalysis(request) {
+  const category = request.category.toLowerCase();
+  const subcategory = request.subcategory.toLowerCase();
+  
+  switch(subcategory) {
+    case 'בנייה ותשתיות':
+      return generateConstructionAnalysis(request);
+    case 'פיתוח תוכנה':
+      return generateSoftwareAnalysis(request);
+    case 'ציוד מחשוב':
+      return generateComputingAnalysis(request);
+    case 'רכבים':
+      return generateVehicleAnalysis(request);
+    case 'חומרי גלם':
+      return generateRawMaterialsAnalysis(request);
+    case 'ייעוץ עסקי':
+      return generateConsultingAnalysis(request);
+    case 'אבטחת מידע':
+      return generateSecurityAnalysis(request);
+    case 'תחזוקה':
+      return generateMaintenanceAnalysis(request);
+    default:
+      return generateGenericAnalysis(request);
+  }
+}
+```
+
+### 2. פונקציות ניתוח ספציפיות לכל סוג דרישה
+
+#### א. ניתוח לבנייה ותשתיות
+
+```javascript
+function generateConstructionAnalysis(request) {
+  const specs = request.technicalSpecs;
+  
+  return {
+    insights: [
+      {
+        title: 'ניתוח מפרט בנייה',
+        description: 'זוהו כל הרכיבים הנדרשים לביצוע הפרויקט',
+        confidence: 95,
+        icon: '🏗️'
+      },
+      {
+        title: 'הערכת סיכוני פרויקט',
+        description: 'זוהו סיכונים פוטנציאליים ונקבעו אמצעי מיתון',
+        confidence: 88,
+        icon: '⚠️'
+      },
+      {
+        title: 'אופטימיזציה לוגיסטית',
+        description: 'הוגדרו לוחות זמנים אופטימליים לאספקת חומרים',
+        confidence: 92,
+        icon: '📋'
+      }
+    ],
+    extractedSpecs: [
+      {
+        category: 'שטח ומידות',
+        specs: [
+          { name: 'שטח בנייה', value: `${specs.area} מ"ר`, source: 'מפרט אדריכלי' },
+          { name: 'גובה מבנה', value: `${specs.height} מטר`, source: 'מפרט אדריכלי' },
+          { name: 'נפח כולל', value: `${specs.area * specs.height} מ"ק`, source: 'חישוב אוטומטי' }
+        ]
+      },
+      {
+        category: 'חומרי בנייה',
+        specs: specs.components.map(comp => ({
+          name: comp.name,
+          value: `${comp.quantity} ${comp.unit}`,
+          source: 'מפרט טכני'
+        }))
+      },
+      {
+        category: 'מערכות',
+        specs: [
+          { name: 'מערכת חשמל', value: 'כלולה', source: 'מפרט חשמל' },
+          { name: 'מערכת אוורור', value: 'כלולה', source: 'מפרט מכני' },
+          { name: 'מערכת בטיחות', value: 'נדרשת', source: 'תקנות בטיחות' }
+        ]
+      }
+    ],
+    recommendedMethods: [
+      {
+        method: 'אומדן מלמטה למעלה',
+        suitability: 95,
+        reason: 'מתאים מאוד לפרויקטי בנייה עם פירוט רכיבים'
+      },
+      {
+        method: 'אומדן אנלוגי',
+        suitability: 80,
+        reason: 'מבוסס על פרויקטי בנייה דומים'
+      },
+      {
+        method: 'אומדן שלוש נקודות',
+        suitability: 75,
+        reason: 'מתאים לניהול אי-ודאות בפרויקטי בנייה'
+      }
+    ],
+    riskAssessment: {
+      weatherRisk: { level: 'בינוני', impact: 'עיכוב בלוחות זמנים' },
+      materialAvailability: { level: 'נמוך', impact: 'זמינות חומרים טובה' },
+      regulatoryRisk: { level: 'נמוך', impact: 'היתרים מאושרים' }
+    },
+    marketAnalysis: {
+      constructionTrends: 'מחירי בנייה יציבים ברבעון האחרון',
+      materialPrices: 'מחירי פלדה עולים 3% לעומת השנה שעברה',
+      laborAvailability: 'זמינות עובדים טובה באזור'
+    }
+  };
+}
+```
+
+#### ב. ניתוח לפיתוח תוכנה
+
+```javascript
+function generateSoftwareAnalysis(request) {
+  const specs = request.technicalSpecs;
+  
+  return {
+    insights: [
+      {
+        title: 'ניתוח דרישות תוכנה',
+        description: 'זוהו כל המודולים והתכונות הנדרשות',
+        confidence: 92,
+        icon: '💻'
+      },
+      {
+        title: 'הערכת מורכבות טכנית',
+        description: `פרויקט ברמת מורכבות ${specs.complexity}`,
+        confidence: 88,
+        icon: '⚙️'
+      },
+      {
+        title: 'אופטימיזציה טכנולוגית',
+        description: 'נבחרו טכנולוגיות מתאימות לדרישות',
+        confidence: 90,
+        icon: '🔧'
+      }
+    ],
+    extractedSpecs: [
+      {
+        category: 'היקף פרויקט',
+        specs: [
+          { name: 'שעות עבודה מוערכות', value: `${specs.estimatedHours} שעות`, source: 'ניתוח דרישות' },
+          { name: 'גודל צוות', value: `${specs.teamSize} מפתחים`, source: 'תכנון משאבים' },
+          { name: 'משך פרויקט', value: specs.duration, source: 'לוח זמנים' }
+        ]
+      },
+      {
+        category: 'טכנולוגיות',
+        specs: specs.technologies.map(tech => ({
+          name: 'טכנולוגיה',
+          value: tech,
+          source: 'מפרט טכני'
+        }))
+      },
+      {
+        category: 'רמת סיכון',
+        specs: [
+          { name: 'מורכבות', value: specs.complexity, source: 'הערכת מומחה' },
+          { name: 'רמת סיכון', value: specs.riskLevel, source: 'ניתוח סיכונים' }
+        ]
+      }
+    ],
+    recommendedMethods: [
+      {
+        method: 'אומדן מבוסס זמן עבודה',
+        suitability: 90,
+        reason: 'מתאים מאוד לפרויקטי פיתוח תוכנה'
+      },
+      {
+        method: 'אומדן אנלוגי',
+        suitability: 85,
+        reason: 'מבוסס על פרויקטי פיתוח דומים'
+      },
+      {
+        method: 'אומדן שלוש נקודות',
+        suitability: 80,
+        reason: 'מתאים לניהול אי-ודאות בפיתוח'
+      }
+    ],
+    riskAssessment: {
+      technicalRisk: { level: specs.riskLevel, impact: 'השפעה על לוחות זמנים' },
+      teamAvailability: { level: 'נמוך', impact: 'צוות זמין' },
+      requirementChanges: { level: 'בינוני', impact: 'שינויי דרישות אפשריים' }
+    },
+    marketAnalysis: {
+      developerRates: 'תעריפי מפתחים יציבים',
+      technologyTrends: 'טכנולוגיות נבחרות מתקדמות ויציבות',
+      projectDemand: 'ביקוש גבוה לפרויקטי פיתוח דומים'
+    }
+  };
+}
+```
+
+#### ג. ניתוח לציוד מחשוב
+
+```javascript
+function generateComputingAnalysis(request) {
+  const specs = request.technicalSpecs;
+  
+  return {
+    insights: [
+      {
+        title: 'ניתוח מפרטי חומרה',
+        description: 'זוהו כל רכיבי החומרה הנדרשים',
+        confidence: 95,
+        icon: '🖥️'
+      },
+      {
+        title: 'התאמה לשימוש',
+        description: 'המפרטים מתאימים לשימוש המיועד',
+        confidence: 92,
+        icon: '✅'
+      },
+      {
+        title: 'אופטימיזציה כלכלית',
+        description: 'זוהו הזדמנויות לחיסכון',
+        confidence: 88,
+        icon: '💰'
+      }
+    ],
+    extractedSpecs: [
+      {
+        category: 'כמות ומפרטים',
+        specs: [
+          { name: 'כמות יחידות', value: `${specs.quantity} יחידות`, source: 'דרישת רכש' },
+          { name: 'מעבד', value: specs.specifications.processor, source: 'מפרט טכני' },
+          { name: 'זיכרון', value: specs.specifications.ram, source: 'מפרט טכני' },
+          { name: 'אחסון', value: specs.specifications.storage, source: 'מפרט טכני' }
+        ]
+      },
+      {
+        category: 'אחריות ותמיכה',
+        specs: [
+          { name: 'תקופת אחריות', value: specs.specifications.warranty, source: 'תנאי רכש' },
+          { name: 'כרטיס גרפי', value: specs.specifications.graphics, source: 'מפרט טכני' }
+        ]
+      }
+    ],
+    recommendedMethods: [
+      {
+        method: 'אומדן אנלוגי',
+        suitability: 95,
+        reason: 'מתאים מאוד לרכש ציוד סטנדרטי'
+      },
+      {
+        method: 'אומדן מבוסס מחיר שוק',
+        suitability: 90,
+        reason: 'מחירי שוק זמינים ועדכניים'
+      },
+      {
+        method: 'אומדן פרמטרי',
+        suitability: 75,
+        reason: 'מבוסס על מפרטי חומרה'
+      }
+    ],
+    riskAssessment: {
+      priceVolatility: { level: 'נמוך', impact: 'מחירי ציוד מחשוב יציבים' },
+      availability: { level: 'נמוך', impact: 'זמינות טובה בשוק' },
+      technologyObsolescence: { level: 'בינוני', impact: 'טכנולוגיה מתקדמת' }
+    },
+    marketAnalysis: {
+      pricetrends: 'מחירי ציוד מחשוב יורדים 2% ברבעון האחרון',
+      supplierCompetition: 'תחרות גבוהה בין ספקים',
+      newTechnology: 'דור חדש של מעבדים זמין'
+    }
+  };
+}
+```
+
+#### ד. ניתוח לרכבים
+
+```javascript
+function generateVehicleAnalysis(request) {
+  const specs = request.technicalSpecs;
+  const params = specs.parameters;
+  
+  return {
+    insights: [
+      {
+        title: 'ניתוח מפרטי רכב',
+        description: 'זוהו כל המפרטים הטכניים הנדרשים',
+        confidence: 93,
+        icon: '🚐'
+      },
+      {
+        title: 'התאמה לשימוש',
+        description: 'הרכבים מתאימים לשימוש המיועד',
+        confidence: 90,
+        icon: '🎯'
+      },
+      {
+        title: 'יעילות תפעולית',
+        description: 'אופטימיזציה לעלויות תפעול',
+        confidence: 87,
+        icon: '⚡'
+      }
+    ],
+    extractedSpecs: [
+      {
+        category: 'מפרטי רכב',
+        specs: [
+          { name: 'כמות רכבים', value: `${specs.quantity} יחידות`, source: 'דרישת רכש' },
+          { name: 'סוג רכב', value: specs.vehicleType, source: 'מפרט טכני' },
+          { name: 'נפח מנוע', value: `${params.engineSize} סמ"ק`, source: 'מפרט טכני' },
+          { name: 'סוג דלק', value: params.fuelType, source: 'מפרט טכני' }
+        ]
+      },
+      {
+        category: 'קיבולת ותפעול',
+        specs: [
+          { name: 'קיבולת מטען', value: `${params.cargoCapacity} ק"ג`, source: 'מפרט טכני' },
+          { name: 'מספר מושבים', value: `${params.seatingCapacity} מושבים`, source: 'מפרט טכני' },
+          { name: 'קילומטראז' צפוי', value: `${params.expectedMileage} ק"מ`, source: 'תכנון תפעולי' }
+        ]
+      }
+    ],
+    recommendedMethods: [
+      {
+        method: 'אומדן פרמטרי',
+        suitability: 90,
+        reason: 'מתאים מאוד לרכש רכבים עם פרמטרים מוגדרים'
+      },
+      {
+        method: 'אומדן מבוסס מחיר שוק',
+        suitability: 85,
+        reason: 'מחירי רכבים זמינים בשוק'
+      },
+      {
+        method: 'אומדן אנלוגי',
+        suitability: 80,
+        reason: 'מבוסס על רכישות רכבים קודמות'
+      }
+    ],
+    riskAssessment: {
+      priceVolatility: { level: 'בינוני', impact: 'מחירי רכבים משתנים' },
+      deliveryTime: { level: 'בינוני', impact: 'זמני אספקה משתנים' },
+      fuelPrices: { level: 'גבוה', impact: 'מחירי דלק משפיעים על TCO' }
+    },
+    marketAnalysis: {
+      vehiclePrices: 'מחירי רכבים מסחריים עולים 1.5% השנה',
+      dealerCompetition: 'תחרות בינונית בין סוכנויות',
+      incentives: 'הנחות זמינות לרכש כמותי'
+    }
+  };
+}
+```
+
+#### ה. ניתוח לחומרי גלם
+
+```javascript
+function generateRawMaterialsAnalysis(request) {
+  const specs = request.technicalSpecs;
+  const marketData = request.marketData;
+  
+  return {
+    insights: [
+      {
+        title: 'ניתוח חומרי גלם',
+        description: 'זוהו כל סוגי חומרי הגלם הנדרשים',
+        confidence: 95,
+        icon: '🏭'
+      },
+      {
+        title: 'ניתוח מגמות שוק',
+        description: 'זוהו מגמות מחירים ותנודתיות',
+        confidence: 88,
+        icon: '📈'
+      },
+      {
+        title: 'אופטימיזציה לוגיסטית',
+        description: 'הוגדרו אסטרטגיות רכש אופטימליות',
+        confidence: 85,
+        icon: '🚛'
+      }
+    ],
+    extractedSpecs: [
+      {
+        category: 'חומרי גלם נדרשים',
+        specs: specs.materials.map(material => ({
+          name: material.name,
+          value: `${material.quantity} ${material.unit}`,
+          source: 'מפרט ייצור'
+        }))
+      },
+      {
+        category: 'מחירי שוק נוכחיים',
+        specs: specs.materials.map(material => {
+          const materialKey = material.name.toLowerCase().replace(' ', '_');
+          const currentPrice = marketData.currentPrices[materialKey]?.price || 0;
+          return {
+            name: `מחיר ${material.name}`,
+            value: `${currentPrice} ₪/${material.unit}`,
+            source: 'נתוני שוק'
+          };
+        })
+      },
+      {
+        category: 'מגמות מחירים',
+        specs: specs.materials.map(material => {
+          const materialKey = material.name.toLowerCase().replace(' ', '_');
+          const trend = marketData.currentPrices[materialKey]?.trend || 'לא ידוע';
+          return {
+            name: `מגמת ${material.name}`,
+            value: trend,
+            source: 'ניתוח שוק'
+          };
+        })
+      }
+    ],
+    recommendedMethods: [
+      {
+        method: 'אומדן מבוסס מחיר שוק',
+        suitability: 95,
+        reason: 'מתאים מאוד לחומרי גלם עם מחירי שוק זמינים'
+      },
+      {
+        method: 'אומדן שלוש נקודות',
+        suitability: 80,
+        reason: 'מתאים לניהול תנודתיות מחירים'
+      },
+      {
+        method: 'אומדן אנלוגי',
+        suitability: 75,
+        reason: 'מבוסס על רכישות חומרי גלם קודמות'
+      }
+    ],
+    riskAssessment: {
+      priceVolatility: { level: 'גבוה', impact: 'תנודתיות גבוהה במחירי חומרי גלם' },
+      supplyChain: { level: 'בינוני', impact: 'סיכוני שרשרת אספקה' },
+      qualityRisk: { level: 'נמוך', impact: 'ספקים מוכרים ואמינים' }
+    },
+    marketAnalysis: {
+      globalTrends: 'מחירי חומרי גלם עולמיים במגמת עלייה',
+      localSupply: 'זמינות טובה בשוק המקומי',
+      seasonality: 'השפעה עונתית מינימלית'
+    }
+  };
+}
+```
+
+### 3. עדכון הפרונטאנד - מסך תוצאות ניתוח AI
+
+```jsx
+// עדכון קומפוננט תוצאות ניתוח AI
+function AIAnalysisResults() {
+  const [analysisData, setAnalysisData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { requestId } = useParams();
+  
+  useEffect(() => {
+    // טעינת ניתוח AI קונטקסטואלי
+    fetch(`/api/ai-analysis/${requestId}`)
+      .then(response => response.json())
+      .then(data => {
+        setAnalysisData(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading AI analysis:', error);
+        setLoading(false);
+      });
+  }, [requestId]);
+  
+  if (loading) return <div>מבצע ניתוח AI...</div>;
+  if (!analysisData) return <div>שגיאה בטעינת נתונים</div>;
+  
+  return (
+    <div className="ai-analysis-results">
+      <h1>ניתוח AI מתקדם</h1>
+      <h2>{analysisData.requestDetails.title}</h2>
+      <p>קטגוריה: {analysisData.requestDetails.category} - {analysisData.requestDetails.subcategory}</p>
+      
+      {/* תובנות AI */}
+      <div className="ai-insights">
+        <h3>תובנות AI</h3>
+        {analysisData.aiInsights.map((insight, index) => (
+          <div key={index} className="insight-card">
+            <div className="insight-header">
+              <span className="insight-icon">{insight.icon}</span>
+              <h4>{insight.title}</h4>
+              <span className="confidence">{insight.confidence}% ביטחון</span>
+            </div>
+            <p>{insight.description}</p>
+          </div>
+        ))}
+      </div>
+      
+      {/* מפרטים שחולצו */}
+      <div className="extracted-specs">
+        <h3>מפרטים שחולצו</h3>
+        {analysisData.extractedSpecs.map((category, index) => (
+          <div key={index} className="spec-category">
+            <h4>{category.category}</h4>
+            <table className="specs-table">
+              <thead>
+                <tr>
+                  <th>מפרט</th>
+                  <th>ערך</th>
+                  <th>מקור</th>
+                </tr>
+              </thead>
+              <tbody>
+                {category.specs.map((spec, idx) => (
+                  <tr key={idx}>
+                    <td>{spec.name}</td>
+                    <td>{spec.value}</td>
+                    <td>{spec.source}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+      
+      {/* שיטות אומדן מומלצות */}
+      <div className="recommended-methods">
+        <h3>שיטות אומדן מומלצות</h3>
+        {analysisData.recommendedMethods.map((method, index) => (
+          <div key={index} className="method-recommendation">
+            <div className="method-header">
+              <h4>{method.method}</h4>
+              <span className="suitability">{method.suitability}% התאמה</span>
+            </div>
+            <p>{method.reason}</p>
+          </div>
+        ))}
+      </div>
+      
+      {/* הערכת סיכונים */}
+      <div className="risk-assessment">
+        <h3>הערכת סיכונים</h3>
+        {Object.entries(analysisData.riskAssessment).map(([riskType, risk]) => (
+          <div key={riskType} className="risk-item">
+            <span className="risk-type">{translateRiskType(riskType)}</span>
+            <span className={`risk-level ${risk.level}`}>{risk.level}</span>
+            <span className="risk-impact">{risk.impact}</span>
+          </div>
+        ))}
+      </div>
+      
+      {/* ניתוח שוק */}
+      <div className="market-analysis">
+        <h3>ניתוח שוק</h3>
+        {Object.entries(analysisData.marketAnalysis).map(([key, value]) => (
+          <div key={key} className="market-insight">
+            <strong>{translateMarketKey(key)}:</strong> {value}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// פונקציות עזר לתרגום
+function translateRiskType(riskType) {
+  const translations = {
+    'weatherRisk': 'סיכוני מזג אוויר',
+    'materialAvailability': 'זמינות חומרים',
+    'regulatoryRisk': 'סיכונים רגולטוריים',
+    'technicalRisk': 'סיכונים טכניים',
+    'teamAvailability': 'זמינות צוות',
+    'requirementChanges': 'שינויי דרישות',
+    'priceVolatility': 'תנודתיות מחירים',
+    'availability': 'זמינות',
+    'technologyObsolescence': 'התיישנות טכנולוגית',
+    'deliveryTime': 'זמני אספקה',
+    'fuelPrices': 'מחירי דלק',
+    'supplyChain': 'שרשרת אספקה',
+    'qualityRisk': 'סיכוני איכות'
+  };
+  return translations[riskType] || riskType;
+}
+
+function translateMarketKey(key) {
+  const translations = {
+    'constructionTrends': 'מגמות בנייה',
+    'materialPrices': 'מחירי חומרים',
+    'laborAvailability': 'זמינות עובדים',
+    'developerRates': 'תעריפי מפתחים',
+    'technologyTrends': 'מגמות טכנולוגיות',
+    'projectDemand': 'ביקוש לפרויקטים',
+    'pricetrends': 'מגמות מחירים',
+    'supplierCompetition': 'תחרות ספקים',
+    'newTechnology': 'טכנולוגיה חדשה',
+    'vehiclePrices': 'מחירי רכבים',
+    'dealerCompetition': 'תחרות סוכנויות',
+    'incentives': 'תמריצים',
+    'globalTrends': 'מגמות עולמיות',
+    'localSupply': 'אספקה מקומית',
+    'seasonality': 'עונתיות'
+  };
+  return translations[key] || key;
+}
+```
+
+## ✅ מה שעובד מצוין (אל תשנה)
+
+כל הפונקציונליות הקיימת צריכה להישמר, כולל:
+- בחירת שיטות אומדן
+- עיצוב ונושא כהה
+- תמיכה בעברית RTL
+- כפתורי ניווט וחזרה
+- כל התיקונים שבוצעו קודם לכן
+
+## 🎯 סדר עדיפויות לתיקון
+
+1. **ראשון:** עדכון API endpoint לניתוח AI קונטקסטואלי
+2. **שני:** יצירת פונקציות ניתוח ספציפיות לכל סוג דרישה
+3. **שלישי:** עדכון מסך תוצאות ניתוח AI להצגת נתונים קונטקסטואליים
+4. **רביעי:** בדיקה שכל סוג דרישה מציג נתונים רלוונטיים
+
+לאחר התיקון, המסך יציג נתונים רלוונטיים וספציפיים לכל סוג דרישה, מה שישפר משמעותית את חוויית המשתמש ואמינות הניתוח.
+

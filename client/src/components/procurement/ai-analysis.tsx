@@ -178,6 +178,63 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                             {key === 'rackUnit' && 'יחידות רק'}
                             {key === 'warrantyPeriod' && 'תקופת אחריות'}
                             {key === 'operatingSystem' && 'מערכת הפעלה'}
+                            {/* Construction-specific specs */}
+                            {key === 'buildingArea' && 'שטח בנייה'}
+                            {key === 'buildingHeight' && 'גובה מבנה'}
+                            {key === 'foundationType' && 'סוג יסוד'}
+                            {key === 'steelStructure' && 'מבנה פלדה'}
+                            {key === 'roofingSystem' && 'מערכת גגות'}
+                            {key === 'electricalSystems' && 'מערכות חשמל'}
+                            {key === 'ventilationSystem' && 'מערכת אוורור'}
+                            {key === 'fireProtection' && 'מערכת כיבוי אש'}
+                            {key === 'constructionPeriod' && 'תקופת בנייה'}
+                            {key === 'permits' && 'היתרים'}
+                            {/* Software-specific specs */}
+                            {key === 'projectScope' && 'היקף פרויקט'}
+                            {key === 'estimatedHours' && 'שעות עבודה מוערכות'}
+                            {key === 'teamSize' && 'גודל צוות'}
+                            {key === 'frontendTechnology' && 'טכנולוגיית Frontend'}
+                            {key === 'backendTechnology' && 'טכנולוגיית Backend'}
+                            {key === 'database' && 'מסד נתונים'}
+                            {key === 'cloudInfrastructure' && 'תשתית ענן'}
+                            {key === 'testingFramework' && 'מסגרת בדיקות'}
+                            {key === 'developmentPeriod' && 'תקופת פיתוח'}
+                            {key === 'maintenancePeriod' && 'תקופת תחזוקה'}
+                            {/* Vehicle-specific specs */}
+                            {key === 'vehicleType' && 'סוג רכב'}
+                            {key === 'capacity' && 'קיבולת'}
+                            {key === 'fuelType' && 'סוג דלק'}
+                            {key === 'transmission' && 'תיבת הילוכים'}
+                            {key === 'enginePower' && 'כוח מנוע'}
+                            {key === 'cargoVolume' && 'נפח מטען'}
+                            {key === 'fuelConsumption' && 'צריכת דלק'}
+                            {key === 'warranty' && 'אחריות'}
+                            {key === 'maintenance' && 'תחזוקה'}
+                            {key === 'safety' && 'בטיחות'}
+                            {/* Consulting-specific specs */}
+                            {key === 'serviceType' && 'סוג שירות'}
+                            {key === 'projectDuration' && 'משך פרויקט'}
+                            {key === 'hourlyRate' && 'תעריף שעתי'}
+                            {key === 'totalHours' && 'סך שעות'}
+                            {key === 'deliverables' && 'תוצרים'}
+                            {key === 'methodology' && 'מתודולוגיה'}
+                            {key === 'industryExpertise' && 'מומחיות תעשייתית'}
+                            {key === 'reportLanguage' && 'שפת דוח'}
+                            {key === 'followUpSupport' && 'ליווי המשך'}
+                            {/* Computing-specific specs */}
+                            {key === 'quantity' && 'כמות'}
+                            {key === 'graphics' && 'כרטיס גרפי'}
+                            {key === 'networkCard' && 'כרטיס רשת'}
+                            {key === 'formFactor' && 'גורם צורה'}
+                            {/* Generic specs */}
+                            {key === 'itemName' && 'שם פריט'}
+                            {key === 'category' && 'קטגוריה'}
+                            {key === 'description' && 'תיאור'}
+                            {key === 'estimatedValue' && 'ערך מוערך'}
+                            {key === 'specifications' && 'מפרטים'}
+                            {key === 'deliveryTime' && 'זמן אספקה'}
+                            {key === 'supplier' && 'ספק'}
+                            {key === 'technicalRequirements' && 'דרישות טכניות'}
                           </label>
                           <p className="text-foreground text-sm">{value as string}</p>
                         </div>
