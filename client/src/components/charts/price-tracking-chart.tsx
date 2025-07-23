@@ -34,12 +34,12 @@ export default function PriceTrackingChart({ data }: PriceTrackingChartProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
         <XAxis 
           dataKey="month" 
-          stroke="hsl(var(--muted-foreground))"
-          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+          stroke="#FFFFFF"
+          tick={{ fill: '#FFFFFF' }}
         />
         <YAxis 
-          stroke="hsl(var(--muted-foreground))"
-          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+          stroke="#FFFFFF"
+          tick={{ fill: '#FFFFFF' }}
           tickFormatter={formatCurrency}
         />
         <Tooltip content={<CustomTooltip />} />

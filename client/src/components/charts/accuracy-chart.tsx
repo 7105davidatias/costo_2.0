@@ -32,7 +32,7 @@ export default function AccuracyChart({ data }: AccuracyChartProps) {
               className="w-3 h-3 rounded-full" 
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm text-muted-foreground">{entry.value}</span>
+            <span className="text-sm text-white">{entry.value}</span>
           </div>
         ))}
       </div>

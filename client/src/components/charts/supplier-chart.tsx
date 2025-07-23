@@ -58,12 +58,12 @@ export default function SupplierChart({ data }: SupplierChartProps) {
         <PolarGrid stroke="hsl(var(--muted))" />
         <PolarAngleAxis 
           dataKey="category" 
-          tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+          tick={{ fill: '#FFFFFF', fontSize: 12 }}
         />
         <PolarRadiusAxis 
           angle={90} 
           domain={[0, 100]} 
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+          tick={{ fill: '#E0E0E0', fontSize: 10 }}
         />
         {data.map((supplier, index) => (
           <Radar
@@ -77,7 +77,14 @@ export default function SupplierChart({ data }: SupplierChartProps) {
           />
         ))}
         <Tooltip content={<CustomTooltip />} />
-        <Legend />
+        <Legend 
+          wrapperStyle={{ 
+            fontSize: '12px',
+            direction: 'rtl',
+            textAlign: 'center',
+            color: '#FFFFFF'
+          }}
+        />
       </RadarChart>
     </ResponsiveContainer>
   );

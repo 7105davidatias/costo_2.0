@@ -349,7 +349,7 @@ export default function MarketResearch() {
                 <div className="flex items-start space-x-reverse space-x-3">
                   <Clock className="text-warning mt-1 w-5 h-5" />
                   <div>
-                    <h4 className="font-medium text-foreground mb-1">עיתוי מופטמלי</h4>
+                    <h4 className="font-medium text-foreground mb-1">עיתוי אופטימלי</h4>
                     <p className="text-sm text-muted-foreground">
                       רכישה במרץ 2024 תספק חיסכון מקסימלי של 3-5% נוספים.
                     </p>
