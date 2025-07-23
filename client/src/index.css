@@ -52,6 +52,8 @@
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
   --ring: hsl(207, 90%, 54%);
+  --info: hsl(200, 100%, 70%);
+  --info-foreground: hsl(0, 0%, 98%);
 }
 
 @layer base {
