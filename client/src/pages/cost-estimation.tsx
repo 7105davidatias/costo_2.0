@@ -15,12 +15,14 @@ export default function CostEstimation() {
   const [estimation, setEstimation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Extract selected methods from URL
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
-  const selectedMethodsParam = urlParams.get('methods');
+  // Extract selected methods from URL - use window.location to get full URL with params
+  const fullUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const url = new URL(fullUrl || 'http://localhost:3000/');
+  const selectedMethodsParam = url.searchParams.get('methods');
   const selectedMethods = selectedMethodsParam ? selectedMethodsParam.split(',').filter(m => m.trim()) : [];
   
-  console.log('URL location:', location);
+  console.log('Full URL:', fullUrl);
+  console.log('URL location (wouter):', location);
   console.log('Selected methods param:', selectedMethodsParam);
   console.log('Selected methods array:', selectedMethods);
 
