@@ -18,7 +18,11 @@ export default function CostEstimation() {
   // Extract selected methods from URL
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const selectedMethodsParam = urlParams.get('methods');
-  const selectedMethods = selectedMethodsParam ? selectedMethodsParam.split(',') : [];
+  const selectedMethods = selectedMethodsParam ? selectedMethodsParam.split(',').filter(m => m.trim()) : [];
+  
+  console.log('URL location:', location);
+  console.log('Selected methods param:', selectedMethodsParam);
+  console.log('Selected methods array:', selectedMethods);
 
   const { data: request } = useQuery<ProcurementRequest>({
     queryKey: ["/api/procurement-requests", id],
@@ -28,13 +32,20 @@ export default function CostEstimation() {
   // Calculate dynamic estimation based on selected methods
   useEffect(() => {
     const calculateEstimation = async () => {
-      if (!id || selectedMethods.length === 0) {
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (selectedMethods.length === 0) {
+        console.log('No methods selected, setting loading to false');
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
+        console.log('Calling API with:', { requestId: parseInt(id!), selectedMethods });
         const result = await apiRequest('/api/calculate-estimate', {
           method: 'POST',
           body: {
@@ -42,6 +53,7 @@ export default function CostEstimation() {
             selectedMethods: selectedMethods
           }
         });
+        console.log('API result:', result);
         setEstimation(result);
       } catch (error) {
         console.error('Error calculating estimation:', error);
@@ -50,10 +62,8 @@ export default function CostEstimation() {
       }
     };
 
-    if (id && selectedMethods.length > 0) {
-      calculateEstimation();
-    }
-  }, [id, selectedMethods]);
+    calculateEstimation();
+  }, [id, selectedMethods.join(',')]);
 
   if (isLoading) {
     return (

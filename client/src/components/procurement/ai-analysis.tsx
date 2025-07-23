@@ -233,7 +233,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                   </div>
 
                   {/* Estimation Methods Section */}
-                  {estimationMethods && (
+                  {estimationMethods && estimationMethods.recommendedMethods && (
                     <div className="mt-8 pt-6 border-t border-muted/20">
                       <div className="mb-6">
                         <h5 className="font-medium text-foreground mb-2 flex items-center space-x-reverse space-x-2">
@@ -246,13 +246,13 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                         
                         <div className="bg-info/10 border border-info/30 rounded-lg p-3 mb-4">
                           <div className="text-sm text-muted-foreground">
-                            <strong>סוג הרכש שזוהה:</strong> {estimationMethods.requestType === 'services' ? 'שירותים' : 'מוצרים/טובין'}
+                            <strong>סוג הרכש שזוהה:</strong> {(estimationMethods as any)?.requestType === 'services' ? 'שירותים' : 'מוצרים/טובין'}
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-3 mb-6">
-                        {estimationMethods.recommendedMethods?.map((method: any) => (
+                        {(estimationMethods as any)?.recommendedMethods?.map((method: any) => (
                           <div key={method.id} className="border border-muted/20 rounded-lg p-4 hover:bg-muted/5 transition-colors">
                             <div className="flex items-start space-x-reverse space-x-3">
                               <Checkbox
