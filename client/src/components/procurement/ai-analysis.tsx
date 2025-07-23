@@ -259,10 +259,15 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                                 id={method.id}
                                 checked={selectedMethods.includes(method.id)}
                                 onCheckedChange={(checked) => {
+                                  console.log('Method selection changed:', method.id, checked);
                                   if (checked) {
-                                    setSelectedMethods([...selectedMethods, method.id]);
+                                    const newMethods = [...selectedMethods, method.id];
+                                    console.log('New selected methods:', newMethods);
+                                    setSelectedMethods(newMethods);
                                   } else {
-                                    setSelectedMethods(selectedMethods.filter(id => id !== method.id));
+                                    const newMethods = selectedMethods.filter(id => id !== method.id);
+                                    console.log('New selected methods after removal:', newMethods);
+                                    setSelectedMethods(newMethods);
                                   }
                                 }}
                                 className="mt-1"
@@ -300,6 +305,10 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                           <Button 
                             disabled={selectedMethods.length === 0}
                             className="bg-success text-white hover:bg-success/90"
+                            onClick={() => {
+                              console.log('Button clicked with selected methods:', selectedMethods);
+                              console.log('Generated URL:', `/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`);
+                            }}
                           >
                             <ArrowRight className="w-4 h-4 ml-2" />
                             יצירת אומדן על פי השיטות שנבחרו ({selectedMethods.length})
