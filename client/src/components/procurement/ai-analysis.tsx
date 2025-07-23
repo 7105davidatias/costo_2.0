@@ -99,18 +99,25 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
       ));
     }
     
-    // Analysis completed
+    // Analysis completed - fetch real results from API
+    try {
+      const response = await fetch(`/api/ai-analysis/${requestId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('AI Analysis result:', result);
+        setExtractedSpecs(result.extractedSpecs);
+      }
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+    }
+    
     setAnalysisCompleted(true);
-    setExtractedSpecs({
-      processor: "Intel Xeon Silver 4314 (16 cores)",
-      memory: "64GB DDR4 ECC",
-      storage: "2x 1TB NVMe SSD",
-      network: "4x 1GbE + 2x 10GbE",
-      powerSupply: "750W Redundant",
-      rackUnit: "2U",
-      warrantyPeriod: "3 years",
-      operatingSystem: "Windows Server 2022 / Linux",
-    });
   };
 
   return (
