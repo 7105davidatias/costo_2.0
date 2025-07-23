@@ -296,7 +296,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                             'בחר לפחות שיטה אחת ליצירת אומדן'
                           )}
                         </div>
-                        <Link href={`/cost-estimation/${requestId}`}>
+                        <Link href={`/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`}>
                           <Button 
                             disabled={selectedMethods.length === 0}
                             className="bg-success text-white hover:bg-success/90"

@@ -1,35 +1,69 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";  
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3, ArrowRight, CheckCircle, Edit3, ExternalLink, Database } from "lucide-react";
 import { CostEstimation as CostEstimationType, ProcurementRequest } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useEffect, useState } from "react";
 
 export default function CostEstimation() {
   const { id } = useParams();
+  const [location] = useLocation();
+  const [estimation, setEstimation] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Extract selected methods from URL
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const selectedMethodsParam = urlParams.get('methods');
+  const selectedMethods = selectedMethodsParam ? selectedMethodsParam.split(',') : [];
 
   const { data: request } = useQuery<ProcurementRequest>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
   });
 
-  const { data: estimation, isLoading } = useQuery<CostEstimationType>({
-    queryKey: ["/api/cost-estimates/request", id],
-    enabled: !!id,
-  });
+  // Calculate dynamic estimation based on selected methods
+  useEffect(() => {
+    const calculateEstimation = async () => {
+      if (!id || selectedMethods.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const result = await apiRequest('/api/calculate-estimate', {
+          method: 'POST',
+          body: {
+            requestId: parseInt(id!),
+            selectedMethods: selectedMethods
+          }
+        });
+        setEstimation(result);
+      } catch (error) {
+        console.error('Error calculating estimation:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id && selectedMethods.length > 0) {
+      calculateEstimation();
+    }
+  }, [id, selectedMethods]);
 
   if (isLoading) {
     return (
       <div className="space-y-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {Array(4).fill(0).map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded"></div>
-            ))}
-          </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold mb-2">מחשב אומדן עלות...</h2>
+          <p className="text-muted-foreground">
+            מעבד נתונים באמצעות {selectedMethods.length} שיטות אומדן שנבחרו
+          </p>
         </div>
       </div>
     );
@@ -39,7 +73,12 @@ export default function CostEstimation() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-4">אומדן עלות לא נמצא</h2>
-        <p className="text-muted-foreground mb-6">אומדן עלות עדיין לא נוצר עבור בקשה זו</p>
+        <p className="text-muted-foreground mb-6">
+          {selectedMethods.length === 0 ? 
+            'לא נבחרו שיטות אומדן. אנא חזור לשלב הקודם ובחר שיטות אומדן' :
+            'אומדן עלות עדיין לא נוצר עבור בקשה זו'
+          }
+        </p>
         <div className="flex gap-4 justify-center">
           <Link href={`/procurement-request/${id}`}>
             <Button variant="outline">חזור לדרישת רכש</Button>
@@ -61,8 +100,8 @@ export default function CostEstimation() {
     }).format(value);
   };
 
-  const savingsPercentage = estimation.marketPrice ? 
-    ((parseFloat(estimation.marketPrice) - parseFloat(estimation.totalCost)) / parseFloat(estimation.marketPrice) * 100) : 0;
+  const savingsPercentage = estimation.marketComparison?.marketPrice ? 
+    ((estimation.marketComparison.marketPrice - estimation.finalEstimate.amount) / estimation.marketComparison.marketPrice * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -79,7 +118,7 @@ export default function CostEstimation() {
             <h1 className="text-3xl font-bold text-foreground">תוצאות אומדן עלות</h1>
           </div>
           <p className="text-muted-foreground">
-            אומדן מפורט עבור {request.itemName} - {request.requestNumber}
+            אומדן מפורט עבור {estimation.requestDetails.title} - {estimation.requestDetails.requestNumber}
           </p>
         </div>
         <div className="flex space-x-reverse space-x-4">
@@ -97,27 +136,33 @@ export default function CostEstimation() {
       {/* Cost Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-2 bg-gradient-to-r from-primary to-secondary p-8 rounded-xl text-primary-foreground">
-          <h3 className="text-2xl font-bold mb-2">הערכה סופית</h3>
-          <p className="text-5xl font-bold mb-4">{formatCurrency(estimation.totalCost)}</p>
+          <h3 className="text-2xl font-bold mb-2">אומדן סופי</h3>
+          <p className="text-5xl font-bold mb-4">{formatCurrency(estimation.finalEstimate.amount)}</p>
           <div className="flex items-center space-x-reverse space-x-2 flex-wrap gap-2">
             <Badge variant="secondary" className="bg-white/20 text-inherit">
-              רמת ביטחון: {estimation.confidenceLevel}%
+              רמת ביטחון: {estimation.finalEstimate.confidence}%
             </Badge>
             {savingsPercentage > 0 && (
               <Badge variant="secondary" className="bg-white/20 text-inherit">
                 חיסכון: {savingsPercentage.toFixed(1)}%
               </Badge>
             )}
+            <Badge variant="secondary" className="bg-white/20 text-inherit">
+              {estimation.methodResults.length} שיטות אומדן
+            </Badge>
           </div>
+          <p className="mt-3 text-sm text-white/80">
+            {estimation.finalEstimate.methodology}
+          </p>
         </div>
         
         <Card className="bg-card border-success/20">
           <CardContent className="p-6">
             <h4 className="text-lg font-semibold text-foreground mb-2">מחיר ממוצע בשוק</h4>
             <p className="text-2xl font-bold text-success">
-              {estimation.marketPrice ? formatCurrency(estimation.marketPrice) : 'לא זמין'}
+              {estimation.marketComparison?.marketPrice ? formatCurrency(estimation.marketComparison.marketPrice) : 'לא זמין'}
             </p>
-            <p className="text-sm text-muted-foreground mt-2">על בסיס 15 ספקים</p>
+            <p className="text-sm text-muted-foreground mt-2">מיקום: {estimation.marketComparison?.pricePosition || 'לא זמין'}</p>
           </CardContent>
         </Card>
         
@@ -125,7 +170,7 @@ export default function CostEstimation() {
           <CardContent className="p-6">
             <h4 className="text-lg font-semibold text-foreground mb-2">חיסכון פוטנציאלי</h4>
             <p className="text-2xl font-bold text-warning">
-              {estimation.potentialSavings ? formatCurrency(estimation.potentialSavings) : '₪0'}
+              {estimation.marketComparison?.savings ? formatCurrency(estimation.marketComparison.savings) : '₪0'}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               {savingsPercentage.toFixed(1)}% מהמחיר הממוצע
@@ -134,55 +179,87 @@ export default function CostEstimation() {
         </Card>
       </div>
 
-      {/* Detailed Justification Table */}
+      {/* Estimation Methods Breakdown */}
       <Card className="bg-card border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center space-x-reverse space-x-2">
             <Calculator className="text-primary w-5 h-5" />
-            <span>טבלת הצדקה מפורטת</span>
+            <span>פירוט שיטות האומדן</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {estimation.breakdown.map((method: any, index: number) => (
+            <div key={index} className="border border-muted/20 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">{method.method}</h4>
+                <div className="flex items-center space-x-reverse space-x-3">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    ביטחון: {method.confidence}%
+                  </Badge>
+                  <span className="text-lg font-bold text-primary">
+                    {formatCurrency(method.estimate)}
+                  </span>
+                </div>
+              </div>
+              
+              {method.breakdown && method.breakdown.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/10">
+                      <tr>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">רכיב</th>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">פירוט</th>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">עלות</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-muted/10">
+                      {method.breakdown.map((item: any, itemIndex: number) => (
+                        <tr key={itemIndex} className="hover:bg-muted/5">
+                          <td className="px-4 py-2 font-medium">
+                            {item.component || item.parameter || item.name || item.scenario}
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            {item.description || 
+                             (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
+                             (item.quantity && `${item.quantity} ${item.unit}`) ||
+                             item.probability || 
+                             item.value}
+                          </td>
+                          <td className="px-4 py-2 font-medium">
+                            {formatCurrency(item.cost || item.totalCost || item.estimate)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* AI Recommendations */}
+      <Card className="bg-card border-info/20">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-reverse space-x-2">
+            <Lightbulb className="text-info w-5 h-5" />
+            <span>המלצות AI</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/20">
-                <tr>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">משתנה</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">ערך</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">מקור</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">רמת ביטחון</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">השפעה על מחיר</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-muted/20">
-                {Array.isArray(estimation.justifications) && estimation.justifications.map((justification: any, index) => (
-                  <tr key={index} className="hover:bg-muted/10">
-                    <td className="px-6 py-4 text-sm text-foreground font-medium">{justification.variable}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{justification.value}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{justification.source}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-reverse space-x-2">
-                        <div className="w-16 bg-muted rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${justification.confidence >= 90 ? 'bg-success' : justification.confidence >= 70 ? 'bg-warning' : 'bg-destructive'}`}
-                            style={{ width: `${justification.confidence}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{justification.confidence}%</span>
-                      </div>
-                    </td>
-                    <td className={`px-6 py-4 text-sm font-medium ${justification.impact.startsWith('+') ? 'text-destructive' : 'text-success'}`}>
-                      {justification.impact}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {estimation.recommendations.map((recommendation: string, index: number) => (
+              <div key={index} className="flex items-start space-x-reverse space-x-3 p-3 bg-info/5 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-info mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-foreground">{recommendation}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Market Insights and AI Recommendations */}
+      {/* Method Details and Assumptions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Market Insights Panel */}
         <Card className="bg-card border-secondary/20">

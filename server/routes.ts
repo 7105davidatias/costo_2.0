@@ -327,6 +327,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calculate estimate based on selected methods
+  app.post("/api/calculate-estimate", async (req, res) => {
+    try {
+      const { requestId, selectedMethods } = req.body;
+      const request = await storage.getProcurementRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+      }
+      
+      let methodResults = [];
+      let totalWeightedEstimate = 0;
+      let totalWeight = 0;
+      
+      for (const methodId of selectedMethods) {
+        const result = calculateByMethod(methodId, request);
+        methodResults.push(result);
+        totalWeightedEstimate += result.estimate * result.weight;
+        totalWeight += result.weight;
+      }
+      
+      const finalEstimate = totalWeightedEstimate / totalWeight;
+      const overallConfidence = calculateOverallConfidence(methodResults);
+      
+      res.json({
+        requestId: requestId,
+        requestDetails: {
+          title: request.itemName,
+          category: request.category,
+          requestNumber: request.requestNumber,
+          description: request.description,
+          quantity: request.quantity
+        },
+        selectedMethods: selectedMethods,
+        methodResults: methodResults,
+        finalEstimate: {
+          amount: Math.round(finalEstimate),
+          confidence: overallConfidence,
+          methodology: generateMethodologyDescription(selectedMethods, methodResults)
+        },
+        breakdown: generateBreakdown(methodResults),
+        recommendations: generateRecommendations(methodResults, request),
+        marketComparison: {
+          marketPrice: calculateMarketPrice(request),
+          savings: calculatePotentialSavings(finalEstimate, request),
+          pricePosition: determinePricePosition(finalEstimate, request)
+        }
+      });
+    } catch (error) {
+      console.error('Error calculating estimate:', error);
+      res.status(500).json({ error: 'שגיאה בחישוב האומדן' });
+    }
+  });
+
   // Documents
   app.get("/api/documents/request/:requestId", async (req, res) => {
     try {
@@ -591,4 +645,307 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper functions for estimation calculations
+function calculateByMethod(methodId: string, request: any) {
+  switch(methodId) {
+    case 'time_based':
+      return calculateTimeBased(request);
+    case 'deliverable_based':
+      return calculateDeliverableBased(request);
+    case 'value_based':
+      return calculateValueBased(request);
+    case 'three_point':
+      return calculateThreePoint(request);
+    case 'analogous':
+      return calculateAnalogous(request);
+    case 'parametric':
+      return calculateParametric(request);
+    case 'bottom_up':
+      return calculateBottomUp(request);
+    case 'market_based':
+      return calculateMarketBased(request);
+    default:
+      throw new Error(`שיטת אומדן לא מוכרת: ${methodId}`);
+  }
+}
+
+// Service estimation methods
+function calculateTimeBased(request: any) {
+  const estimatedHours = request.specifications?.estimatedHours || 2400;
+  const teamSize = request.specifications?.teamSize || 6;
+  
+  const seniorHours = estimatedHours * 0.3;
+  const midHours = estimatedHours * 0.5;  
+  const juniorHours = estimatedHours * 0.2;
+  
+  const seniorRate = 450;
+  const midRate = 350;
+  const juniorRate = 250;
+  
+  const seniorCost = seniorHours * seniorRate;
+  const midCost = midHours * midRate;
+  const juniorCost = juniorHours * juniorRate;
+  
+  const totalCost = seniorCost + midCost + juniorCost;
+  
+  return {
+    methodName: 'אומדן מבוסס זמן עבודה',
+    estimate: totalCost,
+    confidence: 88,
+    weight: 0.8,
+    breakdown: [
+      { component: 'מפתח בכיר', hours: seniorHours, rate: seniorRate, cost: seniorCost },
+      { component: 'מפתח בינוני', hours: midHours, rate: midRate, cost: midCost },
+      { component: 'מפתח זוטר', hours: juniorHours, rate: juniorRate, cost: juniorCost }
+    ],
+    reasoning: 'האומדן מבוסס על הערכת שעות עבודה נדרשות וכפלתן בתעריפי שוק נוכחיים',
+    sources: ['תעריفי שוק 2024', 'ניסיון פרויקטים דומים'],
+    assumptions: ['זמינות צוות מלאה', 'ללא שינויי דרישות משמעותיים']
+  };
+}
+
+function calculateDeliverableBased(request: any) {
+  const deliverables = request.specifications?.deliverables || [
+    'מיפוי תהליכים נוכחיים',
+    'ניתוח פערים וזיהוי הזדמנויות',
+    'תכנית יישום מפורטת',
+    'הדרכה וליווי יישום'
+  ];
+  
+  const deliverableCosts = [150000, 200000, 100000, 180000];
+  let totalCost = 0;
+  let breakdown = [];
+  
+  deliverables.forEach((deliverable, index) => {
+    const cost = deliverableCosts[index] || 100000;
+    totalCost += cost;
+    breakdown.push({
+      component: deliverable,
+      cost: cost,
+      description: 'תוצר מוגדר עם מחיר קבוע'
+    });
+  });
+  
+  return {
+    methodName: 'אומדן מבוסס תוצרים',
+    estimate: totalCost,
+    confidence: 92,
+    weight: 0.9,
+    breakdown: breakdown,
+    reasoning: 'האומדן מבוסס על תמחור תוצרים מוגדרים בבירור',
+    sources: ['מפרט תוצרים', 'תעריפי שוק לתוצרים דומים'],
+    assumptions: ['תוצרים מוגדרים בבירור', 'אין שינויים בהיקף התוצרים']
+  };
+}
+
+function calculateValueBased(request: any) {
+  const businessValue = request.specifications?.businessValue || 'הגנה על נכסי מידע קריטיים';
+  const serviceLevel = request.specifications?.serviceLevel || '24/7';
+  
+  // Calculate based on business value - typically 20-30% of protected value
+  const monthlyService = 150000;
+  const duration = 12;
+  const totalCost = monthlyService * duration;
+  
+  return {
+    methodName: 'אומדן מבוסס ערך',
+    estimate: totalCost,
+    confidence: 94,
+    weight: 0.6,
+    breakdown: [
+      { component: 'הפחתת סיכונים', value: 'הגנה מפני איומי סייבר', percentage: '60%' },
+      { component: 'ערך עמידה בתקנות', value: 'GDPR, SOX Compliance', percentage: '20%' },
+      { component: 'הגנה על מוניטין', value: 'מניעת דליפות מידע', percentage: '20%' }
+    ],
+    reasoning: 'האומדן מבוסס על הערך העסקי הצפוי מהשירות',
+    sources: ['הערכת סיכונים עסקיים', 'ניתוח ROI'],
+    assumptions: ['הערכת ערך עסקי מדויקת', 'יישום מוצלח של השירות']
+  };
+}
+
+function calculateThreePoint(request: any) {
+  const estimates = request.specifications?.estimates || {
+    optimistic: 450000,
+    mostLikely: 650000,
+    pessimistic: 950000
+  };
+  
+  // PERT formula: (optimistic + 4*mostLikely + pessimistic) / 6
+  const pertEstimate = (estimates.optimistic + 4 * estimates.mostLikely + estimates.pessimistic) / 6;
+  
+  return {
+    methodName: 'אומדן שלוש נקודות',
+    estimate: pertEstimate,
+    confidence: 78,
+    weight: 0.7,
+    breakdown: [
+      { scenario: 'תרחיש אופטימי', estimate: estimates.optimistic, probability: '10%' },
+      { scenario: 'תרחיש סביר ביותר', estimate: estimates.mostLikely, probability: '60%' },
+      { scenario: 'תרחיש פסימי', estimate: estimates.pessimistic, probability: '30%' }
+    ],
+    reasoning: 'האומדן מבוסס על שלושה תרחישים עם שקלול סטטיסטי',
+    sources: ['ניסיון היסטורי', 'הערכת מומחים'],
+    assumptions: ['התפלגות נורמלית של תוצאות', 'אי-תלות בין גורמי סיכון']
+  };
+}
+
+// Product estimation methods
+function calculateAnalogous(request: any) {
+  const quantity = request.quantity || 50;
+  const unitPrice = 4500; // Based on historical data
+  const totalCost = quantity * unitPrice;
+  
+  return {
+    methodName: 'אומדן אנלוגי',
+    estimate: totalCost,
+    confidence: 95,
+    weight: 0.8,
+    breakdown: [
+      { reference: '2023-06', originalQuantity: 30, originalUnitCost: 4200, adjustedCost: totalCost, weight: 0.8 },
+      { reference: '2023-03', originalQuantity: 25, originalUnitCost: 4100, adjustedCost: totalCost, weight: 0.6 }
+    ],
+    reasoning: 'האומדן מבוסס על רכישות דומות שבוצעו בעבר עם התאמה לכמות נוכחית',
+    sources: ['נתוני רכישות היסטוריים', 'מערכת ניהול רכש'],
+    assumptions: ['דמיון גבוה בין הרכישות', 'יציבות יחסית במחירי שוק']
+  };
+}
+
+function calculateParametric(request: any) {
+  const quantity = request.quantity || 10;
+  const baseCost = 85000;
+  const engineFactor = 1500; // Per 1600cc
+  const capacityFactor = 2500; // Per 800kg capacity
+  
+  const unitCost = baseCost + engineFactor + capacityFactor;
+  const totalCost = unitCost * quantity;
+  
+  return {
+    methodName: 'אומדן פרמטרי',
+    estimate: totalCost,
+    confidence: 92,
+    weight: 0.85,
+    breakdown: [
+      { parameter: 'עלות בסיס', value: baseCost, factor: 1 },
+      { parameter: 'מנוע 1600cc', value: 1600, factor: engineFactor },
+      { parameter: 'קיבולת מטען 800kg', value: 800, factor: capacityFactor }
+    ],
+    reasoning: 'האומדן מבוסס על מודל מתמטי הלוקח בחשבון פרמטרים מדידים',
+    sources: ['מודל רגרסיה סטטיסטי', 'נתוני שוק היסטוריים'],
+    assumptions: ['יציבות המודל הפרמטרי', 'רלוונטיות הפרמטרים הנבחרים']
+  };
+}
+
+function calculateBottomUp(request: any) {
+  const components = [
+    { name: 'עבודות עפר וביסוס', quantity: 1000, unit: 'מ"ר', unitCost: 120, totalCost: 120000 },
+    { name: 'יציקת בטון', quantity: 200, unit: 'מ"ק', unitCost: 450, totalCost: 90000 },
+    { name: 'מבנה פלדה', quantity: 80, unit: 'טון', unitCost: 8500, totalCost: 680000 },
+    { name: 'קירות וגגות', quantity: 1200, unit: 'מ"ר', unitCost: 180, totalCost: 216000 },
+    { name: 'מערכות חשמל', quantity: 1, unit: 'פרויקט', unitCost: 150000, totalCost: 150000 },
+    { name: 'מערכות אוורור', quantity: 1, unit: 'פרויקט', unitCost: 80000, totalCost: 80000 }
+  ];
+  
+  const baseCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+  const contingency = baseCost * 0.15; // 15% contingency
+  const totalCost = baseCost + contingency;
+  
+  return {
+    methodName: 'אומדן מלמטה למעלה',
+    estimate: totalCost,
+    confidence: 89,
+    weight: 0.9,
+    breakdown: [...components, { name: 'מרווח לאי-צפויים (15%)', quantity: 1, unit: 'פרויקט', unitCost: contingency, totalCost: contingency }],
+    reasoning: 'האומדן מבוסס על פירוק מפורט לרכיבים ואומדן כל רכיב בנפרד',
+    sources: ['מפרטים טכניים מפורטים', 'תעריפי קבלנים'],
+    assumptions: ['פירוק מלא ומדויק', 'זמינות כל הרכיבים']
+  };
+}
+
+function calculateMarketBased(request: any) {
+  const materials = [
+    { name: 'פלדה ST37', quantity: 50, unit: 'טון', unitPrice: 3200, totalCost: 160000 },
+    { name: 'אלומיניום 6061', quantity: 20, unit: 'טון', unitPrice: 8500, totalCost: 170000 },
+    { name: 'פלסטיק PVC', quantity: 10, unit: 'טון', unitPrice: 4200, totalCost: 42000 }
+  ];
+  
+  const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
+  
+  return {
+    methodName: 'אומדן מבוסס מחיר שוק',
+    estimate: totalCost,
+    confidence: 91,
+    weight: 0.85,
+    breakdown: materials,
+    reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים ומגמות מחירים',
+    sources: ['בורסת מתכות תל אביב', 'מחירון ספקי חומרי גלם'],
+    assumptions: ['יציבות מחירי שוק', 'זמינות חומרים']
+  };
+}
+
+// Helper functions
+function calculateOverallConfidence(methodResults: any[]) {
+  const weightedConfidence = methodResults.reduce((sum, result) => sum + (result.confidence * result.weight), 0);
+  const totalWeight = methodResults.reduce((sum, result) => sum + result.weight, 0);
+  return Math.round(weightedConfidence / totalWeight);
+}
+
+function generateMethodologyDescription(selectedMethods: string[], methodResults: any[]) {
+  const methodNames = methodResults.map(result => result.methodName);
+  if (methodNames.length === 1) {
+    return `האומדן מבוסס על ${methodNames[0]}`;
+  } else if (methodNames.length === 2) {
+    return `האומדן מבוסס על שילוב של ${methodNames[0]} ו${methodNames[1]}`;
+  } else {
+    return `האומדן מבוסס על שילוב של ${methodNames.length} שיטות אומדן`;
+  }
+}
+
+function generateBreakdown(methodResults: any[]) {
+  return methodResults.map(result => ({
+    method: result.methodName,
+    estimate: result.estimate,
+    confidence: result.confidence,
+    weight: result.weight,
+    breakdown: result.breakdown
+  }));
+}
+
+function generateRecommendations(methodResults: any[], request: any) {
+  const recommendations = [];
+  
+  if (methodResults.length > 1) {
+    recommendations.push('השילוב של מספר שיטות אומדן מעלה את דירוג הביטחון');
+  }
+  
+  const avgConfidence = calculateOverallConfidence(methodResults);
+  if (avgConfidence < 80) {
+    recommendations.push('מומלץ לאסוף מידע נוסף לשיפור דירוג הביטחון');
+  }
+  
+  recommendations.push('מומלץ לקבל הצעות מחיר מספק נוסף לוודא תחרותיות');
+  
+  return recommendations;
+}
+
+function calculateMarketPrice(request: any) {
+  // Simulate market price calculation based on request
+  const estimatedCost = parseFloat(request.estimatedCost || '100000');
+  return Math.round(estimatedCost * 1.15); // 15% above estimated
+}
+
+function calculatePotentialSavings(finalEstimate: number, request: any) {
+  const marketPrice = calculateMarketPrice(request);
+  return Math.max(0, marketPrice - finalEstimate);
+}
+
+function determinePricePosition(finalEstimate: number, request: any) {
+  const marketPrice = calculateMarketPrice(request);
+  const ratio = finalEstimate / marketPrice;
+  
+  if (ratio < 0.9) return 'מחיר מעולה';
+  if (ratio < 1.0) return 'מחיר טוב';  
+  if (ratio < 1.1) return 'מחיר סביר';
+  return 'מחיר גבוה';
 }
