@@ -194,6 +194,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get estimation methods for a request
+  app.get("/api/estimation-methods/:id", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const request = await storage.getProcurementRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ message: 'Procurement request not found' });
+      }
+      
+      // Helper function to determine request type
+      const determineRequestType = (request: any) => {
+        const description = request.itemName?.toLowerCase() || '';
+        const category = request.category?.toLowerCase() || '';
+        
+        // Check if it's services based on keywords
+        if (description.includes('שירות') || description.includes('יעוץ') || 
+            description.includes('תמיכה') || description.includes('פיתוח') ||
+            category.includes('שירות') || category.includes('יעוץ')) {
+          return 'services';
+        }
+        
+        return 'products';
+      };
+
+      // Helper functions for AI analysis
+      const getComplexityScore = (request: any) => {
+        const quantity = parseInt(request.quantity) || 1;
+        const descLength = request.itemName?.length || 0;
+        
+        if (quantity > 100 || descLength > 100) return 'high';
+        if (quantity > 10 || descLength > 50) return 'medium';
+        return 'low';
+      };
+
+      const getUncertaintyLevel = (request: any) => {
+        const hasSpecs = request.specifications && request.specifications.length > 0;
+        return hasSpecs ? 'low' : 'medium';
+      };
+
+      const getDataAvailability = (request: any) => {
+        const hasCategory = request.category && request.category.length > 0;
+        const hasSpecs = request.specifications && request.specifications.length > 0;
+        
+        if (hasCategory && hasSpecs) return 'high';
+        if (hasCategory || hasSpecs) return 'medium';
+        return 'low';
+      };
+
+      // Determine request type based on category or item description
+      const requestType = determineRequestType(request);
+      
+      let methods = [];
+      
+      if (requestType === 'services') {
+        methods = [
+          {
+            id: 'time_based',
+            method: 'אומדן מבוסס זמן עבודה',
+            suitability: 85,
+            description: 'מתאים לשירותים עם הגדרה ברורה של שעות עבודה',
+            explanation: 'שיטה זו מתבססת על הערכת כמות שעות העבודה הנדרשות וכפלתן בתעריף שעתי'
+          },
+          {
+            id: 'deliverable_based',
+            method: 'אומדן מבוסס תוצרים',
+            suitability: 70,
+            description: 'מתאים לשירותים עם תוצרים מוגדרים בבירור',
+            explanation: 'שיטה זו מתבססת על הגדרת תוצרים ספציפיים ותמחור כל תוצר בנפרד'
+          },
+          {
+            id: 'value_based',
+            method: 'אומדן מבוסס ערך',
+            suitability: 60,
+            description: 'מתאים לשירותים אסטרטגיים בעלי ערך עסקי גבוה',
+            explanation: 'שיטה זו מתבססת על הערך העסקי הצפוי מהשירות'
+          },
+          {
+            id: 'three_point',
+            method: 'אומדן שלוש נקודות',
+            suitability: 92,
+            description: 'מתאים לשירותים מורכבים עם רמת אי-ודאות גבוהה',
+            explanation: 'שיטה זו משתמשת בשלושה אומדנים: אופטימי, פסימי וסביר ביותר'
+          }
+        ];
+      } else {
+        methods = [
+          {
+            id: 'analogous',
+            method: 'אומדן אנלוגי',
+            suitability: 85,
+            description: 'מתאים לרכש דומה שבוצע בעבר',
+            explanation: 'שיטה זו מתבססת על נתוני עלות מרכישות דומות שבוצעו בעבר'
+          },
+          {
+            id: 'parametric',
+            method: 'אומדן פרמטרי',
+            suitability: 70,
+            description: 'מתאים לרכש עם פרמטרים מדידים וקשר סטטיסטי ידוע',
+            explanation: 'שיטה זו משתמשת במודלים מתמטיים המבוססים על פרמטרים מדידים'
+          },
+          {
+            id: 'bottom_up',
+            method: 'אומדן מלמטה למעלה',
+            suitability: 78,
+            description: 'מתאים לרכש מורכב הניתן לפירוק לרכיבים',
+            explanation: 'שיטה זו מפרקת את הרכש לרכיבים קטנים ומעריכה כל רכיב בנפרד'
+          },
+          {
+            id: 'market_based',
+            method: 'אומדן מבוסס מחיר שוק',
+            suitability: 88,
+            description: 'מתאים לרכש סטנדרטי עם מחירי שוק זמינים',
+            explanation: 'שיטה זו מתבססת על מחירי שוק נוכחיים ומגמות מחירים'
+          }
+        ];
+      }
+      
+      res.json({
+        requestId: requestId,
+        requestType: requestType,
+        recommendedMethods: methods,
+        aiAnalysis: {
+          complexity: getComplexityScore(request),
+          uncertainty: getUncertaintyLevel(request),
+          dataAvailability: getDataAvailability(request)
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch estimation methods" });
+    }
+  });
+
   // Documents
   app.get("/api/documents/request/:requestId", async (req, res) => {
     try {

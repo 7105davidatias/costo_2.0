@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Play, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Bot, Play, CheckCircle, AlertCircle, Zap, Calculator, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import ProgressIndicator from '@/components/ui/progress-indicator';
 
 interface AIAnalysisProps {
@@ -25,6 +28,13 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<string>('');
   const [extractedSpecs, setExtractedSpecs] = useState<any>(null);
+  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+
+  // Fetch estimation methods when analysis is completed
+  const { data: estimationMethods } = useQuery({
+    queryKey: ['/api/estimation-methods', requestId],
+    enabled: analysisCompleted,
+  });
 
   const [steps, setSteps] = useState<AnalysisStep[]>([
     {
@@ -221,6 +231,83 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                       </div>
                     </div>
                   </div>
+
+                  {/* Estimation Methods Section */}
+                  {estimationMethods && (
+                    <div className="mt-8 pt-6 border-t border-muted/20">
+                      <div className="mb-6">
+                        <h5 className="font-medium text-foreground mb-2 flex items-center space-x-reverse space-x-2">
+                          <Calculator className="w-4 h-4 text-primary" />
+                          <span>שיטות אומדן מומלצות</span>
+                        </h5>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          בחר שיטה אחת או יותר לחישוב האומדן בהתאם לסוג הרכש ומאפייני הבקשה
+                        </p>
+                        
+                        <div className="bg-info/10 border border-info/30 rounded-lg p-3 mb-4">
+                          <div className="text-sm text-muted-foreground">
+                            <strong>סוג הרכש שזוהה:</strong> {estimationMethods.requestType === 'services' ? 'שירותים' : 'מוצרים/טובין'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mb-6">
+                        {estimationMethods.recommendedMethods?.map((method: any) => (
+                          <div key={method.id} className="border border-muted/20 rounded-lg p-4 hover:bg-muted/5 transition-colors">
+                            <div className="flex items-start space-x-reverse space-x-3">
+                              <Checkbox
+                                id={method.id}
+                                checked={selectedMethods.includes(method.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedMethods([...selectedMethods, method.id]);
+                                  } else {
+                                    setSelectedMethods(selectedMethods.filter(id => id !== method.id));
+                                  }
+                                }}
+                                className="mt-1"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-2">
+                                  <label htmlFor={method.id} className="font-medium text-foreground cursor-pointer">
+                                    {method.method}
+                                  </label>
+                                  <Badge variant="outline" className="text-xs">
+                                    {method.suitability}% התאמה
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-1">
+                                  {method.description}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {method.explanation}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-between items-center pt-4 border-t border-muted/20">
+                        <div className="text-sm text-muted-foreground">
+                          {selectedMethods.length > 0 ? (
+                            `נבחרו ${selectedMethods.length} שיטות אומדן`
+                          ) : (
+                            'בחר לפחות שיטה אחת ליצירת אומדן'
+                          )}
+                        </div>
+                        <Link href={`/cost-estimation/${requestId}`}>
+                          <Button 
+                            disabled={selectedMethods.length === 0}
+                            className="bg-success text-white hover:bg-success/90"
+                          >
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                            יצירת אומדן על פי השיטות שנבחרו ({selectedMethods.length})
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
