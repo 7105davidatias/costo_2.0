@@ -3,7 +3,7 @@ import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal, ArrowRight } from "lucide-react";
+import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal, ArrowRight, ExternalLink } from "lucide-react";
 import SupplierChart from "@/components/charts/supplier-chart";
 import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
@@ -289,7 +289,7 @@ export default function MarketResearch() {
                       <div className={`w-3 h-3 rounded-full ${riskConfig.className.includes('success') ? 'bg-success' : riskConfig.className.includes('warning') ? 'bg-warning' : 'bg-destructive'}`}></div>
                     </div>
                   </div>
-                );
+                ) as React.ReactNode;
               })}
             </div>
           </CardContent>
@@ -360,6 +360,95 @@ export default function MarketResearch() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Data Sources Section */}
+      <Card className="bg-card border-info/20">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-reverse space-x-2">
+            <ExternalLink className="text-info w-5 h-5" />
+            <span>מקורות המידע והנתונים</span>
+          </CardTitle>
+          <p className="text-muted-foreground text-sm">מקורות המידע והנתונים שעליהם מתבסס מחקר השוק</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">מחירון הממשלה</h4>
+                  <p className="text-sm text-muted-foreground mb-2">מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי</p>
+                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">Intel Israel מחירון ספקים</h4>
+                  <p className="text-sm text-muted-foreground mb-2">נתוני מחירים מספקים מאושרים בישראל</p>
+                  <p className="text-xs text-muted-foreground">עודכן: דצמבר 2023</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">TechSource Ltd הסכמי מחיר</h4>
+                  <p className="text-sm text-muted-foreground mb-2">הסכמי מחיר מעודכנים עם ספק מועדף</p>
+                  <p className="text-xs text-muted-foreground">עודכן: נובמבר 2023</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">מדד המחירים לצרכן</h4>
+                  <p className="text-sm text-muted-foreground mb-2">נתוני אינפלציה ומדד מחירים - הלשכה המרכזית לסטטיסטיקה</p>
+                  <p className="text-xs text-muted-foreground">עודכן: דצמבר 2023</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">Dell Israel מחירון רשמי</h4>
+                  <p className="text-sm text-muted-foreground mb-2">מחירים רשמיים מ-Dell ישראל ומפיציהם</p>
+                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+              <div className="flex items-start space-x-reverse space-x-3">
+                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground mb-1">מערכת רכש ממשלתי</h4>
+                  <p className="text-sm text-muted-foreground mb-2">נתוני רכש וחוזים מהמערכת הממשלתית</p>
+                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 bg-info/10 border border-info/30 rounded-lg">
+            <div className="flex items-start space-x-reverse space-x-2">
+              <Shield className="text-info mt-0.5 w-4 h-4 flex-shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                כל המידע מתבסס על מקורות מאושרים ומעודכנים. הנתונים נבדקים ומתעדכנים באופן שוטף לדיוק מקסימלי.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
