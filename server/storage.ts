@@ -196,6 +196,208 @@ export class MemStorage implements IStorage {
         createdAt: new Date("2024-01-20"),
         updatedAt: new Date("2024-01-20"),
       },
+      // New diverse procurement requests for testing estimation methods
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-010",
+        itemName: "פיתוח מערכת ניהול משאבי אנוש",
+        description: "פיתוח מערכת ניהול משאבי אנוש מקיפה הכוללת ניהול עובדים, נוכחות, שכר, גיוס ופיתוח עובדים",
+        category: "שירותים",
+        quantity: 1,
+        priority: "medium",
+        targetDate: new Date("2024-10-15"),
+        requestedBy: "דני כהן",
+        department: "משאבי אנוש",
+        status: "new",
+        estimatedCost: "960000",
+        specifications: {
+          estimatedHours: 2400,
+          teamSize: 6,
+          duration: "8 חודשים",
+          technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
+          complexity: "גבוהה",
+          riskLevel: "בינוני"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-25"),
+        updatedAt: new Date("2024-01-25"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-011",
+        itemName: "ייעוץ אסטרטגי לשיפור תהליכים",
+        description: "ייעוץ אסטרטגי לשיפור תהליכים עסקיים ויעילות ארגונית",
+        category: "שירותים",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-08-15"),
+        requestedBy: "מיכל לוי",
+        department: "הנהלה",
+        status: "new",
+        estimatedCost: "630000",
+        specifications: {
+          deliverables: [
+            "מיפוי תהליכים נוכחיים",
+            "ניתוח פערים וזיהוי הזדמנויות", 
+            "תכנית יישום מפורטת",
+            "הדרכה וליווי יישום"
+          ],
+          duration: "6 חודשים",
+          consultantLevel: "senior",
+          complexity: "גבוהה"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-26"),
+        updatedAt: new Date("2024-01-26"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-012",
+        itemName: "שירותי אבטחת מידע ו-SOC",
+        description: "שירותי ניטור אבטחה 24/7, ניהול אירועי אבטחה ותגובה לאירועים",
+        category: "שירותים",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-12-31"),
+        requestedBy: "אבי רוזן",
+        department: "IT",
+        status: "new",
+        estimatedCost: "2400000",
+        specifications: {
+          serviceLevel: "24/7",
+          coverage: "מלא",
+          responseTime: "15 דקות",
+          duration: "12 חודשים",
+          businessValue: "הגנה על נכסי מידע קריטיים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-27"),
+        updatedAt: new Date("2024-01-27"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-013",
+        itemName: "תחזוקה שנתית למערכות IT",
+        description: "תחזוקה מונעת ותיקונית למערכות IT, שרתים, רשת ותוכנות",
+        category: "שירותים",
+        quantity: 1,
+        priority: "medium",
+        targetDate: new Date("2024-12-31"),
+        requestedBy: "רונית ברק",
+        department: "IT",
+        status: "new",
+        estimatedCost: "650000",
+        specifications: {
+          uncertainty: "גבוהה",
+          variableFactors: ["כמות תקלות", "זמינות טכנאים", "מורכבות תיקונים"],
+          duration: "12 חודשים",
+          systemsCount: 45,
+          estimates: {
+            optimistic: 450000,
+            mostLikely: 650000,
+            pessimistic: 950000
+          }
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-28"),
+        updatedAt: new Date("2024-01-28"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-014",
+        itemName: "רכש 50 מחשבי עבודה",
+        description: "רכש 50 מחשבי עבודה למשרדי החברה החדשים",
+        category: "מוצרים",
+        quantity: 50,
+        priority: "medium",
+        targetDate: new Date("2024-06-15"),
+        requestedBy: "יוסי אברהם",
+        department: "משאבי אנוש",
+        status: "new",
+        estimatedCost: "225000",
+        specifications: {
+          processor: "Intel i7 או AMD Ryzen 7",
+          ram: "16GB",
+          storage: "512GB SSD",
+          graphics: "מובנה",
+          warranty: "3 שנים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-29"),
+        updatedAt: new Date("2024-01-29"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-015",
+        itemName: "רכש 10 רכבי צי",
+        description: "רכש 10 רכבי מסחרי קלים לצי החברה",
+        category: "מוצרים",
+        quantity: 10,
+        priority: "medium",
+        targetDate: new Date("2024-09-15"),
+        requestedBy: "עמית שמעון",
+        department: "לוגיסטיקה",
+        status: "new",
+        estimatedCost: "890000",
+        specifications: {
+          vehicleType: "מסחרי קל",
+          engineSize: 1600,
+          fuelType: "בנזין",
+          cargoCapacity: 800,
+          seatingCapacity: 2,
+          expectedMileage: 100000
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-30"),
+        updatedAt: new Date("2024-01-30"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-016",
+        itemName: "בניית מחסן חדש",
+        description: "בניית מחסן חדש בשטח 1000 מ\"ר",
+        category: "מוצרים",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-12-15"),
+        requestedBy: "שלמה כהן",
+        department: "תפעול",
+        status: "new",
+        estimatedCost: "1336000",
+        specifications: {
+          area: 1000,
+          height: 8,
+          components: "עבודות עפר, יציקת בטון, מבנה פלדה, קירות וגגות, מערכות חשמל ואוורור",
+          contingency: "15%"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-31"),
+        updatedAt: new Date("2024-01-31"),
+      },
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-017",
+        itemName: "רכש חומרי גלם לייצור",
+        description: "רכש חומרי גלם לייצור רבעוני: פלדה, אלומיניום, פלסטיק",
+        category: "מוצרים",
+        quantity: 80,
+        priority: "medium",
+        targetDate: new Date("2024-07-15"),
+        requestedBy: "נועה גולד",
+        department: "ייצור",
+        status: "new",
+        estimatedCost: "330000",
+        specifications: {
+          materials: [
+            { name: "פלדה", quantity: 50, unit: "טון", grade: "ST37" },
+            { name: "אלומיניום", quantity: 20, unit: "טון", grade: "6061" },
+            { name: "פלסטיק PVC", quantity: 10, unit: "טון", grade: "רגיל" }
+          ]
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-02-01"),
+        updatedAt: new Date("2024-02-01"),
+      },
     ];
 
     requests.forEach(request => this.procurementRequests.set(request.id, request));
@@ -390,6 +592,404 @@ export class MemStorage implements IStorage {
           sources: [
             { name: "מחירון HP Israel", price: "₪165,000", date: "2024-01-20" },
             { name: "השוואת מחירים", price: "₪160,000-₪170,000", date: "2024-01-18" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      // Cost estimations for new diverse requests
+      {
+        id: this.currentId++,
+        procurementRequestId: 10, // HR System Development
+        totalCost: "960000",
+        basePrice: "820512",
+        tax: "139387",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 88,
+        marketPrice: "1100000",
+        potentialSavings: "140000",
+        justifications: [
+          {
+            variable: "עלות פיתוח (2400 שעות)",
+            value: "₪2,400 שעות × ₪350 ממוצע",
+            source: "תעריפי שוק 2024 - חברות פיתוח ישראליות",
+            confidence: 90,
+            impact: "+₪840,000"
+          },
+          {
+            variable: "הנחת פרויקט גדול",
+            value: "2.5%",
+            source: "מדיניות חברה לפרויקטים מעל ₪800K",
+            confidence: 85,
+            impact: "-₪21,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מורכבות פרויקט", impact: "גבוהה", description: "מערכת מקיפה עם אינטגרציות רבות" },
+            { factor: "ניסיון צוות", impact: "טוב", description: "צוות מנוסה בפרויקטים דומים" },
+            { factor: "זמן פיתוח", impact: "ריאלי", description: "8 חודשים - לוח זמנים הגיוני" }
+          ],
+          sources: [
+            { name: "מחקר תעריפי פיתוח 2024", price: "₪960,000", date: "2024-01-25" },
+            { name: "השוואת פרויקטים דומים", price: "₪900,000-₪1,200,000", date: "2024-01-20" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 11, // Business Consulting
+        totalCost: "630000",
+        basePrice: "538461",
+        tax: "91539",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 92,
+        marketPrice: "720000",
+        potentialSavings: "90000",
+        justifications: [
+          {
+            variable: "מיפוי תהליכים",
+            value: "₪150,000",
+            source: "מחירון שירותי ייעוץ עסקי 2024",
+            confidence: 95,
+            impact: "+₪150,000"
+          },
+          {
+            variable: "ניתוח פערים",
+            value: "₪200,000",
+            source: "תעריף סטנדרטי ליועצים senior",
+            confidence: 90,
+            impact: "+₪200,000"
+          },
+          {
+            variable: "תכנית יישום",
+            value: "₪100,000",
+            source: "אומדן על בסיס היקף עבודה",
+            confidence: 85,
+            impact: "+₪100,000"
+          },
+          {
+            variable: "הדרכה וליווי",
+            value: "₪180,000",
+            source: "מחיר שוק לשירותי ליווי יישום",
+            confidence: 88,
+            impact: "+₪180,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "ערך עסקי", impact: "גבוה", description: "פוטנציאל לחיסכון משמעותי בתהליכים" },
+            { factor: "מומחיות נדרשת", impact: "מתמחה", description: "דרוש יועץ senior עם ניסיון" },
+            { factor: "משך פרויקט", impact: "סביר", description: "6 חודשים - זמן מתאים להיקף" }
+          ],
+          sources: [
+            { name: "מחקר שכר יועצים 2024", price: "₪630,000", date: "2024-01-26" },
+            { name: "השוואת פרויקטי ייעוץ", price: "₪580,000-₪750,000", date: "2024-01-20" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 12, // Security Services
+        totalCost: "2400000",
+        basePrice: "2051282",
+        tax: "348718",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 94,
+        marketPrice: "2800000",
+        potentialSavings: "400000",
+        justifications: [
+          {
+            variable: "שירותי SOC 24/7",
+            value: "₪150,000/חודש",
+            source: "מחירון שירותי אבטחת מידע ישראל 2024",
+            confidence: 98,
+            impact: "+₪1,800,000"
+          },
+          {
+            variable: "ניטור מתקדם",
+            value: "₪25,000/חודש",
+            source: "תוספת לכלים מתקדמים ו-AI",
+            confidence: 90,
+            impact: "+₪300,000"
+          },
+          {
+            variable: "הכשרות צוות",
+            value: "₪100,000",
+            source: "הכשרת צוות פנימי לעבודה עם המערכת",
+            confidence: 85,
+            impact: "+₪100,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "חיוניות שירות", impact: "קריטי", description: "הגנה על נכסי מידע של החברה" },
+            { factor: "רמת שירות", impact: "מקצועי", description: "צוות מומחים זמין 24/7" },
+            { factor: "ROI", impact: "גבוה", description: "מניעת נזקים פוטנציאליים במיליונים" }
+          ],
+          sources: [
+            { name: "מחקר שוק אבטחת מידע 2024", price: "₪2,400,000", date: "2024-01-27" },
+            { name: "השוואת ספקי SOC", price: "₪2,200,000-₪2,800,000", date: "2024-01-25" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 13, // IT Maintenance
+        totalCost: "650000",
+        basePrice: "555555",
+        tax: "94445",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 78,
+        marketPrice: "750000",
+        potentialSavings: "100000",
+        justifications: [
+          {
+            variable: "אומדן אופטימי",
+            value: "₪450,000",
+            source: "במקרה של מעט תקלות ותחזוקה מונעת יעילה",
+            confidence: 70,
+            impact: "סיכוי 20%"
+          },
+          {
+            variable: "אומדן הסביר ביותר",
+            value: "₪650,000",
+            source: "על בסיס ניסיון שנים קודמות וחיזוי עומס",
+            confidence: 85,
+            impact: "סיכוי 60%"
+          },
+          {
+            variable: "אומדן פסימי",
+            value: "₪950,000",
+            source: "במקרה של תקלות חריגות ועדכוני מערכת מרובים",
+            confidence: 75,
+            impact: "סיכוי 20%"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "אי-ודאות גבוהה", impact: "מורכב", description: "קשה לחזות כמות תקלות עתידיות" },
+            { factor: "ניסיון היסטורי", impact: "חיובי", description: "נתונים מ-3 שנים אחורנית" },
+            { factor: "גיוון סיכונים", impact: "בינוני", description: "שיטת 3 נקודות מפחיתה סיכון תקציבי" }
+          ],
+          sources: [
+            { name: "היסטוריה תחזוקה 2021-2023", price: "₪650,000 ממוצע", date: "2024-01-28" },
+            { name: "מחקר עלויות תחזוקה IT", price: "₪600,000-₪800,000", date: "2024-01-25" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 14, // Desktop Computers
+        totalCost: "225000",
+        basePrice: "192307",
+        tax: "32693",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 95,
+        marketPrice: "240000",
+        potentialSavings: "15000",
+        justifications: [
+          {
+            variable: "מחיר יחידה",
+            value: "₪4,500",
+            source: "מחירון HP/Dell/Lenovo ישראל - ממוצע 3 ספקים",
+            confidence: 98,
+            impact: "+₪225,000"
+          },
+          {
+            variable: "רכישה דומה 2023",
+            value: "₪4,200/יחידה",
+            source: "רכישה של 30 יחידות ביוני 2023",
+            confidence: 95,
+            impact: "השוואה היסטורית"
+          },
+          {
+            variable: "מגמת מחירים",
+            value: "עלייה של 5%",
+            source: "מגמת שוק 2023-2024",
+            confidence: 85,
+            impact: "התאמת מחיר לשוק נוכחי"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר תחרותי", impact: "טוב", description: "מחיר סביר בהשוואה לשוק" },
+            { factor: "מפרט מתאים", impact: "מעולה", description: "מפרט עונה על כל הדרישות" },
+            { factor: "זמינות ספק", impact: "גבוהה", description: "מלאי זמין אצל מספר ספקים" }
+          ],
+          sources: [
+            { name: "מחירון ספקים רשמי", price: "₪225,000", date: "2024-01-29" },
+            { name: "השוואת מחירי שוק", price: "₪220,000-₪240,000", date: "2024-01-25" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 15, // Fleet Vehicles
+        totalCost: "890000",
+        basePrice: "760683",
+        tax: "129317",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 92,
+        marketPrice: "950000",
+        potentialSavings: "60000",
+        justifications: [
+          {
+            variable: "מחיר בסיס",
+            value: "₪85,000/רכב",
+            source: "מחירון יצרן רשמי לרכב מסחרי קל",
+            confidence: 95,
+            impact: "+₪850,000"
+          },
+          {
+            variable: "תוספת מנוע 1600cc",
+            value: "₪1,500/רכב",
+            source: "מחירון אופציות יצרן",
+            confidence: 90,
+            impact: "+₪15,000"
+          },
+          {
+            variable: "תוספת קיבולת משא",
+            value: "₪2,500/רכב",
+            source: "שיפור לקיבולת 800 ק\"ג",
+            confidence: 85,
+            impact: "+₪25,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מודל פרמטרי", impact: "מדויק", description: "אומדן מבוסס פרמטרים טכניים" },
+            { factor: "ניסיון רכישות", impact: "חיובי", description: "נתוני רגרסיה מרכישות קודמות" },
+            { factor: "מחיר שוק", impact: "תחרותי", description: "מחיר טוב יחסית לשוק" }
+          ],
+          sources: [
+            { name: "מחירון יצרן רשמי", price: "₪890,000", date: "2024-01-30" },
+            { name: "השוואת רכישות קודמות", price: "₪850,000-₪950,000", date: "2024-01-25" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 16, // Warehouse Construction
+        totalCost: "1336000",
+        basePrice: "1143589",
+        tax: "194411",
+        shippingCost: "0",
+        discountAmount: "2000",
+        confidenceLevel: 89,
+        marketPrice: "1450000",
+        potentialSavings: "114000",
+        justifications: [
+          {
+            variable: "עבודות עפר וביסוס",
+            value: "₪120,000",
+            source: "₪120/מ\"ר × 1000 מ\"ר",
+            confidence: 95,
+            impact: "+₪120,000"
+          },
+          {
+            variable: "יציקת בטון",
+            value: "₪90,000",
+            source: "₪450/מ\"ק × 200 מ\"ק",
+            confidence: 90,
+            impact: "+₪90,000"
+          },
+          {
+            variable: "מבנה פלדה",
+            value: "₪680,000",
+            source: "₪8,500/טון × 80 טון",
+            confidence: 85,
+            impact: "+₪680,000"
+          },
+          {
+            variable: "קירות וגגות",
+            value: "₪216,000",
+            source: "₪180/מ\"ר × 1200 מ\"ר",
+            confidence: 88,
+            impact: "+₪216,000"
+          },
+          {
+            variable: "מערכות חשמל",
+            value: "₪150,000",
+            source: "אומדן קבלן חשמל מוסמך",
+            confidence: 80,
+            impact: "+₪150,000"
+          },
+          {
+            variable: "מערכות אוורור",
+            value: "₪80,000",
+            source: "אומדן קבלן מיזוג אוויר",
+            confidence: 75,
+            impact: "+₪80,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "אומדן מלמטה למעלה", impact: "מדויק", description: "פירוק מפורט לרכיבים" },
+            { factor: "מחירי שוק נוכחיים", impact: "עדכני", description: "מחירים מעודכנים ינואר 2024" },
+            { factor: "מרווח ביטחון", impact: "נכלל", description: "15% מרווח לאירועים בלתי צפויים" }
+          ],
+          sources: [
+            { name: "מחירון בנייה 2024", price: "₪1,336,000", date: "2024-01-31" },
+            { name: "אומדן קבלנים", price: "₪1,300,000-₪1,400,000", date: "2024-01-30" }
+          ]
+        },
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 17, // Raw Materials
+        totalCost: "330000",
+        basePrice: "282051",
+        tax: "47949",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 91,
+        marketPrice: "350000",
+        potentialSavings: "20000",
+        justifications: [
+          {
+            variable: "פלדה ST37",
+            value: "₪3,200/טון × 50 טון",
+            source: "מחיר שוק נוכחי - ממוצע 3 ספקים",
+            confidence: 95,
+            impact: "+₪160,000"
+          },
+          {
+            variable: "אלומיניום 6061",
+            value: "₪8,500/טון × 20 טון",
+            source: "מחיר בורסת מתכות + מרווח ספק",
+            confidence: 90,
+            impact: "+₪170,000"
+          },
+          {
+            variable: "פלסטיק PVC",
+            value: "₪4,200/טון × 10 טון",
+            source: "מחיר יצרן + הובלה",
+            confidence: 92,
+            impact: "+₪42,000"
+          }
+        ],
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר שוק נוכחי", impact: "יציב", description: "מחירים יציבים ב-3 חודשים אחרונים" },
+            { factor: "זמינות חומרים", impact: "טובה", description: "מלאי זמין אצל ספקים מרובים" },
+            { factor: "מגמת מחירים", impact: "חיובית", description: "צפייה ליציבות מחירים ברבעון הקרוב" }
+          ],
+          sources: [
+            { name: "בורסת מתכות תל אביב", price: "₪330,000", date: "2024-02-01" },
+            { name: "מחירון ספקי חומרי גלם", price: "₪320,000-₪340,000", date: "2024-01-30" }
           ]
         },
         createdAt: new Date(),
