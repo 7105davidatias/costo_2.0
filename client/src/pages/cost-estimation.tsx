@@ -48,13 +48,11 @@ export default function CostEstimation() {
       try {
         setIsLoading(true);
         console.log('Calling API with:', { requestId: parseInt(id!), selectedMethods });
-        const result = await apiRequest('/api/calculate-estimate', {
-          method: 'POST',
-          body: {
-            requestId: parseInt(id!),
-            selectedMethods: selectedMethods
-          }
+        const response = await apiRequest('POST', '/api/calculate-estimate', {
+          requestId: parseInt(id!),
+          selectedMethods: selectedMethods
         });
+        const result = await response.json();
         console.log('API result:', result);
         setEstimation(result);
       } catch (error) {
@@ -81,7 +79,7 @@ export default function CostEstimation() {
     );
   }
 
-  if (!estimation || !request) {
+  if (!estimation) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-4">אומדן עלות לא נמצא</h2>
@@ -112,7 +110,7 @@ export default function CostEstimation() {
     }).format(value);
   };
 
-  const savingsPercentage = estimation.marketComparison?.marketPrice ? 
+  const savingsPercentage = estimation?.marketComparison?.marketPrice ? 
     ((estimation.marketComparison.marketPrice - estimation.finalEstimate.amount) / estimation.marketComparison.marketPrice * 100) : 0;
 
   return (
@@ -130,7 +128,7 @@ export default function CostEstimation() {
             <h1 className="text-3xl font-bold text-foreground">תוצאות אומדן עלות</h1>
           </div>
           <p className="text-muted-foreground">
-            אומדן מפורט עבור {estimation.requestDetails.title} - {estimation.requestDetails.requestNumber}
+            אומדן מפורט עבור {estimation?.requestDetails?.title || 'הפריט'} - {estimation?.requestDetails?.requestNumber || ''}
           </p>
         </div>
         <div className="flex space-x-reverse space-x-4">
@@ -152,7 +150,7 @@ export default function CostEstimation() {
           <p className="text-5xl font-bold mb-4">{formatCurrency(estimation.finalEstimate.amount)}</p>
           <div className="flex items-center space-x-reverse space-x-2 flex-wrap gap-2">
             <Badge variant="secondary" className="bg-white/20 text-inherit">
-              רמת ביטחון: {estimation.finalEstimate.confidence}%
+              רמת ביטחון: {estimation?.finalEstimate?.confidence || 85}%
             </Badge>
             {savingsPercentage > 0 && (
               <Badge variant="secondary" className="bg-white/20 text-inherit">
@@ -160,11 +158,11 @@ export default function CostEstimation() {
               </Badge>
             )}
             <Badge variant="secondary" className="bg-white/20 text-inherit">
-              {estimation.methodResults.length} שיטות אומדן
+              {estimation?.methodResults?.length || 0} שיטות אומדן
             </Badge>
           </div>
           <p className="mt-3 text-sm text-white/80">
-            {estimation.finalEstimate.methodology}
+            {estimation?.finalEstimate?.methodology || 'אומדן מבוסס על השיטות שנבחרו'}
           </p>
         </div>
         
