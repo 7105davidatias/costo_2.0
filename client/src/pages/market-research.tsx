@@ -35,7 +35,10 @@ export default function MarketResearch() {
   });
 
   // Debug log to see what data we're getting
+  console.log('MarketResearch - category param:', category);
+  console.log('MarketResearch - isRequestId:', isRequestId);
   console.log('MarketResearch - requestId:', requestId);
+  console.log('MarketResearch - URL:', window.location.pathname);
   console.log('MarketResearch - marketResearch:', marketResearch);
   console.log('MarketResearch - contextualSuppliers:', marketResearch?.supplierComparison);
   console.log('MarketResearch - suppliers (legacy):', suppliers);
