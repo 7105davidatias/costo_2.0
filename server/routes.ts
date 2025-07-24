@@ -1219,20 +1219,30 @@ function generateGenericAnalysis(request: any) {
 // Function to generate contextual market research based on procurement request type
 function generateContextualMarketResearch(request: any) {
   const category = request.category?.toLowerCase() || '';
-  const title = request.title?.toLowerCase() || '';
+  const itemName = request.itemName?.toLowerCase() || '';
   const description = request.description?.toLowerCase() || '';
   
+  console.log(`Market research detection - Category: ${category}, Item: ${itemName}, Desc: ${description}`);
+  
   // Detect request type based on category and content
-  if (title.includes('רכב') || title.includes('vehicle') || description.includes('רכב')) {
+  if (itemName.includes('רכב') || itemName.includes('צי') || description.includes('רכב')) {
     return generateVehicleMarketResearch(request);
-  } else if (title.includes('מחסן') || title.includes('בני') || description.includes('בני')) {
+  } else if (itemName.includes('מחסן') || itemName.includes('בני') || description.includes('בני')) {
     return generateConstructionMarketResearch(request);
-  } else if (title.includes('מחשב') || title.includes('שרת') || description.includes('ציוד')) {
+  } else if (itemName.includes('מחשב') || itemName.includes('שרת') || itemName.includes('laptop') || category.includes('חומרה')) {
     return generateComputingMarketResearch(request);
-  } else if (title.includes('פיתוח') || title.includes('תוכנה') || description.includes('פיתוח')) {
+  } else if (itemName.includes('פיתוח') || itemName.includes('מערכת') || description.includes('פיתוח')) {
     return generateSoftwareMarketResearch(request);
-  } else if (title.includes('ייעוץ') || title.includes('יעוץ') || description.includes('ייעוץ')) {
+  } else if (itemName.includes('ייעוץ') || itemName.includes('יעוץ') || description.includes('ייעוץ')) {
     return generateConsultingMarketResearch(request);
+  } else if (itemName.includes('חומרי גלם') || itemName.includes('פלדה') || itemName.includes('אלומיניום')) {
+    return generateRawMaterialsMarketResearch(request);
+  } else if (itemName.includes('כסא') || itemName.includes('ריהוט') || category.includes('ריהוט')) {
+    return generateFurnitureMarketResearch(request);
+  } else if (itemName.includes('אבטחה') || itemName.includes('SOC') || description.includes('אבטחת מידע')) {
+    return generateSecurityMarketResearch(request);
+  } else if (itemName.includes('תחזוקה') || description.includes('תחזוקה')) {
+    return generateMaintenanceMarketResearch(request);
   } else {
     return generateGenericMarketResearch(request);
   }
