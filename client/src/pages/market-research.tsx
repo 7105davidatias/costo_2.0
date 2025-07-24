@@ -525,7 +525,7 @@ export default function MarketResearch() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(requestId ? marketResearch?.informationSources : [
+            {(requestId && marketResearch?.informationSources ? marketResearch.informationSources : [
               {
                 title: "מחירון הממשלה",
                 description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי",

@@ -1236,13 +1236,157 @@ function generateContextualMarketResearch(request: any) {
   } else if (itemName.includes('ייעוץ') || itemName.includes('יעוץ') || description.includes('ייעוץ')) {
     return generateConsultingMarketResearch(request);
   } else if (itemName.includes('חומרי גלם') || itemName.includes('פלדה') || itemName.includes('אלומיניום')) {
-    return generateRawMaterialsMarketResearch(request);
+    return {
+      supplierComparison: [
+        {
+          supplier: 'פלדמור - יבוא פלדה',
+          rating: 4.6,
+          deliveryTime: '3 שבועות',
+          pricePerUnit: '₪4,200 לטון',
+          discount: '5% מעל 50 טון',
+          warranty: 'תקן ISO 9001',
+          advantages: ['איכות גבוהה', 'אמינות באספקה', 'מחירים יציבים'],
+          contact: 'PL'
+        }
+      ],
+      marketInsights: [{
+        title: 'מגמות שוק חומרי הגלם',
+        description: 'יציבות במחירי חומרי גלם בתעשייה',
+        trend: 'יציב',
+        impact: 'חיובי'
+      }],
+      priceTrends: {
+        currentQuarter: 'יציבות במחירי חומרי גלם',
+        yearOverYear: 'ירידה של 3% לעומת השנה שעברה',
+        forecast: 'צפויה יציבות יחסית ברבעון הבא',
+        factors: ['מחירי אנרגיה', 'שער החליפין', 'ביקוש תעשייתי']
+      },
+      informationSources: [{
+        title: 'איגוד התעשייה',
+        description: 'נתוני מחירים ומלאי חומרי גלם בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }],
+      recommendations: [{
+        title: 'קנייה בכמויות גדולות',
+        description: 'נצל הנחות כמות לחיסכון משמעותי',
+        priority: 'בינונית'
+      }]
+    };
   } else if (itemName.includes('כסא') || itemName.includes('ריהוט') || category.includes('ריהוט')) {
-    return generateFurnitureMarketResearch(request);
+    return {
+      supplierComparison: [
+        {
+          supplier: 'אמנון ריהוט משרדי',
+          rating: 4.6,
+          deliveryTime: '3 שבועות',
+          pricePerUnit: '₪1,800',
+          discount: '8% מעל 30 יחידות',
+          warranty: '5 שנות אחריות',
+          advantages: ['עיצוב ארגונומי', 'איכות גבוהה', 'התאמה אישית'],
+          contact: 'AM'
+        }
+      ],
+      marketInsights: [{
+        title: 'מגמות שוק הריהוט המשרדי',
+        description: 'עלייה בביקוש לכסאות ארגונומיים בעקבות עבודה מהבית',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }],
+      priceTrends: {
+        currentQuarter: 'יציבות במחירי ריהוט משרדי',
+        yearOverYear: 'עלייה של 4% לעומת השנה שעברה',
+        forecast: 'צפויה יציבות ברבעון הבא',
+        factors: ['עלויות חומרי גלם', 'ביקוש גבוה', 'עבודה היברידית']
+      },
+      informationSources: [{
+        title: 'איגוד יצרני הריהוט',
+        description: 'נתוני שוק ומחירים בתעשיית הריהוט',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }],
+      recommendations: [{
+        title: 'בחירת כסאות ארגונומיים',
+        description: 'השקיע בכסאות איכותיים לשיפור פרודוקטיביות העובדים',
+        priority: 'בינונית'
+      }]
+    };
   } else if (itemName.includes('אבטחה') || itemName.includes('SOC') || description.includes('אבטחת מידע')) {
-    return generateSecurityMarketResearch(request);
+    return {
+      supplierComparison: [
+        {
+          supplier: 'Check Point ישראל',
+          rating: 4.9,
+          deliveryTime: '2 שבועות',
+          pricePerUnit: '₪280,000 שנתי',
+          discount: '5% לחוזה רב-שנתי',
+          warranty: '24/7 תמיכה',
+          advantages: ['מובילה עולמית', 'טכנולוגיה מתקדמת', 'תמיכה מקומית'],
+          contact: 'CP'
+        }
+      ],
+      marketInsights: [{
+        title: 'מגמות אבטחת סייבר',
+        description: 'עלייה חדה בביקוש לפתרונות SOC מנוהלים',
+        trend: 'עולה חדה',
+        impact: 'חיובי'
+      }],
+      priceTrends: {
+        currentQuarter: 'עלייה של 12% במחירי שירותי אבטחה',
+        yearOverYear: 'עלייה של 18% לעומת השנה שעברה',
+        forecast: 'צפויה המשך עלייה ברבעון הבא',
+        factors: ['עלייה באיומי סייבר', 'מחסור במומחים', 'רגולציה מחמירה']
+      },
+      informationSources: [{
+        title: 'איגוד אבטחת המידע הישראלי',
+        description: 'נתוני שוק ומגמות בתחום אבטחת המידע',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }],
+      recommendations: [{
+        title: 'השקעה באבטחה',
+        description: 'השקעה באבטחה מתקדמת חיונית למניעת נזקים עתידיים',
+        priority: 'קריטית'
+      }]
+    };
   } else if (itemName.includes('תחזוקה') || description.includes('תחזוקה')) {
-    return generateMaintenanceMarketResearch(request);
+    return {
+      supplierComparison: [
+        {
+          supplier: 'מטריקס שירותי IT',
+          rating: 4.5,
+          deliveryTime: 'מיידי',
+          pricePerUnit: '₪650,000 שנתי',
+          discount: '5% לחוזה רב-שנתי',
+          warranty: 'SLA זמן תגובה',
+          advantages: ['זמינות 24/7', 'ניסיון רב', 'צוות מקצועי'],
+          contact: 'MT'
+        }
+      ],
+      marketInsights: [{
+        title: 'מגמות שירותי תחזוקה',
+        description: 'עלייה בביקוש לתחזוקה מונעת ופתרונות ענן',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }],
+      priceTrends: {
+        currentQuarter: 'עלייה של 5% במחירי שירותי תחזוקה',
+        yearOverYear: 'עלייה של 8% לעומת השנה שעברה',
+        forecast: 'צפויה יציבות ברבעון הבא',
+        factors: ['מורכבות מערכות', 'מחסור בטכנאים', 'טכנולוגיות חדשות']
+      },
+      informationSources: [{
+        title: 'איגוד חברות התוכנה והשירותים',
+        description: 'נתוני שוק בתחום שירותי IT ותחזוקה',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }],
+      recommendations: [{
+        title: 'תחזוקה מונעת',
+        description: 'השקיע בתחזוקה מונעת לחיסכון ארוך טווח',
+        priority: 'בינונית'
+      }]
+    };
   } else {
     return generateGenericMarketResearch(request);
   }
@@ -1584,6 +1728,100 @@ function generateConsultingMarketResearch(request: any) {
         title: 'בחירת יועץ',
         description: 'בחר יועץ עם ניסיון ספציפי בתחום הפעילות שלך',
         priority: 'גבוהה'
+      }
+    ]
+  };
+}
+
+// Raw materials market research  
+function generateRawMaterialsMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'פלדמור - יבוא פלדה',
+        rating: 4.6,
+        deliveryTime: '3 שבועות',
+        pricePerUnit: '₪4,200 לטון',
+        discount: '5% מעל 50 טון',
+        warranty: 'תקן ISO 9001',
+        advantages: ['איכות גבוהה', 'אמינות באספקה', 'מחירים יציבים'],
+        contact: 'PL'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק חומרי הגלם',
+        description: 'יציבות במחירי חומרי גלם בתעשייה',
+        trend: 'יציב',
+        impact: 'חיובי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'יציבות במחירי חומרי גלם',
+      yearOverYear: 'ירידה של 3% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות יחסית ברבעון הבא',
+      factors: ['מחירי אנרגיה', 'שער החליפין', 'ביקוש תעשייתי']
+    },
+    informationSources: [
+      {
+        title: 'איגוד התעשייה',
+        description: 'נתוני מחירים ומלאי חומרי גלם בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'קנייה בכמויות גדולות',
+        description: 'נצל הנחות כמות לחיסכון משמעותי',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+
+// Maintenance services market research
+function generateMaintenanceMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'מטריקס שירותי IT',
+        rating: 4.5,
+        deliveryTime: 'מיידי',
+        pricePerUnit: '₪650,000 שנתי',
+        discount: '5% לחוזה רב-שנתי',
+        warranty: 'SLA זמן תגובה',
+        advantages: ['זמינות 24/7', 'ניסיון רב', 'צוות מקצועי'],
+        contact: 'MT'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שירותי תחזוקה',
+        description: 'עלייה בביקוש לתחזוקה מונעת ופתרונות ענן',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה של 5% במחירי שירותי תחזוקה',
+      yearOverYear: 'עלייה של 8% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות ברבעון הבא',
+      factors: ['מורכבות מערכות', 'מחסור בטכנאים', 'טכנולוגיות חדשות']
+    },
+    informationSources: [
+      {
+        title: 'איגוד חברות התוכנה והשירותים',
+        description: 'נתוני שוק בתחום שירותי IT ותחזוקה',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'תחזוקה מונעת',
+        description: 'השקיע בתחזוקה מונעת לחיסכון ארוך טווח',
+        priority: 'בינונית'
       }
     ]
   };
