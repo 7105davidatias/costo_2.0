@@ -16,6 +16,13 @@ export default function MarketResearch() {
   const requestId = isRequestId ? category : null;
   const actualCategory = !isRequestId ? category : null;
   
+  // Force debugging info
+  console.log('Raw category parameter:', category);
+  console.log('Is numeric check:', category, !isNaN(Number(category || '')));
+  console.log('Number conversion:', Number(category || ''));
+  console.log('Final isRequestId:', isRequestId);
+  console.log('Final requestId:', requestId);
+  
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch } = useQuery({
     queryKey: ["/api/market-research", requestId],
