@@ -239,7 +239,14 @@ export default function ProcurementRequest() {
                 {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
               </Button>
               <Link href={`/market-research/${id}`} className="block">
-                <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                  onClick={() => {
+                    console.log('Market Research link clicked with ID:', id);
+                    console.log('Generated URL:', `/market-research/${id}`);
+                  }}
+                >
                   <Bot className="w-4 h-4 ml-2" />
                   מחקר שוק
                 </Button>
