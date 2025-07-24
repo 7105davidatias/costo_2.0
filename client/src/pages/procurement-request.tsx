@@ -244,7 +244,9 @@ export default function ProcurementRequest() {
                 onClick={() => {
                   console.log('Market Research button clicked with ID:', id);
                   console.log('Navigating to URL:', `/market-research/${id}`);
-                  window.location.href = `/market-research/${id}`;
+                  // Use pushState to navigate properly
+                  window.history.pushState({}, '', `/market-research/${id}`);
+                  window.location.reload();
                 }}
               >
                 <Bot className="w-4 h-4 ml-2" />

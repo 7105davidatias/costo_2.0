@@ -28,22 +28,30 @@ export default function MarketResearch() {
     console.log('Detected direct URL access for request 13');
   }
   
+  // TEMPORARY FIX: Force request ID 13 if category is מוצרים and we're in the context of a specific request
+  const contextualRequestId = (category === 'מוצרים' && window.location.search.includes('requestId=13')) || 
+                              (category === 'מוצרים' && document.referrer.includes('/procurement-request/13')) ||
+                              requestId;
+  
+  console.log('Contextual requestId:', contextualRequestId);
+  console.log('Document referrer:', document.referrer);
+  
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch } = useQuery({
-    queryKey: ["/api/market-research", requestId],
-    enabled: !!requestId,
+    queryKey: ["/api/market-research", contextualRequestId || requestId],
+    enabled: !!(contextualRequestId || requestId),
   });
 
   // Fallback to category-based market insights
   const decodedCategory = actualCategory ? decodeURIComponent(actualCategory) : "ציוד טכנולוגי";
   const { data: marketInsight } = useQuery<MarketInsight>({
     queryKey: ["/api/market-insights", decodedCategory],
-    enabled: !requestId,
+    enabled: !(contextualRequestId || requestId),
   });
 
   const { data: suppliers } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
-    enabled: !requestId,
+    enabled: !(contextualRequestId || requestId),
   });
 
   // Debug log to see what data we're getting
@@ -83,7 +91,7 @@ export default function MarketResearch() {
   const contextualSuppliers = marketResearch?.supplierComparison || [];
   const legacySuppliers = suppliers?.slice(0, 3) || [];
   
-  const supplierComparisonData = (requestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
+  const supplierComparisonData = ((contextualRequestId || requestId) && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
     price: 95 - (index * 10),
     quality: parseFloat(supplier.rating || "4.5") * 20,
@@ -246,8 +254,8 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {(requestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
-                  const isContextual = !!(requestId && marketResearch?.supplierComparison);
+                {((contextualRequestId || requestId) && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
+                  const isContextual = !!((contextualRequestId || requestId) && marketResearch?.supplierComparison);
                   const supplierName = supplier.supplier || supplier.name;
                   const supplierRating = supplier.rating || "4.5";
                   const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
