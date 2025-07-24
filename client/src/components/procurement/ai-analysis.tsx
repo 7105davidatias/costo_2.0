@@ -365,19 +365,33 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                             'בחר לפחות שיטה אחת ליצירת אומדן'
                           )}
                         </div>
-                        <Link href={`/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`}>
+                        <div className="flex gap-2">
                           <Button 
-                            disabled={selectedMethods.length === 0}
-                            className="bg-success text-white hover:bg-success/90"
+                            variant="outline"
+                            className="border-secondary text-secondary hover:bg-secondary/10"
                             onClick={() => {
-                              console.log('Button clicked with selected methods:', selectedMethods);
-                              console.log('Generated URL:', `/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`);
+                              console.log('Market Research button clicked from AI Analysis with ID:', requestId);
+                              localStorage.setItem('currentRequestId', requestId.toString());
+                              window.location.href = `/market-research/${requestId}`;
                             }}
                           >
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                            יצירת אומדן על פי השיטות שנבחרו ({selectedMethods.length})
+                            <Bot className="w-4 h-4 ml-2" />
+                            מחקר שוק
                           </Button>
-                        </Link>
+                          <Link href={`/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`}>
+                            <Button 
+                              disabled={selectedMethods.length === 0}
+                              className="bg-success text-white hover:bg-success/90"
+                              onClick={() => {
+                                console.log('Button clicked with selected methods:', selectedMethods);
+                                console.log('Generated URL:', `/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`);
+                              }}
+                            >
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                              יצירת אומדן על פי השיטות שנבחרו ({selectedMethods.length})
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   )}

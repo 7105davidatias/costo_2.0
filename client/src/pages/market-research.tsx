@@ -28,30 +28,40 @@ export default function MarketResearch() {
     console.log('Detected direct URL access for request 13');
   }
   
-  // TEMPORARY FIX: Force request ID 13 if category is מוצרים and we're in the context of a specific request
-  const contextualRequestId = (category === 'מוצרים' && window.location.search.includes('requestId=13')) || 
-                              (category === 'מוצרים' && document.referrer.includes('/procurement-request/13')) ||
-                              requestId;
+  // Check localStorage for request context or use URL parameter
+  const storedRequestId = localStorage.getItem('currentRequestId');
   
-  console.log('Contextual requestId:', contextualRequestId);
+  // FINAL FIX: If user navigated from a general category but has a stored request context, use it
+  let finalRequestId = requestId;
+  
+  if (!requestId && category === 'מוצרים' && storedRequestId) {
+    console.log('Redirecting from general category to specific request:', storedRequestId);
+    finalRequestId = storedRequestId;
+    // Update the URL to reflect the correct request ID
+    window.history.replaceState({}, '', `/market-research/${storedRequestId}`);
+  }
+  
+  console.log('Final decision - requestId:', finalRequestId);
+  console.log('Stored requestId from localStorage:', storedRequestId);
+  console.log('Original category param:', category);
   console.log('Document referrer:', document.referrer);
   
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch } = useQuery({
-    queryKey: ["/api/market-research", contextualRequestId || requestId],
-    enabled: !!(contextualRequestId || requestId),
+    queryKey: ["/api/market-research", finalRequestId],
+    enabled: !!finalRequestId,
   });
 
   // Fallback to category-based market insights
   const decodedCategory = actualCategory ? decodeURIComponent(actualCategory) : "ציוד טכנולוגי";
   const { data: marketInsight } = useQuery<MarketInsight>({
     queryKey: ["/api/market-insights", decodedCategory],
-    enabled: !(contextualRequestId || requestId),
+    enabled: !finalRequestId,
   });
 
   const { data: suppliers } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
-    enabled: !(contextualRequestId || requestId),
+    enabled: !finalRequestId,
   });
 
   // Debug log to see what data we're getting
@@ -91,7 +101,7 @@ export default function MarketResearch() {
   const contextualSuppliers = marketResearch?.supplierComparison || [];
   const legacySuppliers = suppliers?.slice(0, 3) || [];
   
-  const supplierComparisonData = ((contextualRequestId || requestId) && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
+  const supplierComparisonData = (finalRequestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
     price: 95 - (index * 10),
     quality: parseFloat(supplier.rating || "4.5") * 20,
@@ -254,8 +264,8 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {((contextualRequestId || requestId) && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
-                  const isContextual = !!((contextualRequestId || requestId) && marketResearch?.supplierComparison);
+                {(finalRequestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
+                  const isContextual = !!(finalRequestId && marketResearch?.supplierComparison);
                   const supplierName = supplier.supplier || supplier.name;
                   const supplierRating = supplier.rating || "4.5";
                   const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";

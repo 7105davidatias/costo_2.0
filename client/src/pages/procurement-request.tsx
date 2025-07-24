@@ -243,10 +243,10 @@ export default function ProcurementRequest() {
                 className="w-full border-secondary text-secondary hover:bg-secondary/10"
                 onClick={() => {
                   console.log('Market Research button clicked with ID:', id);
-                  console.log('Navigating to URL:', `/market-research/${id}`);
-                  // Use pushState to navigate properly
-                  window.history.pushState({}, '', `/market-research/${id}`);
-                  window.location.reload();
+                  // Store the request ID in localStorage for context
+                  localStorage.setItem('currentRequestId', id.toString());
+                  // Navigate directly with the ID in the URL
+                  window.location.href = `/market-research/${id}`;
                 }}
               >
                 <Bot className="w-4 h-4 ml-2" />
