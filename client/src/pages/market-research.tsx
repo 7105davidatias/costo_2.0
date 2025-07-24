@@ -378,7 +378,7 @@ export default function MarketResearch() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {(requestId ? marketResearch?.recommendations : marketInsight?.recommendations || []).map((rec: any, index: number) => (
+              {(finalRequestId ? (marketResearch?.recommendations || []) : (marketInsight?.recommendations || [])).map((rec: any, index: number) => (
                 <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
                   <div className="flex items-start space-x-reverse space-x-3">
                     <div className="flex-shrink-0">
@@ -408,7 +408,7 @@ export default function MarketResearch() {
               ))}
               
               {/* Show fallback recommendations if no contextual data */}
-              {!requestId && (
+              {!finalRequestId && (
                 <>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
                     <div className="flex items-start space-x-reverse space-x-3">
