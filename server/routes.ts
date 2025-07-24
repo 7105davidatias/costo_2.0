@@ -880,24 +880,137 @@ function calculateBottomUp(request: any) {
 }
 
 function calculateMarketBased(request: any) {
-  const materials = [
-    { name: 'פלדה ST37', quantity: 50, unit: 'טון', unitPrice: 3200, totalCost: 160000 },
-    { name: 'אלומיניום 6061', quantity: 20, unit: 'טון', unitPrice: 8500, totalCost: 170000 },
-    { name: 'פלסטיק PVC', quantity: 10, unit: 'טון', unitPrice: 4200, totalCost: 42000 }
-  ];
+  const category = request.category?.toLowerCase() || '';
+  const itemName = request.itemName?.toLowerCase() || '';
+  const quantity = request.quantity || 1;
   
-  const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
-  
-  return {
-    methodName: 'אומדן מבוסס מחיר שוק',
-    estimate: totalCost,
-    confidence: 91,
-    weight: 0.85,
-    breakdown: materials,
-    reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים ומגמות מחירים',
-    sources: ['בורסת מתכות תל אביב', 'מחירון ספקי חומרי גלם'],
-    assumptions: ['יציבות מחירי שוק', 'זמינות חומרים']
-  };
+  // Generate contextual breakdown based on request type
+  if (itemName.includes('מחשב') || itemName.includes('laptop') || category.includes('חומרה')) {
+    // Computer/Hardware breakdown
+    const unitPrice = 5000;
+    const components = [
+      { name: 'מחשב נייד בסיסי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
+      { name: 'רישיון Windows Pro', quantity: quantity, unit: 'רישיונות', unitPrice: 800, totalCost: quantity * 800 },
+      { name: 'אחריות מורחבת', quantity: quantity, unit: 'שנים', unitPrice: 400, totalCost: quantity * 400 }
+    ];
+    
+    const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 93,
+      weight: 0.85,
+      breakdown: components,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים לציוד מחשוב דומה',
+      sources: ['מחירון Dell רשמי', 'השוואת מחירים בשוק המקומי'],
+      assumptions: ['יציבות מחירי חומרה', 'זמינות מלאי']
+    };
+  } else if (itemName.includes('כסא') || itemName.includes('ריהוט') || category.includes('ריהוט')) {
+    // Furniture breakdown
+    const unitPrice = 1800;
+    const components = [
+      { name: 'כסא משרד ארגונומי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
+      { name: 'משלוח והרכבה', quantity: 1, unit: 'שירות', unitPrice: 500, totalCost: 500 },
+      { name: 'אחריות 5 שנים', quantity: quantity, unit: 'יחידות', unitPrice: 200, totalCost: quantity * 200 }
+    ];
+    
+    const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 91,
+      weight: 0.85,
+      breakdown: components,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים לריהוט משרדי איכותי',
+      sources: ['מחירון יצרני ריהוט', 'השוואת מחירים בשוק'],
+      assumptions: ['יציבות מחירי ריהוט', 'זמינות מיידית']
+    };
+  } else if (itemName.includes('רכב') || itemName.includes('משאית') || category.includes('רכב')) {
+    // Vehicle breakdown
+    const unitPrice = 89000;
+    const components = [
+      { name: 'רכב מסחרי קל', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
+      { name: 'ביטוח חובה ומקיף', quantity: quantity, unit: 'שנה', unitPrice: 8000, totalCost: quantity * 8000 },
+      { name: 'בדיקות ורישוי', quantity: quantity, unit: 'יחידות', unitPrice: 1000, totalCost: quantity * 1000 }
+    ];
+    
+    const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 89,
+      weight: 0.85,
+      breakdown: components,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים לרכבים מסחריים דומים',
+      sources: ['מחירון יבואני רכב', 'נתוני מכירות רכב'],
+      assumptions: ['יציבות מחירי רכב', 'זמינות דגמים']
+    };
+  } else if (itemName.includes('מחסן') || itemName.includes('בני') || category.includes('בני')) {
+    // Construction breakdown
+    const area = 1000; // Default area
+    const components = [
+      { name: 'עבודות עפר ויסודות', quantity: area, unit: 'מ"ר', unitPrice: 350, totalCost: area * 350 },
+      { name: 'מבנה פלדה וקירות', quantity: area, unit: 'מ"ר', unitPrice: 800, totalCost: area * 800 },
+      { name: 'גג ומערכות', quantity: area, unit: 'מ"ר', unitPrice: 450, totalCost: area * 450 }
+    ];
+    
+    const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 87,
+      weight: 0.85,
+      breakdown: components,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים לבנייה תעשייתית',
+      sources: ['מחירון קבלני בנייה', 'נתוני עלות בנייה'],
+      assumptions: ['יציבות מחירי חומרים', 'זמינות קבלנים']
+    };
+  } else if (itemName.includes('חומרי גלם') || itemName.includes('פלדה') || itemName.includes('אלומיניום')) {
+    // Raw materials breakdown - original logic for materials
+    const materials = [
+      { name: 'פלדה ST37', quantity: 50, unit: 'טון', unitPrice: 3200, totalCost: 160000 },
+      { name: 'אלומיניום 6061', quantity: 20, unit: 'טון', unitPrice: 8500, totalCost: 170000 },
+      { name: 'פלסטיק PVC', quantity: 10, unit: 'טון', unitPrice: 4200, totalCost: 42000 }
+    ];
+    
+    const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 91,
+      weight: 0.85,
+      breakdown: materials,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים ומגמות מחירים',
+      sources: ['בורסת מתכות תל אביב', 'מחירון ספקי חומרי גלם'],
+      assumptions: ['יציבות מחירי שוק', 'זמינות חומרים']
+    };
+  } else {
+    // Generic breakdown for other items
+    const estimatedValue = parseFloat(request.estimatedCost || '100000');
+    const components = [
+      { name: 'עלות יחידה בסיסית', quantity: quantity, unit: 'יחידות', unitPrice: estimatedValue / quantity, totalCost: estimatedValue },
+      { name: 'שירותים נלווים', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.1, totalCost: estimatedValue * 0.1 },
+      { name: 'אחריות ותמיכה', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.05, totalCost: estimatedValue * 0.05 }
+    ];
+    
+    const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
+    
+    return {
+      methodName: 'אומדן מבוסס מחיר שוק',
+      estimate: totalCost,
+      confidence: 85,
+      weight: 0.85,
+      breakdown: components,
+      reasoning: 'האומדן מבוסס על מחירי שוק נוכחיים לפריטים דומים',
+      sources: ['מחקר שוק כללי', 'השוואת מחירים'],
+      assumptions: ['יציבות מחירי שוק', 'זמינות פריטים']
+    };
+  }
 }
 
 // Helper functions
