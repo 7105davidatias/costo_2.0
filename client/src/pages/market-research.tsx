@@ -47,9 +47,16 @@ export default function MarketResearch() {
   console.log('Document referrer:', document.referrer);
   
   // Use new contextual market research API if requestId is provided
-  const { data: marketResearch } = useQuery({
+  const { data: marketResearch, isLoading: marketResearchLoading, error: marketResearchError } = useQuery({
     queryKey: ["/api/market-research", finalRequestId],
     enabled: !!finalRequestId,
+  });
+
+  console.log('Market research query status:', {
+    finalRequestId,
+    marketResearch,
+    isLoading: marketResearchLoading,
+    error: marketResearchError
   });
 
   // Fallback to category-based market insights
@@ -59,10 +66,29 @@ export default function MarketResearch() {
     enabled: !finalRequestId,
   });
 
-  const { data: suppliers } = useQuery<Supplier[]>({
+  const { data: suppliers, isLoading: suppliersLoading } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
     enabled: !finalRequestId,
   });
+
+  // Add early return with loading state
+  if (finalRequestId && marketResearchLoading) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">טוען נתוני מחקר שוק...</p>
+      </div>
+    </div>;
+  }
+
+  if (!finalRequestId && suppliersLoading) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">טוען נתוני ספקים...</p>
+      </div>
+    </div>;
+  }
 
   // Debug log to see what data we're getting
   console.log('MarketResearch - category param:', category);
@@ -101,7 +127,7 @@ export default function MarketResearch() {
   const contextualSuppliers = marketResearch?.supplierComparison || [];
   const legacySuppliers = suppliers?.slice(0, 3) || [];
   
-  const supplierComparisonData = (finalRequestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
+  const supplierComparisonData = ((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
     price: 95 - (index * 10),
     quality: parseFloat(supplier.rating || "4.5") * 20,
@@ -110,11 +136,11 @@ export default function MarketResearch() {
     reliability: supplier.reliability || 85,
   }));
 
-  const priceHistoryData = Array.isArray(marketInsight?.priceHistory) ? 
-    marketInsight.priceHistory.map((item: any) => ({
-      month: item.month,
-      price: item.price,
-    })) : [];
+  const priceHistoryData = (Array.isArray(marketInsight?.priceHistory) ? 
+    marketInsight.priceHistory : []).map((item: any) => ({
+      month: item.month || 'Unknown',
+      price: item.price || 0,
+    }));
 
   return (
     <div className="space-y-8">
@@ -129,8 +155,8 @@ export default function MarketResearch() {
             <h1 className="text-3xl font-bold text-foreground">מחקר שוק</h1>
           </div>
           <p className="text-muted-foreground">
-            {requestId && marketResearch?.requestDetails 
-              ? `ניתוח מקיף של שוק ${marketResearch.requestDetails.title}`
+            {finalRequestId && marketResearch?.requestDetails 
+              ? `ניתוח מקיף של שוק ${marketResearch.requestDetails.title || 'רכש'}`
               : `ניתוח מקיף של שוק ${decodedCategory}`
             }
           </p>
@@ -264,7 +290,7 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {(finalRequestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
+                {((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => {
                   const isContextual = !!(finalRequestId && marketResearch?.supplierComparison);
                   const supplierName = supplier.supplier || supplier.name;
                   const supplierRating = supplier.rating || "4.5";
@@ -294,7 +320,7 @@ export default function MarketResearch() {
                         <div className="flex items-center space-x-reverse space-x-1">
                           <span className="text-foreground">{supplierRating}</span>
                           <div className="flex text-yellow-400">
-                            {[...Array(5)].map((_, i) => (
+                            {Array.from({ length: 5 }, (_, i) => (
                               <span key={i} className={`text-xs ${i < Math.floor(parseFloat(supplierRating)) ? 'text-yellow-400' : 'text-muted'}`}>
                                 ★
                               </span>
