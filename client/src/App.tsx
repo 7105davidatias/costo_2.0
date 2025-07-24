@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/layout/header";
 import Dashboard from "@/pages/dashboard";
 import ProcurementRequest from "@/pages/procurement-request";
+import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
 import NotFound from "@/pages/not-found";
@@ -18,6 +19,7 @@ function Router() {
         <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/procurement-requests" component={ProcurementRequestsList} />
           <Route path="/procurement-request/:id?" component={ProcurementRequest} />
           <Route path="/cost-estimation/:id?" component={CostEstimation} />
           <Route path="/market-research/:category?" component={MarketResearch} />

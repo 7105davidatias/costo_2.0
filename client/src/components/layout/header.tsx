@@ -8,13 +8,14 @@ export default function Header() {
 
   const navigationItems = [
     { path: "/dashboard", label: "לוח בקרה", icon: Calculator },
-    { path: "/procurement-request", label: "דרישות רכש", icon: Calculator },
+    { path: "/procurement-requests", label: "דרישות רכש", icon: Calculator },
     { path: "/cost-estimation", label: "אומדני עלויות", icon: Calculator },
     { path: "/market-research", label: "מחקר שוק", icon: Calculator },
   ];
 
   const isActive = (path: string) => {
     if (path === "/dashboard" && (location === "/" || location === "/dashboard")) return true;
+    if (path === "/procurement-requests" && (location === "/procurement-requests" || location.startsWith("/procurement-request"))) return true;
     return location.startsWith(path);
   };
 
