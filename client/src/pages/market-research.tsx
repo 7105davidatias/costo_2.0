@@ -34,6 +34,12 @@ export default function MarketResearch() {
     enabled: !requestId,
   });
 
+  // Debug log to see what data we're getting
+  console.log('MarketResearch - requestId:', requestId);
+  console.log('MarketResearch - marketResearch:', marketResearch);
+  console.log('MarketResearch - contextualSuppliers:', marketResearch?.supplierComparison);
+  console.log('MarketResearch - suppliers (legacy):', suppliers);
+
   const formatCurrency = (amount: string | number) => {
     const value = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('he-IL', {
@@ -62,7 +68,7 @@ export default function MarketResearch() {
   const contextualSuppliers = marketResearch?.supplierComparison || [];
   const legacySuppliers = suppliers?.slice(0, 3) || [];
   
-  const supplierComparisonData = (requestId ? contextualSuppliers : legacySuppliers).map((supplier: any, index: number) => ({
+  const supplierComparisonData = (requestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
     price: 95 - (index * 10),
     quality: parseFloat(supplier.rating || "4.5") * 20,
@@ -225,8 +231,8 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {(requestId ? contextualSuppliers : legacySuppliers).map((supplier: any, index: number) => {
-                  const isContextual = !!requestId;
+                {(requestId && marketResearch?.supplierComparison ? marketResearch.supplierComparison : suppliers?.slice(0, 3) || []).map((supplier: any, index: number) => {
+                  const isContextual = !!(requestId && marketResearch?.supplierComparison);
                   const supplierName = supplier.supplier || supplier.name;
                   const supplierRating = supplier.rating || "4.5";
                   const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
