@@ -439,7 +439,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Market Insights
+  // Market Research - contextual based on procurement request
+  app.get("/api/market-research/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const request = await storage.getProcurementRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+      }
+      
+      // Generate contextual market research
+      const marketResearch = generateContextualMarketResearch(request);
+      
+      res.json({
+        requestId: requestId,
+        requestDetails: {
+          title: request.title,
+          category: request.category,
+          subcategory: request.subcategory
+        },
+        supplierComparison: marketResearch.supplierComparison,
+        marketInsights: marketResearch.marketInsights,
+        priceTrends: marketResearch.priceTrends,
+        informationSources: marketResearch.informationSources,
+        recommendations: marketResearch.recommendations
+      });
+    } catch (error) {
+      console.error('Error generating market research:', error);
+      res.status(500).json({ error: 'שגיאה ביצירת מחקר השוק' });
+    }
+  });
+
+  // Market Insights (legacy)
   app.get("/api/market-insights", async (req, res) => {
     try {
       const insights = await storage.getMarketInsights();
@@ -1181,5 +1213,368 @@ function generateGenericAnalysis(request: any) {
       qualityRisk: "לא ידוע",
       generalRisk: "נדרש מידע נוסף להערכת סיכונים"
     }
+  };
+}
+
+// Function to generate contextual market research based on procurement request type
+function generateContextualMarketResearch(request: any) {
+  const category = request.category?.toLowerCase() || '';
+  const title = request.title?.toLowerCase() || '';
+  const description = request.description?.toLowerCase() || '';
+  
+  // Detect request type based on category and content
+  if (title.includes('רכב') || title.includes('vehicle') || description.includes('רכב')) {
+    return generateVehicleMarketResearch(request);
+  } else if (title.includes('מחסן') || title.includes('בני') || description.includes('בני')) {
+    return generateConstructionMarketResearch(request);
+  } else if (title.includes('מחשב') || title.includes('שרת') || description.includes('ציוד')) {
+    return generateComputingMarketResearch(request);
+  } else if (title.includes('פיתוח') || title.includes('תוכנה') || description.includes('פיתוח')) {
+    return generateSoftwareMarketResearch(request);
+  } else if (title.includes('ייעוץ') || title.includes('יעוץ') || description.includes('ייעוץ')) {
+    return generateConsultingMarketResearch(request);
+  } else {
+    return generateGenericMarketResearch(request);
+  }
+}
+
+// Vehicle market research
+function generateVehicleMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'סוכנות טויוטה ישראל',
+        rating: 4.8,
+        deliveryTime: '45 ימים',
+        pricePerUnit: '₪89,000',
+        discount: '5% מעל 10 יחידות',
+        warranty: '3 שנים + תמיכה',
+        advantages: ['אמינות גבוהה', 'שירות ארצי', 'חלפים זמינים'],
+        contact: 'TY'
+      },
+      {
+        supplier: 'סוכנות פורד ישראל',
+        rating: 4.6,
+        deliveryTime: '60 ימים',
+        pricePerUnit: '₪85,000',
+        discount: '7% מעל 10 יחידות',
+        warranty: '3 שנים',
+        advantages: ['מחיר תחרותי', 'רשת שירות נרחבת', 'דגמים מגוונים'],
+        contact: 'FI'
+      },
+      {
+        supplier: 'סוכנות הונדה ישראל',
+        rating: 4.7,
+        deliveryTime: '50 ימים',
+        pricePerUnit: '₪87,500',
+        discount: '6% מעל 10 יחידות',
+        warranty: '3 שנים + הארכה',
+        advantages: ['חסכון בדלק', 'טכנולוגיה מתקדמת', 'ערך שיורי גבוה'],
+        contact: 'HI'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק הרכבים המסחריים',
+        description: 'שוק הרכבים המסחריים צומח 3.2% השנה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      },
+      {
+        title: 'זמינות רכבים',
+        description: 'זמני אספקה התקצרו ב-15% לעומת השנה שעברה',
+        trend: 'משתפר',
+        impact: 'חיובי'
+      },
+      {
+        title: 'מחירי דלק',
+        description: 'עלייה של 8% במחירי הדלק משפיעה על TCO',
+        trend: 'עולה',
+        impact: 'שלילי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'יציבות במחירי רכבים מסחריים',
+      yearOverYear: 'עלייה של 2.5% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות יחסית ברבעון הבא',
+      factors: ['מחירי חומרי גלם', 'שער החליפין', 'מדיניות יבוא']
+    },
+    informationSources: [
+      {
+        title: 'איגוד יבואני הרכב',
+        description: 'נתוני מכירות ומחירים רשמיים של יבואני הרכב בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מחירון הרכבים הממשלתי',
+        description: 'מחירון רשמי לרכש רכבים במגזר הציבורי',
+        lastUpdated: 'ינואר 2024',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'דוח שוק הרכבים - בנק ישראל',
+        description: 'ניתוח מקיף של שוק הרכבים והמגמות הכלכליות',
+        lastUpdated: 'נובמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'המלצה לתזמון רכישה',
+        description: 'מומלץ לבצע את הרכישה ברבעון הנוכחי לפני עלייה צפויה במחירים',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'אסטרטגיית משא ומתן',
+        description: 'נצל את הכמות הגדולה (10 יחידות) להשגת הנחות נוספות',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+
+// Construction market research
+function generateConstructionMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'חברת בנייה אלקטרה',
+        rating: 4.7,
+        deliveryTime: '6 חודשים',
+        pricePerUnit: '₪1,200 למ"ר',
+        discount: '3% מעל 1000 מ"ר',
+        warranty: '10 שנים מבנה',
+        advantages: ['ניסיון רב', 'איכות גבוהה', 'עמידה בלוחות זמנים'],
+        contact: 'EL'
+      },
+      {
+        supplier: 'קבוצת שפיר',
+        rating: 4.5,
+        deliveryTime: '7 חודשים',
+        pricePerUnit: '₪1,150 למ"ר',
+        discount: '5% מעל 1000 מ"ר',
+        warranty: '10 שנים מבנה',
+        advantages: ['מחיר תחרותי', 'גמישות בעיצוב', 'טכנולוגיות חדשניות'],
+        contact: 'SH'
+      },
+      {
+        supplier: 'חברת בנייה סולל בונה',
+        rating: 4.6,
+        deliveryTime: '6.5 חודשים',
+        pricePerUnit: '₪1,180 למ"ר',
+        discount: '4% מעל 1000 מ"ר',
+        warranty: '12 שנים מבנה',
+        advantages: ['אחריות מורחבת', 'ניסיון בפרויקטים דומים', 'יכולת ביצוע מהירה'],
+        contact: 'SB'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק הבנייה התעשייתית',
+        description: 'גידול של 5% בביקוש לבניית מחסנים ומבני תעשייה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      },
+      {
+        title: 'זמינות קבלנים',
+        description: 'עומס עבודה גבוה אצל קבלנים מוביל לעלייה בזמני ביצוע',
+        trend: 'מאתגר',
+        impact: 'שלילי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה של 3% במחירי בנייה תעשייתית',
+      yearOverYear: 'עלייה של 8% לעומת השנה שעברה',
+      forecast: 'צפויה המשך עלייה מתונה ברבעון הבא',
+      factors: ['מחירי חומרי גלם', 'עלויות עבודה', 'ביקוש גבוה']
+    },
+    informationSources: [
+      {
+        title: 'איגוד קבלני הבנייה',
+        description: 'נתוני עלויות בנייה ומחירוני עבודות',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מחירון דקל - עבודות בנייה',
+        description: 'מחירון מקצועי לעבודות בנייה ותשתיות',
+        lastUpdated: 'ינואר 2024',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'תזמון פרויקט',
+        description: 'מומלץ להתחיל את הפרויקט בחודשים הקרובים לפני עונת הגשמים',
+        priority: 'גבוהה'
+      }
+    ]
+  };
+}
+
+// Computing market research (existing)
+function generateComputingMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'TechSource Ltd',
+        rating: 4.8,
+        deliveryTime: '10 ימים',
+        pricePerUnit: '₪4,500',
+        discount: '5% מעל 50 יחידות',
+        warranty: '3 שנים + תמיכה',
+        advantages: ['מומלץ', 'הנחות', 'תמיכה'],
+        contact: 'TS'
+      },
+      {
+        supplier: 'Dell Technologies',
+        rating: 4.7,
+        deliveryTime: '15 ימים',
+        pricePerUnit: '₪4,200',
+        discount: '8% מעל 20 יחידות',
+        warranty: '3 שנים',
+        advantages: ['יבואן רשמי', 'מחיר', 'זמינות'],
+        contact: 'DT'
+      },
+      {
+        supplier: 'CompuTrade',
+        rating: 4.5,
+        deliveryTime: '7 ימים',
+        pricePerUnit: '₪4,800',
+        discount: '3% מעל 30 יחידות',
+        warranty: '2 שנים',
+        advantages: ['מהיר', 'מקומי', 'גמיש'],
+        contact: 'CT'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק הטכנולוגיה',
+        description: 'ביקוש גבוה לפתרונות ענן והיברידיים',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'יציבות במחירי ציוד מחשוב',
+      yearOverYear: 'ירידה של 5% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות ברבעון הבא',
+      factors: ['מלחמת שבבים', 'שרשרת אספקה', 'שער הדולר']
+    },
+    informationSources: [
+      {
+        title: 'Intel Israel',
+        description: 'מידע טכני ומחירים עדכניים למעבדים ורכיבי חומרה',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'המלצה טכנולוגית',
+        description: 'שקול שדרוג לטכנולוגיות חדשות יותר למען עתיד עמיד',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+
+// Generic market research fallback
+function generateGenericMarketResearch(request: any) {
+  return generateComputingMarketResearch(request);
+}
+
+// Software development market research
+function generateSoftwareMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'חברת פיתוח Alpha-Tech',
+        rating: 4.8,
+        deliveryTime: '12 שבועות',
+        pricePerUnit: '₪450 לשעה',
+        discount: '10% מעל 500 שעות',
+        warranty: 'תחזוקה שנתית',
+        advantages: ['ניסיון רב', 'טכנולוגיות מתקדמות', 'צוות מנוסה'],
+        contact: 'AT'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות פיתוח תוכנה',
+        description: 'ביקוש גבוה לפתרונות AI ואוטומציה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה של 5% בתעריפי פיתוח',
+      yearOverYear: 'עלייה של 12% לעומת השנה שעברה',
+      forecast: 'צפויה המשך עלייה ברבעון הבא',
+      factors: ['מחסור במפתחים', 'ביקוש גבוה', 'טכנולוגיות חדשות']
+    },
+    informationSources: [
+      {
+        title: 'איגוד תעשיות התוכנה',
+        description: 'נתוני שוק ותעריפים בתעשיית התוכנה',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'המלצה טכנולוגית',
+        description: 'שקול אימוץ מתודולוגיות Agile לשיפור היעילות',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+
+// Consulting market research
+function generateConsultingMarketResearch(request: any) {
+  return {
+    supplierComparison: [
+      {
+        supplier: 'חברת ייעוץ עסקי McKinsey',
+        rating: 4.9,
+        deliveryTime: '8 שבועות',
+        pricePerUnit: '₪800 לשעה',
+        discount: '5% מעל 200 שעות',
+        warranty: 'ליווי למימוש',
+        advantages: ['מוניטין בינלאומי', 'מתודולוגיות מוכחות', 'צוות מומחים'],
+        contact: 'MC'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות ייעוץ עסקי',
+        description: 'ביקוש גבוה לייעוץ דיגיטלי וטרנספורמציה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה של 7% בתעריפי ייעוץ',
+      yearOverYear: 'עלייה של 15% לעומת השנה שעברה',
+      forecast: 'צפויה המשך עלייה ברבעון הבא',
+      factors: ['ביקוש גבוה', 'מחסור ביועצים מנוסים', 'פרויקטים מורכבים']
+    },
+    informationSources: [
+      {
+        title: 'איגוד היועצים הישראלי',
+        description: 'נתוני שוק ותעריפים בתחום הייעוץ העסקי',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'בחירת יועץ',
+        description: 'בחר יועץ עם ניסיון ספציפי בתחום הפעילות שלך',
+        priority: 'גבוהה'
+      }
+    ]
   };
 }

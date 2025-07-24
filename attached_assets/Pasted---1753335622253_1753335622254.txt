@@ -1,0 +1,707 @@
+# פרומפט לתיקון מסך מחקר השוק - הצגת נתונים קונטקסטואליים
+
+תודה על העבודה המצוינת! זוהתה בעיה קריטית במסך "מחקר שוק" שדורשת תיקון מיידי.
+
+## 🔴 בעיה קריטית זוהתה
+
+**הבעיה:** מסך "מחקר שוק" מציג תמיד את אותם הנתונים הגנריים (ספקי ציוד מחשוב) ללא קשר לסוג הדרישה הספציפית ומאפייניה.
+
+**דוגמה לבעיה:** עבור דרישת רכש "רכש 10 רכבי צי" (REQ-2024-015), המסך מציג:
+- השוואת ספקים של ציוד מחשוב (TechSource Ltd, Dell Technologies, CompuTrade)
+- מקורות מידע רלוונטיים לציוד מחשוב (Intel Israel, מחירון הממשלה, מדד המחירים לצרכן)
+
+**מה שצריך לקרות:** המסך צריך להציג נתונים רלוונטיים לסוג הדרישה:
+- **לרכש רכבים:** ספקי רכבים, סוכנויות, יצרנים, מחירוני רכבים
+- **לרכש בנייה:** קבלני בנייה, ספקי חומרי בנייה, מחירוני בנייה
+- **לרכש שירותים:** ספקי שירותים, חברות ייעוץ, תעריפי שוק
+
+## 🔧 תיקונים נדרשים
+
+### 1. עדכון API endpoint למחקר שוק קונטקסטואלי
+
+```javascript
+// עדכון ה-API endpoint הקיים
+app.get('/api/market-research/:requestId', (req, res) => {
+  const requestId = parseInt(req.params.requestId);
+  const request = getRequestById(requestId);
+  
+  if (!request) {
+    return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+  }
+  
+  // יצירת מחקר שוק קונטקסטואלי לפי סוג הדרישה
+  const marketResearch = generateContextualMarketResearch(request);
+  
+  res.json({
+    requestId: requestId,
+    requestDetails: {
+      title: request.title,
+      category: request.category,
+      subcategory: request.subcategory
+    },
+    supplierComparison: marketResearch.supplierComparison,
+    marketInsights: marketResearch.marketInsights,
+    priceTrends: marketResearch.priceTrends,
+    informationSources: marketResearch.informationSources,
+    recommendations: marketResearch.recommendations
+  });
+});
+
+// פונקציה ליצירת מחקר שוק קונטקסטואלי
+function generateContextualMarketResearch(request) {
+  const category = request.category.toLowerCase();
+  const subcategory = request.subcategory.toLowerCase();
+  
+  switch(subcategory) {
+    case 'רכבים':
+      return generateVehicleMarketResearch(request);
+    case 'בנייה ותשתיות':
+      return generateConstructionMarketResearch(request);
+    case 'ציוד מחשוב':
+      return generateComputingMarketResearch(request);
+    case 'חומרי גלם':
+      return generateRawMaterialsMarketResearch(request);
+    case 'פיתוח תוכנה':
+      return generateSoftwareMarketResearch(request);
+    case 'ייעוץ עסקי':
+      return generateConsultingMarketResearch(request);
+    case 'אבטחת מידע':
+      return generateSecurityMarketResearch(request);
+    case 'תחזוקה':
+      return generateMaintenanceMarketResearch(request);
+    default:
+      return generateGenericMarketResearch(request);
+  }
+}
+```
+
+### 2. פונקציות מחקר שוק ספציפיות לכל סוג דרישה
+
+#### א. מחקר שוק לרכבים
+
+```javascript
+function generateVehicleMarketResearch(request) {
+  const specs = request.technicalSpecs;
+  const vehicleType = specs.vehicleType;
+  const quantity = specs.quantity;
+  
+  return {
+    supplierComparison: [
+      {
+        supplier: 'סוכנות טויוטה ישראל',
+        rating: 4.8,
+        deliveryTime: '45 ימים',
+        pricePerUnit: '₪89,000',
+        discount: '5% מעל 10 יחידות',
+        warranty: '3 שנים + תמיכה',
+        advantages: ['אמינות גבוהה', 'שירות ארצי', 'חלפים זמינים'],
+        contact: 'TS'
+      },
+      {
+        supplier: 'סוכנות פורד ישראל',
+        rating: 4.6,
+        deliveryTime: '60 ימים',
+        pricePerUnit: '₪85,000',
+        discount: '7% מעל 10 יחידות',
+        warranty: '3 שנים',
+        advantages: ['מחיר תחרותי', 'רשת שירות נרחבת', 'דגמים מגוונים'],
+        contact: 'FI'
+      },
+      {
+        supplier: 'סוכנות הונדה ישראל',
+        rating: 4.7,
+        deliveryTime: '50 ימים',
+        pricePerUnit: '₪87,500',
+        discount: '6% מעל 10 יחידות',
+        warranty: '3 שנים + הארכה',
+        advantages: ['חסכון בדלק', 'טכנולוגיה מתקדמת', 'ערך שיורי גבוה'],
+        contact: 'HI'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק הרכבים המסחריים',
+        description: 'שוק הרכבים המסחריים צומח 3.2% השנה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      },
+      {
+        title: 'זמינות רכבים',
+        description: 'זמני אספקה התקצרו ב-15% לעומת השנה שעברה',
+        trend: 'משתפר',
+        impact: 'חיובי'
+      },
+      {
+        title: 'מחירי דלק',
+        description: 'עלייה של 8% במחירי הדלק משפיעה על TCO',
+        trend: 'עולה',
+        impact: 'שלילי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'יציבות במחירי רכבים מסחריים',
+      yearOverYear: 'עלייה של 2.5% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות יחסית ברבעון הבא',
+      factors: ['מחירי חומרי גלם', 'שער החליפין', 'מדיניות יבוא']
+    },
+    informationSources: [
+      {
+        title: 'איגוד יבואני הרכב',
+        description: 'נתוני מכירות ומחירים רשמיים של יבואני הרכב בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מחירון הרכבים הממשלתי',
+        description: 'מחירון רשמי לרכש רכבים במגזר הציבורי',
+        lastUpdated: 'ינואר 2024',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'דוח שוק הרכבים - בנק ישראל',
+        description: 'ניתוח מקיף של שוק הרכבים והמגמות הכלכליות',
+        lastUpdated: 'נובמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מערכת רכש ממשלתי',
+        description: 'נתוני רכישות רכבים במגזר הציבורי ומחירי התקשרויות',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'המלצה לתזמון רכישה',
+        description: 'מומלץ לבצע את הרכישה ברבעון הנוכחי לפני עלייה צפויה במחירים',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'אסטרטגיית משא ומתן',
+        description: 'נצל את הכמות הגדולה (10 יחידות) להשגת הנחות נוספות',
+        priority: 'בינונית'
+      },
+      {
+        title: 'בחינת חלופות מימון',
+        description: 'שקול ליסינג תפעולי כחלופה לרכישה ישירה',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+```
+
+#### ב. מחקר שוק לבנייה ותשתיות
+
+```javascript
+function generateConstructionMarketResearch(request) {
+  const specs = request.technicalSpecs;
+  const area = specs.area;
+  const components = specs.components;
+  
+  return {
+    supplierComparison: [
+      {
+        supplier: 'חברת בנייה אלקטרה',
+        rating: 4.7,
+        deliveryTime: '6 חודשים',
+        pricePerUnit: '₪1,200 למ"ר',
+        discount: '3% מעל 1000 מ"ר',
+        warranty: '10 שנים מבנה',
+        advantages: ['ניסיון רב', 'איכות גבוהה', 'עמידה בלוחות זמנים'],
+        contact: 'EL'
+      },
+      {
+        supplier: 'קבוצת שפיר',
+        rating: 4.5,
+        deliveryTime: '7 חודשים',
+        pricePerUnit: '₪1,150 למ"ר',
+        discount: '5% מעל 1000 מ"ר',
+        warranty: '10 שנים מבנה',
+        advantages: ['מחיר תחרותי', 'גמישות בעיצוב', 'טכנולוגיות חדשניות'],
+        contact: 'SH'
+      },
+      {
+        supplier: 'חברת בנייה סולל בונה',
+        rating: 4.6,
+        deliveryTime: '6.5 חודשים',
+        pricePerUnit: '₪1,180 למ"ר',
+        discount: '4% מעל 1000 מ"ר',
+        warranty: '12 שנים מבנה',
+        advantages: ['אחריות מורחבת', 'ניסיון בפרויקטים דומים', 'יכולת ביצוע מהירה'],
+        contact: 'SB'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות שוק הבנייה התעשייתית',
+        description: 'גידול של 5% בביקוש לבניית מחסנים ומבני תעשייה',
+        trend: 'עולה',
+        impact: 'חיובי'
+      },
+      {
+        title: 'זמינות קבלנים',
+        description: 'עומס עבודה גבוה אצל קבלנים מוביל לעלייה בזמני ביצוע',
+        trend: 'מאתגר',
+        impact: 'שלילי'
+      },
+      {
+        title: 'מחירי חומרי בנייה',
+        description: 'יציבות יחסית במחירי פלדה ובטון ברבעון האחרון',
+        trend: 'יציב',
+        impact: 'ניטרלי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה של 3% במחירי בנייה תעשייתית',
+      yearOverYear: 'עלייה של 8% לעומת השנה שעברה',
+      forecast: 'צפויה המשך עלייה מתונה ברבעון הבא',
+      factors: ['מחירי חומרי גלם', 'עלויות עבודה', 'ביקוש גבוה']
+    },
+    informationSources: [
+      {
+        title: 'איגוד קבלני הבנייה',
+        description: 'נתוני עלויות בנייה ומחירוני עבודות',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מחירון דקל - עבודות בנייה',
+        description: 'מחירון מקצועי לעבודות בנייה ותשתיות',
+        lastUpdated: 'ינואר 2024',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'הלשכה המרכזית לסטטיסטיקה',
+        description: 'מדד מחירי תשומות בבנייה ומדד עלות הבנייה',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'משרד הבינוי והשיכון',
+        description: 'נתוני בנייה ותקנות בנייה עדכניות',
+        lastUpdated: 'נובמבר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'תזמון פרויקט',
+        description: 'מומלץ להתחיל את הפרויקט בחודשים הקרובים לפני עונת הגשמים',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'ניהול סיכונים',
+        description: 'הכן תוכנית חירום למקרה של עיכובים במשלוח חומרים',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'אופטימיזציה כלכלית',
+        description: 'שקול רכישה מוקדמת של חומרי גלם לקיבוע מחירים',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+```
+
+#### ג. מחקר שוק לציוד מחשוב (הקיים - לשמירה)
+
+```javascript
+function generateComputingMarketResearch(request) {
+  // השאר את הפונקציה הקיימת כפי שהיא
+  return {
+    supplierComparison: [
+      {
+        supplier: 'TechSource Ltd',
+        rating: 4.8,
+        deliveryTime: '10 ימים',
+        pricePerUnit: '₪4,500',
+        discount: '5% מעל 50 יחידות',
+        warranty: '3 שנים + תמיכה',
+        advantages: ['מומלץ', 'הנחות', 'תמיכה'],
+        contact: 'TS'
+      },
+      // ... שאר הספקים
+    ],
+    // ... שאר הנתונים הקיימים
+  };
+}
+```
+
+#### ד. מחקר שוק לחומרי גלם
+
+```javascript
+function generateRawMaterialsMarketResearch(request) {
+  const specs = request.technicalSpecs;
+  const materials = specs.materials;
+  
+  return {
+    supplierComparison: [
+      {
+        supplier: 'פלדות ישראל',
+        rating: 4.6,
+        deliveryTime: '14 ימים',
+        pricePerUnit: 'לפי מחירון',
+        discount: '3% מעל 50 טון',
+        warranty: 'תקן ישראלי',
+        advantages: ['איכות מובטחת', 'אספקה מהירה', 'תמיכה טכנית'],
+        contact: 'PI'
+      },
+      {
+        supplier: 'מתכות הצפון',
+        rating: 4.4,
+        deliveryTime: '21 ימים',
+        pricePerUnit: 'לפי מחירון',
+        discount: '5% מעל 50 טון',
+        warranty: 'תקן אירופאי',
+        advantages: ['מחיר תחרותי', 'מגוון רחב', 'גמישות באספקה'],
+        contact: 'MH'
+      },
+      {
+        supplier: 'חומרי בנייה דרום',
+        rating: 4.5,
+        deliveryTime: '18 ימים',
+        pricePerUnit: 'לפי מחירון',
+        discount: '4% מעל 50 טון',
+        warranty: 'תקן ישראלי',
+        advantages: ['שירות אזורי', 'מחירים יציבים', 'ניסיון רב'],
+        contact: 'CBD'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'מגמות מחירי חומרי גלם',
+        description: 'מחירי פלדה עולים 2% ברבעון האחרון',
+        trend: 'עולה',
+        impact: 'שלילי'
+      },
+      {
+        title: 'זמינות חומרים',
+        description: 'זמינות טובה של רוב חומרי הגלם',
+        trend: 'יציב',
+        impact: 'חיובי'
+      },
+      {
+        title: 'השפעות גלובליות',
+        description: 'מחירי אנרגיה משפיעים על עלויות ייצור',
+        trend: 'משתנה',
+        impact: 'שלילי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'עלייה מתונה במחירי חומרי גלם',
+      yearOverYear: 'עלייה של 6% לעומת השנה שעברה',
+      forecast: 'צפויה יציבות יחסית ברבעון הבא',
+      factors: ['מחירי אנרגיה', 'ביקוש תעשייתי', 'מדיניות יבוא']
+    },
+    informationSources: [
+      {
+        title: 'בורסת המתכות בלונדון',
+        description: 'מחירי מתכות עולמיים בזמן אמת',
+        lastUpdated: 'יומי',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'איגוד התעשיינים',
+        description: 'נתוני תעשיית המתכות והפלדה בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מחירון חומרי גלם',
+        description: 'מחירון מקצועי לחומרי גלם תעשייתיים',
+        lastUpdated: 'ינואר 2024',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'אסטרטגיית רכישה',
+        description: 'מומלץ לבצע רכישה מדורגת להפחתת סיכוני מחיר',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'ניהול מלאי',
+        description: 'שמור על מלאי ביטחון של 30 ימים',
+        priority: 'בינונית'
+      }
+    ]
+  };
+}
+```
+
+#### ה. מחקר שוק לשירותי פיתוח תוכנה
+
+```javascript
+function generateSoftwareMarketResearch(request) {
+  const specs = request.technicalSpecs;
+  const technologies = specs.technologies;
+  const estimatedHours = specs.estimatedHours;
+  
+  return {
+    supplierComparison: [
+      {
+        supplier: 'חברת פיתוח טק-סולושנס',
+        rating: 4.8,
+        deliveryTime: '8 חודשים',
+        pricePerUnit: '₪350/שעה',
+        discount: 'הנחה 10% לפרויקטים מעל 2000 שעות',
+        warranty: 'תמיכה שנה + אחריות קוד',
+        advantages: ['ניסיון בטכנולוגיות מתקדמות', 'צוות מנוסה', 'מתודולוגיות Agile'],
+        contact: 'TS'
+      },
+      {
+        supplier: 'סטודיו פיתוח דיגיטל',
+        rating: 4.6,
+        deliveryTime: '9 חודשים',
+        pricePerUnit: '₪320/שעה',
+        discount: 'הנחה 8% לפרויקטים מעל 2000 שעות',
+        warranty: 'תמיכה 6 חודשים',
+        advantages: ['מחיר תחרותי', 'גמישות בדרישות', 'ניסיון בתחום'],
+        contact: 'SD'
+      },
+      {
+        supplier: 'חברת פיתוח אינוביט',
+        rating: 4.7,
+        deliveryTime: '7.5 חודשים',
+        pricePerUnit: '₪380/שעה',
+        discount: 'הנחה 12% לפרויקטים מעל 2000 שעות',
+        warranty: 'תמיכה שנתיים + הדרכות',
+        advantages: ['איכות גבוהה', 'תמיכה מורחבת', 'חדשנות טכנולוגית'],
+        contact: 'IN'
+      }
+    ],
+    marketInsights: [
+      {
+        title: 'ביקוש לפיתוח תוכנה',
+        description: 'ביקוש גבוה לפיתוח מערכות ניהול משאבי אנוש',
+        trend: 'עולה',
+        impact: 'חיובי'
+      },
+      {
+        title: 'זמינות מפתחים',
+        description: 'מחסור במפתחים מנוסים בטכנולוגיות מתקדמות',
+        trend: 'מאתגר',
+        impact: 'שלילי'
+      },
+      {
+        title: 'תעריפי פיתוח',
+        description: 'עלייה של 5% בתעריפי פיתוח השנה',
+        trend: 'עולה',
+        impact: 'שלילי'
+      }
+    ],
+    priceTrends: {
+      currentQuarter: 'יציבות יחסית בתעריפי פיתוח',
+      yearOverYear: 'עלייה של 5% לעומת השנה שעברה',
+      forecast: 'צפויה המשך עלייה מתונה',
+      factors: ['ביקוש גבוה', 'מחסור במפתחים', 'טכנולוגיות חדשות']
+    },
+    informationSources: [
+      {
+        title: 'איגוד תעשיות ההיי-טק',
+        description: 'נתוני שוק הפיתוח והתעריפים בישראל',
+        lastUpdated: 'דצמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'דוח שכר היי-טק',
+        description: 'סקר שכר ותעריפים בתעשיית ההיי-טק',
+        lastUpdated: 'נובמבר 2023',
+        reliability: 'גבוהה'
+      },
+      {
+        title: 'מרכז המחקר והמידע של הכנסת',
+        description: 'נתוני תעשיית ההיי-טק והפיתוח בישראל',
+        lastUpdated: 'אוקטובר 2023',
+        reliability: 'גבוהה'
+      }
+    ],
+    recommendations: [
+      {
+        title: 'בחירת ספק',
+        description: 'מומלץ לבחור ספק עם ניסיון ספציפי בטכנולוגיות הנדרשות',
+        priority: 'גבוהה'
+      },
+      {
+        title: 'ניהול פרויקט',
+        description: 'הגדר אבני דרך ברורות ומנגנוני בקרת איכות',
+        priority: 'גבוהה'
+      }
+    ]
+  };
+}
+```
+
+### 3. עדכון הפרונטאנד - מסך מחקר שוק
+
+```jsx
+// עדכון קומפוננט מחקר שוק
+function MarketResearch() {
+  const [marketData, setMarketData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { requestId } = useParams();
+  
+  useEffect(() => {
+    // טעינת מחקר שוק קונטקסטואלי
+    fetch(`/api/market-research/${requestId}`)
+      .then(response => response.json())
+      .then(data => {
+        setMarketData(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading market research:', error);
+        setLoading(false);
+      });
+  }, [requestId]);
+  
+  if (loading) return <div>טוען מחקר שוק...</div>;
+  if (!marketData) return <div>שגיאה בטעינת נתונים</div>;
+  
+  return (
+    <div className="market-research">
+      <h1>מחקר שוק</h1>
+      <h2>{marketData.requestDetails.title}</h2>
+      <p>קטגוריה: {marketData.requestDetails.category} - {marketData.requestDetails.subcategory}</p>
+      
+      {/* השוואת ספקים */}
+      <div className="supplier-comparison">
+        <h3>השוואת ספקים</h3>
+        <table className="suppliers-table">
+          <thead>
+            <tr>
+              <th>ספק</th>
+              <th>מחיר ליחידה</th>
+              <th>דירוג</th>
+              <th>זמן אספקה</th>
+              <th>אחריות</th>
+              <th>הנחות</th>
+              <th>המלצה</th>
+            </tr>
+          </thead>
+          <tbody>
+            {marketData.supplierComparison.map((supplier, index) => (
+              <tr key={index}>
+                <td>
+                  <div className="supplier-info">
+                    <span className="supplier-name">{supplier.supplier}</span>
+                    <span className="supplier-contact">{supplier.contact}</span>
+                  </div>
+                </td>
+                <td>{supplier.pricePerUnit}</td>
+                <td>
+                  <div className="rating">
+                    <span className="stars">{'★'.repeat(Math.floor(supplier.rating))}</span>
+                    <span className="rating-number">{supplier.rating}</span>
+                  </div>
+                </td>
+                <td>{supplier.deliveryTime}</td>
+                <td>{supplier.warranty}</td>
+                <td>{supplier.discount}</td>
+                <td>
+                  <div className="advantages">
+                    {supplier.advantages.map((advantage, idx) => (
+                      <span key={idx} className="advantage-tag">{advantage}</span>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* תובנות שוק */}
+      <div className="market-insights">
+        <h3>תובנות שוק</h3>
+        {marketData.marketInsights.map((insight, index) => (
+          <div key={index} className="insight-card">
+            <h4>{insight.title}</h4>
+            <p>{insight.description}</p>
+            <div className="insight-indicators">
+              <span className={`trend ${insight.trend}`}>{insight.trend}</span>
+              <span className={`impact ${insight.impact}`}>{insight.impact}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* מגמות מחירים */}
+      <div className="price-trends">
+        <h3>מגמות מחירים</h3>
+        <div className="trends-grid">
+          <div className="trend-item">
+            <h4>רבעון נוכחי</h4>
+            <p>{marketData.priceTrends.currentQuarter}</p>
+          </div>
+          <div className="trend-item">
+            <h4>השוואה שנתית</h4>
+            <p>{marketData.priceTrends.yearOverYear}</p>
+          </div>
+          <div className="trend-item">
+            <h4>תחזית</h4>
+            <p>{marketData.priceTrends.forecast}</p>
+          </div>
+          <div className="trend-item">
+            <h4>גורמים משפיעים</h4>
+            <ul>
+              {marketData.priceTrends.factors.map((factor, idx) => (
+                <li key={idx}>{factor}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      {/* מקורות מידע */}
+      <div className="information-sources">
+        <h3>מקורות המידע והנתונים</h3>
+        {marketData.informationSources.map((source, index) => (
+          <div key={index} className="source-card">
+            <h4>{source.title}</h4>
+            <p>{source.description}</p>
+            <div className="source-meta">
+              <span className="last-updated">עודכן: {source.lastUpdated}</span>
+              <span className={`reliability ${source.reliability}`}>
+                אמינות: {source.reliability}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* המלצות */}
+      <div className="recommendations">
+        <h3>המלצות</h3>
+        {marketData.recommendations.map((rec, index) => (
+          <div key={index} className={`recommendation ${rec.priority}`}>
+            <h4>{rec.title}</h4>
+            <p>{rec.description}</p>
+            <span className="priority">עדיפות: {rec.priority}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+## ✅ מה שעובד מצוין (אל תשנה)
+
+כל הפונקציונליות הקיימת צריכה להישמר, כולל:
+- עיצוב ונושא כהה
+- תמיכה בעברית RTL
+- כפתורי ניווט וחזרה
+- כל התיקונים שבוצעו קודם לכן
+
+## 🎯 סדר עדיפויות לתיקון
+
+1. **ראשון:** עדכון API endpoint למחקר שוק קונטקסטואלי
+2. **שני:** יצירת פונקציות מחקר שוק ספציפיות לכל סוג דרישה
+3. **שלישי:** עדכון מסך מחקר שוק להצגת נתונים קונטקסטואליים
+4. **רביעי:** בדיקה שכל סוג דרישה מציג נתונים רלוונטיים
+
+לאחר התיקון, המסך יציג נתונים רלוונטיים וספציפיים לכל סוג דרישה, מה שישפר משמעותית את חוויית המשתמש ואמינות המחקר.
+

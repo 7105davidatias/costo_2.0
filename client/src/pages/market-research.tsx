@@ -10,14 +10,28 @@ import { MarketInsight, Supplier } from "@shared/schema";
 
 export default function MarketResearch() {
   const { category } = useParams();
-  const decodedCategory = category ? decodeURIComponent(category) : "חומרה - שרתים";
+  
+  // Check if the parameter is actually a request ID (number) or a category (string)
+  const isRequestId = category && !isNaN(Number(category));
+  const requestId = isRequestId ? category : null;
+  const actualCategory = !isRequestId ? category : null;
+  
+  // Use new contextual market research API if requestId is provided
+  const { data: marketResearch } = useQuery({
+    queryKey: ["/api/market-research", requestId],
+    enabled: !!requestId,
+  });
 
+  // Fallback to category-based market insights
+  const decodedCategory = actualCategory ? decodeURIComponent(actualCategory) : "ציוד טכנולוגי";
   const { data: marketInsight } = useQuery<MarketInsight>({
     queryKey: ["/api/market-insights", decodedCategory],
+    enabled: !requestId,
   });
 
   const { data: suppliers } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
+    enabled: !requestId,
   });
 
   const formatCurrency = (amount: string | number) => {
@@ -44,14 +58,18 @@ export default function MarketResearch() {
     return { label: 'סטנדרט', className: 'bg-muted/20 text-muted-foreground' };
   };
 
-  const supplierComparisonData = suppliers?.slice(0, 3).map(supplier => ({
-    supplier: supplier.name,
-    price: 95 - (suppliers.indexOf(supplier) * 10),
+  // Use contextual data if available, otherwise fallback to legacy data
+  const contextualSuppliers = marketResearch?.supplierComparison || [];
+  const legacySuppliers = suppliers?.slice(0, 3) || [];
+  
+  const supplierComparisonData = (requestId ? contextualSuppliers : legacySuppliers).map((supplier: any, index: number) => ({
+    supplier: supplier.supplier || supplier.name,
+    price: 95 - (index * 10),
     quality: parseFloat(supplier.rating || "4.5") * 20,
-    delivery: 100 - (supplier.deliveryTime || 10) * 5,
+    delivery: 100 - ((supplier.deliveryTime || "10").toString().match(/\d+/)?.[0] || 10) * 5,
     service: supplier.reliability || 85,
     reliability: supplier.reliability || 85,
-  })) || [];
+  }));
 
   const priceHistoryData = Array.isArray(marketInsight?.priceHistory) ? 
     marketInsight.priceHistory.map((item: any) => ({
@@ -71,7 +89,12 @@ export default function MarketResearch() {
             </Button>
             <h1 className="text-3xl font-bold text-foreground">מחקר שוק</h1>
           </div>
-          <p className="text-muted-foreground">ניתוח מקיף של שוק {decodedCategory}</p>
+          <p className="text-muted-foreground">
+            {requestId && marketResearch?.requestDetails 
+              ? `ניתוח מקיף של שוק ${marketResearch.requestDetails.title}`
+              : `ניתוח מקיף של שוק ${decodedCategory}`
+            }
+          </p>
         </div>
         <div className="flex space-x-reverse space-x-4">
           <Button variant="outline">
@@ -202,39 +225,50 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {suppliers?.map((supplier, index) => {
-                  const recommendationConfig = getRecommendationBadge(supplier);
-                  const basePrice = 60500 + (index * 2500);
+                {(requestId ? contextualSuppliers : legacySuppliers).map((supplier: any, index: number) => {
+                  const isContextual = !!requestId;
+                  const supplierName = supplier.supplier || supplier.name;
+                  const supplierRating = supplier.rating || "4.5";
+                  const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
+                  const supplierWarranty = supplier.warranty || supplier.warrantyTerms || "3 שנים";
+                  const supplierDiscount = supplier.discount || supplier.discountPolicy || "ללא הנחה";
+                  const supplierPrice = supplier.pricePerUnit || formatCurrency(60500 + (index * 2500));
+                  const supplierCode = supplier.contact || supplier.code || supplierName.substring(0, 2);
+                  
+                  // Determine recommendation based on context
+                  const recommendationConfig = isContextual 
+                    ? { label: index === 0 ? 'מומלץ' : index === 1 ? 'טוב' : 'סטנדרט', className: index === 0 ? 'bg-success/20 text-success' : index === 1 ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground' }
+                    : getRecommendationBadge(supplier);
                   
                   return (
-                    <tr key={supplier.id} className={`hover:bg-muted/10 ${supplier.isPreferred ? 'bg-success/5' : ''}`}>
+                    <tr key={index} className={`hover:bg-muted/10 ${index === 0 ? 'bg-success/5' : ''}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-reverse space-x-3">
                           <div className={`w-8 h-8 ${index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : 'bg-purple-600'} rounded-lg flex items-center justify-center`}>
-                            <span className="text-white text-xs font-bold">{supplier.code}</span>
+                            <span className="text-white text-xs font-bold">{supplierCode}</span>
                           </div>
-                          <span className="text-foreground font-medium">{supplier.name}</span>
+                          <span className="text-foreground font-medium">{supplierName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-foreground font-bold">{formatCurrency(basePrice)}</td>
+                      <td className="px-6 py-4 text-foreground font-bold">{supplierPrice}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-reverse space-x-1">
-                          <span className="text-foreground">{supplier.rating}</span>
+                          <span className="text-foreground">{supplierRating}</span>
                           <div className="flex text-yellow-400">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i} className={`text-xs ${i < Math.floor(parseFloat(supplier.rating || "0")) ? 'text-yellow-400' : 'text-muted'}`}>
+                              <span key={i} className={`text-xs ${i < Math.floor(parseFloat(supplierRating)) ? 'text-yellow-400' : 'text-muted'}`}>
                                 ★
                               </span>
                             ))}
                           </div>
                         </div>
                       </td>
-                      <td className={`px-6 py-4 ${supplier.deliveryTime! <= 10 ? 'text-success' : supplier.deliveryTime! <= 14 ? 'text-warning' : 'text-muted-foreground'}`}>
-                        {supplier.deliveryTime} ימים
+                      <td className={`px-6 py-4 ${parseInt(supplierDeliveryTime) <= 10 ? 'text-success' : parseInt(supplierDeliveryTime) <= 14 ? 'text-warning' : 'text-muted-foreground'}`}>
+                        {supplierDeliveryTime}
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{supplier.warrantyTerms}</td>
-                      <td className={`px-6 py-4 ${supplier.isPreferred ? 'text-success' : 'text-muted-foreground'}`}>
-                        {supplier.discountPolicy}
+                      <td className="px-6 py-4 text-muted-foreground">{supplierWarranty}</td>
+                      <td className={`px-6 py-4 ${index === 0 ? 'text-success' : 'text-muted-foreground'}`}>
+                        {supplierDiscount}
                       </td>
                       <td className="px-6 py-4">
                         <Badge className={recommendationConfig.className}>
@@ -305,44 +339,75 @@ export default function MarketResearch() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Formula Recommendations */}
-              <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
-                <div className="flex items-start space-x-reverse space-x-3">
-                  <Calculator className="text-primary mt-1 w-5 h-5" />
-                  <div>
-                    <h4 className="font-medium text-foreground mb-1">נוסחאות מומלצות</h4>
-                    <p className="text-sm text-muted-foreground">
-                      השתמש במקדם 0.85 למחיר ספק + 12% עלויות נוספות + מע״ם לחישוב מדויק יותר.
-                    </p>
+              {(requestId ? marketResearch?.recommendations : marketInsight?.recommendations || []).map((rec: any, index: number) => (
+                <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
+                  <div className="flex items-start space-x-reverse space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">{index + 1}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground mb-1">
+                        {rec.title || `המלצה ${index + 1}`}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {rec.description || rec}
+                      </p>
+                      {rec.priority && (
+                        <span className={`inline-block mt-2 px-2 py-1 text-xs rounded-full ${
+                          rec.priority === 'גבוהה' ? 'bg-destructive/20 text-destructive' :
+                          rec.priority === 'בינונית' ? 'bg-warning/20 text-warning' :
+                          'bg-muted/20 text-muted-foreground'
+                        }`}>
+                          עדיפות {rec.priority}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
+              
+              {/* Show fallback recommendations if no contextual data */}
+              {!requestId && (
+                <>
+                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                    <div className="flex items-start space-x-reverse space-x-3">
+                      <Calculator className="text-primary mt-1 w-5 h-5" />
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">נוסחאות מומלצות</h4>
+                        <p className="text-sm text-muted-foreground">
+                          השתמש במקדם 0.85 למחיר ספק + 12% עלויות נוספות + מע״ם לחישוב מדויק יותר.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Coefficient Optimization */}
-              <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4">
-                <div className="flex items-start space-x-reverse space-x-3">
-                  <Cog className="text-secondary mt-1 w-5 h-5" />
-                  <div>
-                    <h4 className="font-medium text-foreground mb-1">אופטימיזציה של מקדמים</h4>
-                    <p className="text-sm text-muted-foreground">
-                      מקדם הנחת כמות מומלץ: 8-12% ל-3+ יחידות, 15-20% ל-10+ יחידות.
-                    </p>
+                  <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4">
+                    <div className="flex items-start space-x-reverse space-x-3">
+                      <Cog className="text-secondary mt-1 w-5 h-5" />
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">אופטימיזציה של מקדמים</h4>
+                        <p className="text-sm text-muted-foreground">
+                          מקדם הנחת כמות מומלץ: 8-12% ל-3+ יחידות, 15-20% ל-10+ יחידות.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Preferred Suppliers */}
-              <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-                <div className="flex items-start space-x-reverse space-x-3">
-                  <Medal className="text-success mt-1 w-5 h-5" />
-                  <div>
-                    <h4 className="font-medium text-foreground mb-1">ספקים מועדפים</h4>
-                    <p className="text-sm text-muted-foreground">
-                      TechSource מציע את המחיר הטוב ביותר עם דירוג גבוה. Dell רשמי למבטח איכות.
-                    </p>
+                  <div className="bg-success/10 border border-success/30 rounded-lg p-4">
+                    <div className="flex items-start space-x-reverse space-x-3">
+                      <Medal className="text-success mt-1 w-5 h-5" />
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">ספקים מועדפים</h4>
+                        <p className="text-sm text-muted-foreground">
+                          TechSource מציע את המחיר הטוב ביותר עם דירוג גבוה. Dell רשמי למבטח איכות.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
 
               {/* Market Timing */}
               <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">

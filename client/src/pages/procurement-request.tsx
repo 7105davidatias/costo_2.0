@@ -238,6 +238,12 @@ export default function ProcurementRequest() {
                 <Play className="w-4 h-4 ml-2" />
                 {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
               </Button>
+              <Link href={`/market-research/${id}`} className="block">
+                <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
+                  <Bot className="w-4 h-4 ml-2" />
+                  מחקר שוק
+                </Button>
+              </Link>
               <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
                 <Download className="w-4 h-4 ml-2" />
                 ייצא דוח
