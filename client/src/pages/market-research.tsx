@@ -437,71 +437,66 @@ export default function MarketResearch() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">מחירון הממשלה</h4>
-                  <p className="text-sm text-muted-foreground mb-2">מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי</p>
-                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
+            {(requestId ? marketResearch?.informationSources : [
+              {
+                title: "מחירון הממשלה",
+                description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי",
+                lastUpdated: "ינואר 2024",
+                reliability: "גבוהה"
+              },
+              {
+                title: "Intel Israel",
+                description: "נתוני מחירים מספקים מאושרים בישראל",
+                lastUpdated: "דצמבר 2023", 
+                reliability: "גבוהה"
+              },
+              {
+                title: "TechSource Ltd",
+                description: "הסכמי מחיר מעודכנים עם ספק מועדף",
+                lastUpdated: "נובמבר 2023",
+                reliability: "גבוהה"
+              },
+              {
+                title: "מדד המחירים לצרכן",
+                description: "נתוני אינפלציה ומדד מחירים - הלשכה המרכזית לסטטיסטיקה",
+                lastUpdated: "דצמבר 2023",
+                reliability: "גבוהה"
+              },
+              {
+                title: "Dell Israel",
+                description: "מחירים רשמיים מ-Dell ישראל ומפיציהם",
+                lastUpdated: "ינואר 2024",
+                reliability: "גבוהה"
+              },
+              {
+                title: "מערכת רכש ממשלתי",
+                description: "נתוני רכש וחוזים מהמערכת הממשלתית",
+                lastUpdated: "ינואר 2024",
+                reliability: "גבוהה"
+              }
+            ]).map((source: any, index: number) => (
+              <div key={index} className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                <div className="flex items-start space-x-reverse space-x-3">
+                  <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium text-foreground mb-1">{source.title}</h4>
+                    <p className="text-sm text-muted-foreground mb-2">{source.description}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">עודכן: {source.lastUpdated}</p>
+                      {source.reliability && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          source.reliability === 'גבוהה' ? 'bg-success/20 text-success' :
+                          source.reliability === 'בינונית' ? 'bg-warning/20 text-warning' :
+                          'bg-muted/20 text-muted-foreground'
+                        }`}>
+                          אמינות {source.reliability}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">Intel Israel מחירון ספקים</h4>
-                  <p className="text-sm text-muted-foreground mb-2">נתוני מחירים מספקים מאושרים בישראל</p>
-                  <p className="text-xs text-muted-foreground">עודכן: דצמבר 2023</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">TechSource Ltd הסכמי מחיר</h4>
-                  <p className="text-sm text-muted-foreground mb-2">הסכמי מחיר מעודכנים עם ספק מועדף</p>
-                  <p className="text-xs text-muted-foreground">עודכן: נובמבר 2023</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">מדד המחירים לצרכן</h4>
-                  <p className="text-sm text-muted-foreground mb-2">נתוני אינפלציה ומדד מחירים - הלשכה המרכזית לסטטיסטיקה</p>
-                  <p className="text-xs text-muted-foreground">עודכן: דצמבר 2023</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">Dell Israel מחירון רשמי</h4>
-                  <p className="text-sm text-muted-foreground mb-2">מחירים רשמיים מ-Dell ישראל ומפיציהם</p>
-                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground mb-1">מערכת רכש ממשלתי</h4>
-                  <p className="text-sm text-muted-foreground mb-2">נתוני רכש וחוזים מהמערכת הממשלתית</p>
-                  <p className="text-xs text-muted-foreground">עודכן: ינואר 2024</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           <div className="mt-4 p-4 bg-info/10 border border-info/30 rounded-lg">
