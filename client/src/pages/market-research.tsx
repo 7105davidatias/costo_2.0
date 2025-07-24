@@ -335,7 +335,7 @@ export default function MarketResearch() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {marketInsight?.riskAssessment && Object.entries(marketInsight.riskAssessment).map(([key, value]) => {
+              {(marketInsight?.riskAssessment && typeof marketInsight.riskAssessment === 'object') ? Object.entries(marketInsight.riskAssessment).map(([key, value]) => {
                 const riskConfig = getRiskBadge(value as string);
                 const riskLabels: Record<string, string> = {
                   supplyRisk: "סיכון אספקה",
@@ -363,7 +363,7 @@ export default function MarketResearch() {
                     </div>
                   </div>
                 ) as React.ReactNode;
-              })}
+              }) : null}
             </div>
           </CardContent>
         </Card>
