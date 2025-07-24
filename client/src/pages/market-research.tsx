@@ -185,7 +185,13 @@ export default function MarketResearch() {
               <div>
                 <p className="text-muted-foreground text-sm mb-1">ממוצע שוק</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {marketInsight?.averagePrice ? formatCurrency(marketInsight.averagePrice) : '₪68,300'}
+                  {finalRequestId && marketResearch?.supplierComparison ? (
+                    formatCurrency(
+                      marketResearch.supplierComparison.reduce((sum, supplier) => 
+                        sum + parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0'), 0
+                      ) / marketResearch.supplierComparison.length
+                    )
+                  ) : (marketInsight?.averagePrice ? formatCurrency(marketInsight.averagePrice) : '₪68,300')}
                 </p>
                 <p className="text-primary text-sm mt-1">לכל יחידה</p>
               </div>
@@ -199,7 +205,10 @@ export default function MarketResearch() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">מספר ספקים</p>
-                <p className="text-2xl font-bold text-foreground">{marketInsight?.supplierCount || 15}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {finalRequestId && marketResearch?.supplierComparison ? 
+                    marketResearch.supplierComparison.length : (marketInsight?.supplierCount || 15)}
+                </p>
                 <p className="text-secondary text-sm mt-1">ספקים פעילים</p>
               </div>
               <Store className="text-secondary w-8 h-8" />
@@ -213,7 +222,13 @@ export default function MarketResearch() {
               <div>
                 <p className="text-muted-foreground text-sm mb-1">מחיר מינימלי</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {marketInsight?.minPrice ? formatCurrency(marketInsight.minPrice) : '₪61,500'}
+                  {finalRequestId && marketResearch?.supplierComparison ? (
+                    formatCurrency(
+                      Math.min(...marketResearch.supplierComparison.map(supplier => 
+                        parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0')
+                      ))
+                    )
+                  ) : (marketInsight?.minPrice ? formatCurrency(marketInsight.minPrice) : '₪61,500')}
                 </p>
                 <p className="text-success text-sm mt-1">10% מתחת לממוצע</p>
               </div>
@@ -227,7 +242,15 @@ export default function MarketResearch() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">זמן אספקה</p>
-                <p className="text-2xl font-bold text-foreground">14</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {finalRequestId && marketResearch?.supplierComparison ? (
+                    Math.round(
+                      marketResearch.supplierComparison.reduce((sum, supplier) => 
+                        sum + parseInt(supplier.deliveryTime?.match(/\d+/)?.[0] || '0'), 0
+                      ) / marketResearch.supplierComparison.length
+                    )
+                  ) : '14'}
+                </p>
                 <p className="text-warning text-sm mt-1">ימי עסקים ממוצע</p>
               </div>
               <Clock className="text-warning w-8 h-8" />
