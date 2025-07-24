@@ -23,6 +23,11 @@ export default function MarketResearch() {
   console.log('Final isRequestId:', isRequestId);
   console.log('Final requestId:', requestId);
   
+  // Additional check - if the user is viewing a specific product category but we have a requestId in URL
+  if (category === 'מוצרים' && window.location.pathname.includes('/13')) {
+    console.log('Detected direct URL access for request 13');
+  }
+  
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch } = useQuery({
     queryKey: ["/api/market-research", requestId],

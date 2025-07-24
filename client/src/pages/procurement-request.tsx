@@ -238,19 +238,18 @@ export default function ProcurementRequest() {
                 <Play className="w-4 h-4 ml-2" />
                 {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
               </Button>
-              <Link href={`/market-research/${id}`} className="block">
-                <Button 
-                  variant="outline" 
-                  className="w-full border-secondary text-secondary hover:bg-secondary/10"
-                  onClick={() => {
-                    console.log('Market Research link clicked with ID:', id);
-                    console.log('Generated URL:', `/market-research/${id}`);
-                  }}
-                >
-                  <Bot className="w-4 h-4 ml-2" />
-                  מחקר שוק
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                onClick={() => {
+                  console.log('Market Research button clicked with ID:', id);
+                  console.log('Navigating to URL:', `/market-research/${id}`);
+                  window.location.href = `/market-research/${id}`;
+                }}
+              >
+                <Bot className="w-4 h-4 ml-2" />
+                מחקר שוק
+              </Button>
               <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
                 <Download className="w-4 h-4 ml-2" />
                 ייצא דוח
