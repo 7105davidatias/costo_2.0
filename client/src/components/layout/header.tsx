@@ -91,9 +91,9 @@ export default function Header() {
                   <div className="text-right">
                     <div className="text-sm font-medium">{user?.firstName} {user?.lastName}</div>
                     <div className="text-xs text-muted-foreground">
-                      {user?.role === 'admin' ? 'מנהל מערכת' : 
-                       user?.role === 'procurement_manager' ? 'מנהל רכש' :
-                       user?.role === 'department_head' ? 'ראש מחלקה' : 'עובד'}
+                      {user?.role === 'system_admin' ? 'מנהל מערכת' : 
+                       user?.role === 'economist' ? 'כלכלן' :
+                       user?.role === 'procurement' ? 'איש רכש' : 'קב"ט'}
                     </div>
                   </div>
                 </div>

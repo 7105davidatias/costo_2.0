@@ -11,23 +11,66 @@ import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import SystemAdminDashboard from "@/components/dashboards/SystemAdminDashboard";
+import EconomistDashboard from "@/components/dashboards/EconomistDashboard";
+import ProcurementDashboard from "@/components/dashboards/ProcurementDashboard";
+import SecurityDashboard from "@/components/dashboards/SecurityDashboard";
+import { useState, useEffect } from "react";
 
 function Router() {
+  const [user, setUser] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const getRoleDashboard = () => {
+    if (!user) return Dashboard;
+    
+    switch (user.role) {
+      case 'system_admin':
+        return SystemAdminDashboard;
+      case 'economist':
+        return EconomistDashboard;
+      case 'procurement':
+        return ProcurementDashboard;
+      case 'security':
+        return SecurityDashboard;
+      default:
+        return Dashboard;
+    }
+  };
+
+  const UserDashboard = getRoleDashboard();
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {isLoggedIn && <Header />}
+      {isLoggedIn ? (
+        <main className={isLoggedIn ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" : ""}>
+          <Switch>
+            <Route path="/login" component={Login} />
+            <Route path="/" component={UserDashboard} />
+            <Route path="/dashboard" component={UserDashboard} />
+            <Route path="/procurement-requests" component={ProcurementRequestsList} />
+            <Route path="/procurement-request/:id?" component={ProcurementRequest} />
+            <Route path="/cost-estimation/:id?" component={CostEstimation} />
+            <Route path="/market-research/:category?" component={MarketResearch} />
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+      ) : (
         <Switch>
           <Route path="/login" component={Login} />
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/procurement-requests" component={ProcurementRequestsList} />
-          <Route path="/procurement-request/:id?" component={ProcurementRequest} />
-          <Route path="/cost-estimation/:id?" component={CostEstimation} />
-          <Route path="/market-research/:category?" component={MarketResearch} />
-          <Route component={NotFound} />
+          <Route component={Login} />
         </Switch>
-      </main>
+      )}
     </div>
   );
 }

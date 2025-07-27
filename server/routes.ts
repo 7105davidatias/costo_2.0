@@ -699,15 +699,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      const mockUser = {
+      // Demo users mapping
+      const demoUsersMap: Record<string, any> = {
+        "admin@company.com": { id: 1, firstName: "דוד", lastName: "כהן", role: "system_admin", department: "מערכות מידע" },
+        "economist@company.com": { id: 2, firstName: "רחל", lastName: "לוי", role: "economist", department: "כלכלה" },
+        "procurement@company.com": { id: 3, firstName: "משה", lastName: "אברהם", role: "procurement", department: "רכש" },
+        "security@company.com": { id: 4, firstName: "שרה", lastName: "דוד", role: "security", department: "ביטחון מידע" }
+      };
+
+      const mockUser = demoUsersMap[email] || {
         id: 1,
-        email,
         firstName: "משתמש",
         lastName: "דמו",
-        role: "procurement_manager" as const,
-        department: "רכש",
-        isActive: true
+        role: "procurement" as const,
+        department: "רכש"
       };
+      
+      mockUser.email = email;
+      mockUser.isActive = true;
 
       if (password === "demo123") {
         const token = authService.generateToken(mockUser);

@@ -30,10 +30,10 @@ type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const demoUsers = [
-  { email: "admin@company.com", password: "demo123", role: "admin", name: "מנהל מערכת", department: "IT" },
-  { email: "procurement@company.com", password: "demo123", role: "procurement_manager", name: "מנהל רכש", department: "רכש" },
-  { email: "department@company.com", password: "demo123", role: "department_head", name: "ראש מחלקה", department: "כספים" },
-  { email: "employee@company.com", password: "demo123", role: "employee", name: "עובד", department: "הנדסה" }
+  { email: "admin@company.com", password: "demo123", role: "system_admin", name: "דוד כהן", department: "מערכות מידע", icon: "👨‍💼", description: "גישה מלאה לכל המערכת" },
+  { email: "economist@company.com", password: "demo123", role: "economist", name: "רחל לוי", department: "כלכלה", icon: "📊", description: "אישור ובקרת אומדנים" },
+  { email: "procurement@company.com", password: "demo123", role: "procurement", name: "משה אברהם", department: "רכש", icon: "🛒", description: "יצירת אומדנים חדשים" },
+  { email: "security@company.com", password: "demo123", role: "security", name: "שרה דוד", department: "ביטחון מידע", icon: "🔒", description: "בקרת ביטחון מידע" }
 ];
 
 export default function Login() {
@@ -277,10 +277,10 @@ export default function Login() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="employee">עובד</SelectItem>
-                              <SelectItem value="department_head">ראש מחלקה</SelectItem>
-                              <SelectItem value="procurement_manager">מנהל רכש</SelectItem>
-                              <SelectItem value="admin">מנהל מערכת</SelectItem>
+                              <SelectItem value="security">קב"ט</SelectItem>
+                              <SelectItem value="procurement">איש רכש</SelectItem>
+                              <SelectItem value="economist">כלכלן</SelectItem>
+                              <SelectItem value="system_admin">מנהל מערכת</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -341,17 +341,18 @@ export default function Login() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-primary/10">
-                          <User className="h-4 w-4 text-primary" />
+                        <div className="p-2 rounded-full bg-primary/10 text-2xl">
+                          {user.icon}
                         </div>
                         <div>
                           <div className="font-medium">{user.name}</div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
                           <div className="text-xs text-muted-foreground">
-                            {user.department} • {user.role === 'admin' ? 'מנהל מערכת' : 
-                             user.role === 'procurement_manager' ? 'מנהל רכש' :
-                             user.role === 'department_head' ? 'ראש מחלקה' : 'עובד'}
+                            {user.department} • {user.role === 'system_admin' ? 'מנהל מערכת' : 
+                             user.role === 'economist' ? 'כלכלן' :
+                             user.role === 'procurement' ? 'איש רכש' : 'קב"ט'}
                           </div>
+                          <div className="text-xs text-green-600 mt-1">{user.description}</div>
                         </div>
                       </div>
                       <Button
