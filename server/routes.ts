@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema } from "@shared/schema";
+import { MarketResearchService } from "./services/marketResearchService";
+import { AuthService } from "./services/authService";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -656,6 +658,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(estimation);
     } catch (error) {
       res.status(500).json({ message: "Failed to generate cost estimation", error });
+    }
+  });
+
+  // New API Routes - Dynamic Market Research & Authentication
+  const marketResearchService = new MarketResearchService();
+  const authService = new AuthService();
+
+  app.post("/api/dynamic-market-research/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const request = await storage.getProcurementRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Procurement request not found" });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const researchResults = await marketResearchService.conductDynamicMarketResearch({
+        id: request.id,
+        itemName: request.itemName,
+        description: request.description || '',
+        category: request.category,
+        quantity: request.quantity
+      });
+
+      res.json(researchResults);
+    } catch (error) {
+      console.error('Dynamic market research error:', error);
+      res.status(500).json({ message: "Failed to conduct dynamic market research" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const mockUser = {
+        id: 1,
+        email,
+        firstName: "משתמש",
+        lastName: "דמו",
+        role: "procurement_manager" as const,
+        department: "רכש",
+        isActive: true
+      };
+
+      if (password === "demo123") {
+        const token = authService.generateToken(mockUser);
+        const sanitizedUser = authService.sanitizeUserData(mockUser as any);
+        
+        res.json({
+          success: true,
+          token,
+          user: sanitizedUser
+        });
+      } else {
+        res.status(401).json({ message: "Invalid credentials" });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, role, department } = req.body;
+      
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      const passwordValidation = authService.validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ 
+          message: "Password does not meet requirements",
+          errors: passwordValidation.errors
+        });
+      }
+
+      const hashedPassword = await authService.hashPassword(password);
+      
+      const newUser = {
+        id: Date.now(),
+        email,
+        firstName,
+        lastName,
+        role: role || "employee",
+        department,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      };
+
+      const token = authService.generateToken(newUser);
+      const sanitizedUser = authService.sanitizeUserData(newUser as any);
+      
+      res.status(201).json({
+        success: true,
+        token,
+        user: sanitizedUser
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded = authService.verifyToken(token);
+      
+      const user = {
+        id: decoded.id,
+        email: decoded.email,
+        firstName: decoded.firstName,
+        lastName: decoded.lastName,
+        role: decoded.role,
+        department: "רכש",
+        isActive: true
+      };
+
+      const sanitizedUser = authService.sanitizeUserData(user as any);
+      res.json({ user: sanitizedUser });
+    } catch (error) {
+      res.status(401).json({ message: "Invalid token" });
     }
   });
 
@@ -1939,3 +2077,5 @@ function generateMaintenanceMarketResearch(request: any) {
     ]
   };
 }
+
+

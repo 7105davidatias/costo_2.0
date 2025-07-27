@@ -5,10 +5,18 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   displayName: text("display_name").notNull(),
-  role: text("role").notNull().default("user"),
+  role: text("role", { enum: ["admin", "procurement_manager", "department_head", "employee"] }).notNull().default("employee"),
+  department: text("department"),
+  phoneNumber: text("phone_number"),
+  isActive: boolean("is_active").default(true),
+  lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const procurementRequests = pgTable("procurement_requests", {
@@ -100,10 +108,91 @@ export const marketInsights = pgTable("market_insights", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const marketResearch = pgTable("market_research", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").references(() => procurementRequests.id),
+  category: text("category").notNull(),
+  supplierComparison: jsonb("supplier_comparison"),
+  marketInsights: jsonb("market_insights"),
+  priceTrends: jsonb("price_trends"),
+  informationSources: jsonb("information_sources"),
+  recommendations: jsonb("recommendations"),
+  confidence: integer("confidence"), // 1-100
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// TypeScript types
+export type User = typeof users.$inferSelect;
+export type UserRole = "admin" | "procurement_manager" | "department_head" | "employee";
+export type ProcurementRequest = typeof procurementRequests.$inferSelect;
+export type Supplier = typeof suppliers.$inferSelect;
+export type CostEstimation = typeof costEstimations.$inferSelect;
+export type MarketResearch = typeof marketResearch.$inferSelect;
+
+export interface MarketInsight {
+  id: number;
+  title: string;
+  description: string;
+  trend: string;
+  impact: string;
+  source: string;
+  lastUpdated: string;
+}
+
+export interface SupplierData {
+  id: number;
+  name: string;
+  rating: number;
+  deliveryTime: string;
+  pricePerUnit: string;
+  discount: string;
+  warranty: string;
+  advantages: string[];
+  contact: string;
+  verified?: boolean;
+  lastUpdated?: string;
+}
+
+export interface PriceTrends {
+  currentQuarter: string;
+  yearOverYear: string;
+  forecast: string;
+  factors: string[];
+}
+
+export interface InformationSource {
+  title: string;
+  description: string;
+  lastUpdated: string;
+  reliability: string;
+}
+
+export interface Recommendation {
+  title: string;
+  description: string;
+  priority: string;
+}
+
+export interface MarketResearchData {
+  id: number;
+  requestId: number;
+  category: string;
+  supplierComparison: SupplierData[];
+  marketInsights: MarketInsight[];
+  priceTrends: PriceTrends;
+  informationSources: InformationSource[];
+  recommendations: Recommendation[];
+  confidence: number;
+  lastUpdated: string;
+}
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+  lastLogin: true,
 });
 
 export const insertProcurementRequestSchema = createInsertSchema(procurementRequests).omit({

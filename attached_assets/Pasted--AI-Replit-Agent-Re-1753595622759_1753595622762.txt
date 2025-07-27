@@ -1,0 +1,839 @@
+# פרומפט מותאם להמשך פיתוח מערכת אומדן עלויות AI - Replit Agent
+
+## מצב נוכחי של הפרויקט
+
+אתה Replit Agent מומחה בפיתוח מערכות אינטרנט מתקדמות. הפרויקט הנוכחי כבר כולל תשתית בסיסית פעילה שאתה צריך להרחיב ולשפר. המערכת הקיימת מורכבת מ:
+
+### תשתית קיימת - פרונטאנד (React + Vite)
+המערכת כוללת ארבעה קומפוננטים מרכזיים פעילים:
+- **Dashboard.jsx** - לוח מחוונים ראשי עם KPI cards
+- **ProcurementRequest.jsx** - מסך פרטי דרישת רכש עם פונקציונליות ניתוח AI
+- **CostEstimationResults.jsx** - מסך תוצאות אומדן עלות
+- **MarketResearch.jsx** - מסך מחקר שוק (כרגע עם נתונים מדומים)
+
+הפרונטאנד משתמש ב:
+- React 19.1.0 עם Vite
+- Tailwind CSS 4.1.7 לעיצוב
+- Radix UI לקומפוננטים מתקדמים
+- React Router DOM לניווט
+- Recharts לגרפים ותרשימים
+
+### תשתית קיימת - בקאנד (Flask + Python)
+הבקאנד כולל:
+- **Flask 3.1.1** כשרת ראשי
+- **SQLAlchemy** למסד נתונים
+- **Flask-CORS** לתמיכה בבקשות cross-origin
+- מודל User בסיסי עם CRUD operations
+- שלושה blueprints: user, procurement, ai_service
+
+### מה שכבר עובד
+1. ממשק משתמש בסיסי עם ניווט בין מסכים
+2. מסד נתונים SQLite פעיל עם מודל משתמשים
+3. API endpoints בסיסיים למשתמשים
+4. ממשק ויזואלי מלא עם עיצוב מקצועי
+5. תמיכה ב-RTL (עברית)
+
+## המשימות הנדרשות להשלמה
+
+### חלק א': שדרוג מחקר השוק לדינמי
+
+**בעיה נוכחית:** מסך מחקר השוק מציג נתונים מדומים סטטיים שאינם רלוונטיים לסוג הדרישה.
+
+**פתרון נדרש:** יישום מחקר שוק דינמי בזמן אמת.
+
+#### 1. הוספת תלויות חדשות לבקאנד
+הוסף לקובץ `requirements.txt`:
+```
+requests==2.31.0
+beautifulsoup4==4.12.2
+selenium==4.15.0
+lxml==4.9.3
+python-dotenv==1.0.0
+```
+
+#### 2. יצירת שירותי מחקר שוק חדשים
+צור את הקבצים הבאים ב-`src/services/`:
+
+**`src/services/web_search_service.py`** - שירות חיפוש באינטרנט:
+```python
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
+from typing import List, Dict
+
+class WebSearchService:
+    def __init__(self):
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+    
+    def search_suppliers_by_category(self, category: str, location: str = "israel") -> List[str]:
+        """חיפוש ספקים לפי קטגוריה"""
+        search_queries = self._get_search_queries(category)
+        urls = []
+        
+        for query in search_queries:
+            try:
+                # הוסף כאן לוגיקת חיפוש אמיתית
+                # לדוגמה: Google Search API או Bing Search API
+                urls.extend(self._perform_search(query))
+                time.sleep(random.uniform(1, 3))  # מניעת חסימה
+            except Exception as e:
+                print(f"Error searching for {query}: {e}")
+        
+        return urls[:10]  # החזר עד 10 תוצאות
+    
+    def _get_search_queries(self, category: str) -> List[str]:
+        """יצירת שאילתות חיפוש מותאמות לקטגוריה"""
+        queries_map = {
+            "vehicles": [
+                "סוכנות רכב ישראל",
+                "יבואן רכבים ישראל",
+                "רכש רכבי צי ישראל"
+            ],
+            "construction": [
+                "קבלן בנייה ישראל",
+                "ספק חומרי בנייה",
+                "חברת בנייה ישראל"
+            ],
+            "it_equipment": [
+                "ספק ציוד מחשוב ישראל",
+                "חברת מחשבים ישראל",
+                "ציוד IT ישראל"
+            ],
+            "raw_materials": [
+                "ספק חומרי גלם ישראל",
+                "יבואן מתכות ישראל",
+                "חומרי גלם תעשייתיים"
+            ],
+            "services": [
+                "שירותים מקצועיים ישראל",
+                "חברת ייעוץ ישראל",
+                "ספק שירותים עסקיים"
+            ]
+        }
+        return queries_map.get(category, ["ספקים ישראל"])
+```
+
+**`src/services/data_extraction_service.py`** - שירות חילוץ נתונים:
+```python
+from bs4 import BeautifulSoup
+import requests
+import re
+from typing import Dict, Optional
+
+class DataExtractionService:
+    def __init__(self):
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+    
+    def extract_company_info(self, url: str) -> Dict:
+        """חילוץ מידע חברה מאתר"""
+        try:
+            response = requests.get(url, headers=self.headers, timeout=10)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            return {
+                'name': self._extract_company_name(soup),
+                'phone': self._extract_phone(soup),
+                'email': self._extract_email(soup),
+                'address': self._extract_address(soup),
+                'description': self._extract_description(soup),
+                'url': url
+            }
+        except Exception as e:
+            return {'error': str(e), 'url': url}
+    
+    def _extract_company_name(self, soup: BeautifulSoup) -> Optional[str]:
+        """חילוץ שם החברה"""
+        # חפש בכותרת הדף
+        title = soup.find('title')
+        if title:
+            return title.get_text().strip()
+        
+        # חפש ב-h1 הראשון
+        h1 = soup.find('h1')
+        if h1:
+            return h1.get_text().strip()
+        
+        return None
+    
+    def _extract_phone(self, soup: BeautifulSoup) -> Optional[str]:
+        """חילוץ מספר טלפון"""
+        phone_patterns = [
+            r'0\d{1,2}-?\d{7}',
+            r'\+972-?\d{1,2}-?\d{7}',
+            r'0\d{9}'
+        ]
+        
+        text = soup.get_text()
+        for pattern in phone_patterns:
+            match = re.search(pattern, text)
+            if match:
+                return match.group()
+        
+        return None
+    
+    def _extract_email(self, soup: BeautifulSoup) -> Optional[str]:
+        """חילוץ כתובת אימייל"""
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        text = soup.get_text()
+        match = re.search(email_pattern, text)
+        return match.group() if match else None
+```
+
+**`src/services/market_research_service.py`** - שירות מרכזי:
+```python
+from .web_search_service import WebSearchService
+from .data_extraction_service import DataExtractionService
+import asyncio
+from typing import Dict, List
+
+class MarketResearchService:
+    def __init__(self):
+        self.web_search = WebSearchService()
+        self.data_extraction = DataExtractionService()
+    
+    def conduct_market_research(self, procurement_type: str, description: str) -> Dict:
+        """ביצוע מחקר שוק מלא"""
+        try:
+            # שלב 1: זיהוי קטגוריה
+            category = self._categorize_procurement(procurement_type, description)
+            
+            # שלב 2: חיפוש ספקים
+            supplier_urls = self.web_search.search_suppliers_by_category(category)
+            
+            # שלב 3: חילוץ נתוני ספקים
+            suppliers_data = []
+            for url in supplier_urls[:5]:  # הגבל ל-5 ספקים לביצועים
+                supplier_info = self.data_extraction.extract_company_info(url)
+                if not supplier_info.get('error'):
+                    suppliers_data.append(supplier_info)
+            
+            # שלב 4: ניתוח ודירוג
+            analyzed_suppliers = self._analyze_suppliers(suppliers_data)
+            
+            return {
+                'success': True,
+                'category': category,
+                'suppliers': analyzed_suppliers,
+                'market_insights': self._generate_market_insights(category, analyzed_suppliers)
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _categorize_procurement(self, procurement_type: str, description: str) -> str:
+        """זיהוי קטגוריית הרכש"""
+        keywords_map = {
+            'vehicles': ['רכב', 'צי', 'אוטו', 'משאית', 'רכבים'],
+            'construction': ['בנייה', 'מחסן', 'בניין', 'תשתית', 'קבלן'],
+            'it_equipment': ['מחשב', 'שרת', 'ציוד', 'טכנולוגיה', 'IT'],
+            'raw_materials': ['חומר גלם', 'מתכת', 'פלדה', 'אלומיניום'],
+            'services': ['שירות', 'ייעוץ', 'פיתוח', 'תחזוקה']
+        }
+        
+        text = f"{procurement_type} {description}".lower()
+        
+        for category, keywords in keywords_map.items():
+            if any(keyword in text for keyword in keywords):
+                return category
+        
+        return 'services'  # ברירת מחדל
+```
+
+#### 3. עדכון נתיב מחקר השוק
+עדכן את `src/routes/procurement.py` להוסיף endpoint חדש:
+
+```python
+from src.services.market_research_service import MarketResearchService
+
+@procurement_bp.route('/market-research', methods=['POST'])
+def conduct_market_research():
+    try:
+        data = request.json
+        procurement_type = data.get('type', '')
+        description = data.get('description', '')
+        
+        research_service = MarketResearchService()
+        results = research_service.conduct_market_research(procurement_type, description)
+        
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+```
+
+#### 4. עדכון קומפוננט מחקר השוק
+עדכן את `src/components/MarketResearch.jsx`:
+
+```javascript
+// הוסף state למחקר דינמי
+const [isLoading, setIsLoading] = useState(false);
+const [researchResults, setResearchResults] = useState(null);
+
+// פונקציה לביצוע מחקר שוק
+const conductMarketResearch = async () => {
+  setIsLoading(true);
+  try {
+    const response = await fetch('/api/procurement/market-research', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: procurementData.type,
+        description: procurementData.description
+      })
+    });
+    
+    const results = await response.json();
+    setResearchResults(results);
+  } catch (error) {
+    console.error('Error conducting market research:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+// הוסף מסך טעינה
+if (isLoading) {
+  return (
+    <div className="min-h-screen bg-gray-50 rtl">
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <h2 className="text-xl font-semibold mt-4">מבצע מחקר שוק...</h2>
+          <p className="text-gray-600 mt-2">אנא המתן, זה עלול לקחת מספר דקות</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### חלק ב': יישום מערכת משתמשים פונקציונליים
+
+**בעיה נוכחית:** המערכת כוללת רק מודל User בסיסי ללא הרשאות או תפקידים.
+
+**פתרון נדרש:** הרחבת מערכת המשתמשים לתמוך בארבעה תפקידים פונקציונליים.
+
+#### 1. עדכון מודל המשתמש
+עדכן את `src/models/user.py`:
+
+```python
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import json
+
+db = SQLAlchemy()
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(50), nullable=False, default='procurement')
+    
+    # פרטים אישיים
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    department = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    
+    # הגדרות אבטחה
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # הרשאות נוספות (JSON)
+    additional_permissions = db.Column(db.Text)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def has_permission(self, permission):
+        """בדיקת הרשאה ספציפית"""
+        role_permissions = {
+            'system_admin': ['all'],
+            'economist': ['create_estimate', 'edit_estimate', 'delete_estimate', 'approve_estimate', 'view_all'],
+            'procurement': ['create_estimate', 'edit_own_estimate', 'view_own'],
+            'security': ['view_all', 'view_logs', 'manage_security']
+        }
+        
+        if self.role == 'system_admin':
+            return True
+        
+        permissions = role_permissions.get(self.role, [])
+        return permission in permissions
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': self.role,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'department': self.department,
+            'phone': self.phone,
+            'is_active': self.is_active,
+            'last_login': self.last_login.isoformat() if self.last_login else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+class AuditLog(db.Model):
+    """לוג פעילות משתמשים"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(100), nullable=False)
+    details = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))
+    
+    user = db.relationship('User', backref=db.backref('audit_logs', lazy=True))
+```
+
+#### 2. יצירת מערכת אימות
+צור `src/services/auth_service.py`:
+
+```python
+from flask import session, request
+from src.models.user import User, AuditLog, db
+from functools import wraps
+import jwt
+from datetime import datetime, timedelta
+
+class AuthService:
+    def __init__(self, app):
+        self.app = app
+        self.secret_key = app.config['SECRET_KEY']
+    
+    def login(self, username, password):
+        """התחברות משתמש"""
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password) and user.is_active:
+            # עדכון זמן כניסה אחרונה
+            user.last_login = datetime.utcnow()
+            db.session.commit()
+            
+            # יצירת JWT token
+            token = jwt.encode({
+                'user_id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'exp': datetime.utcnow() + timedelta(hours=24)
+            }, self.secret_key, algorithm='HS256')
+            
+            # רישום פעילות
+            self._log_activity(user.id, 'login', 'User logged in successfully')
+            
+            return {'success': True, 'token': token, 'user': user.to_dict()}
+        
+        return {'success': False, 'message': 'Invalid credentials'}
+    
+    def verify_token(self, token):
+        """אימות token"""
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=['HS256'])
+            return payload
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
+    
+    def _log_activity(self, user_id, action, details):
+        """רישום פעילות במערכת"""
+        log = AuditLog(
+            user_id=user_id,
+            action=action,
+            details=details,
+            ip_address=request.remote_addr
+        )
+        db.session.add(log)
+        db.session.commit()
+
+def require_auth(f):
+    """דקורטור לדרישת אימות"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return {'error': 'No token provided'}, 401
+        
+        if token.startswith('Bearer '):
+            token = token[7:]
+        
+        auth_service = AuthService(current_app)
+        payload = auth_service.verify_token(token)
+        
+        if not payload:
+            return {'error': 'Invalid token'}, 401
+        
+        request.current_user = User.query.get(payload['user_id'])
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+def require_permission(permission):
+    """דקורטור לדרישת הרשאה ספציפית"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not hasattr(request, 'current_user') or not request.current_user:
+                return {'error': 'Authentication required'}, 401
+            
+            if not request.current_user.has_permission(permission):
+                return {'error': 'Insufficient permissions'}, 403
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+```
+
+#### 3. יצירת ממשקי משתמש מותאמים
+צור קומפוננטים חדשים:
+
+**`src/components/AdminDashboard.jsx`** - דשבורד מנהל מערכת:
+```javascript
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+const AdminDashboard = () => {
+  const [users, setUsers] = useState([]);
+  const [systemStats, setSystemStats] = useState({});
+  
+  useEffect(() => {
+    fetchUsers();
+    fetchSystemStats();
+  }, []);
+  
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-50 rtl">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">דשבורד מנהל מערכת</h1>
+        
+        {/* סטטיסטיקות מערכת */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>משתמשים פעילים</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{systemStats.activeUsers || 0}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>אומדנים השבוע</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{systemStats.weeklyEstimates || 0}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>זמינות מערכת</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">99.9%</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>התראות ביטחון</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">{systemStats.securityAlerts || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* ניהול משתמשים */}
+        <Card>
+          <CardHeader>
+            <CardTitle>ניהול משתמשים</CardTitle>
+            <Button onClick={() => setShowAddUser(true)}>הוסף משתמש חדש</Button>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-right p-2">שם משתמש</th>
+                    <th className="text-right p-2">אימייל</th>
+                    <th className="text-right p-2">תפקיד</th>
+                    <th className="text-right p-2">סטטוס</th>
+                    <th className="text-right p-2">פעולות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user.id} className="border-b">
+                      <td className="p-2">{user.username}</td>
+                      <td className="p-2">{user.email}</td>
+                      <td className="p-2">{getRoleDisplayName(user.role)}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {user.is_active ? 'פעיל' : 'לא פעיל'}
+                        </span>
+                      </td>
+                      <td className="p-2">
+                        <Button size="sm" onClick={() => editUser(user)}>ערוך</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const getRoleDisplayName = (role) => {
+  const roleNames = {
+    'system_admin': 'מנהל מערכת',
+    'economist': 'כלכלן',
+    'procurement': 'איש רכש',
+    'security': 'קב"ט'
+  };
+  return roleNames[role] || role;
+};
+
+export default AdminDashboard;
+```
+
+#### 4. עדכון נתיבי המשתמשים
+עדכן את `src/routes/user.py`:
+
+```python
+from flask import Blueprint, jsonify, request, current_app
+from src.models.user import User, AuditLog, db
+from src.services.auth_service import AuthService, require_auth, require_permission
+
+user_bp = Blueprint('user', __name__)
+
+@user_bp.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    auth_service = AuthService(current_app)
+    result = auth_service.login(username, password)
+    
+    if result['success']:
+        return jsonify(result)
+    else:
+        return jsonify(result), 401
+
+@user_bp.route('/users', methods=['GET'])
+@require_auth
+@require_permission('view_all')
+def get_users():
+    users = User.query.all()
+    return jsonify([user.to_dict() for user in users])
+
+@user_bp.route('/users', methods=['POST'])
+@require_auth
+@require_permission('manage_users')
+def create_user():
+    data = request.json
+    
+    # בדיקת קיום משתמש
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({'error': 'Username already exists'}), 400
+    
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already exists'}), 400
+    
+    user = User(
+        username=data['username'],
+        email=data['email'],
+        role=data.get('role', 'procurement'),
+        first_name=data.get('first_name'),
+        last_name=data.get('last_name'),
+        department=data.get('department'),
+        phone=data.get('phone')
+    )
+    user.set_password(data['password'])
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    # רישום פעילות
+    auth_service = AuthService(current_app)
+    auth_service._log_activity(
+        request.current_user.id,
+        'create_user',
+        f'Created user: {user.username}'
+    )
+    
+    return jsonify(user.to_dict()), 201
+
+@user_bp.route('/profile', methods=['GET'])
+@require_auth
+def get_profile():
+    return jsonify(request.current_user.to_dict())
+
+@user_bp.route('/audit-logs', methods=['GET'])
+@require_auth
+@require_permission('view_logs')
+def get_audit_logs():
+    logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(100).all()
+    return jsonify([{
+        'id': log.id,
+        'user_id': log.user_id,
+        'username': log.user.username,
+        'action': log.action,
+        'details': log.details,
+        'timestamp': log.timestamp.isoformat(),
+        'ip_address': log.ip_address
+    } for log in logs])
+```
+
+### חלק ג': שיפורים נוספים נדרשים
+
+#### 1. תיקון יישור KPI Cards
+עדכן את הקומפוננטים `Dashboard.jsx` ו-`ProcurementRequest.jsx` לשנות יישור מימין למרכז:
+
+```css
+/* הוסף ל-App.css */
+.kpi-card {
+  text-align: center !important;
+}
+
+.kpi-card .kpi-value {
+  text-align: center !important;
+}
+
+.kpi-card .kpi-label {
+  text-align: center !important;
+}
+```
+
+#### 2. הוספת שיטות אומדן מומלצות
+עדכן את `CostEstimationResults.jsx` להציג שיטות אומדן עם תיבות סימון:
+
+```javascript
+// הוסף state לשיטות אומדן
+const [recommendedMethods, setRecommendedMethods] = useState([]);
+const [selectedMethods, setSelectedMethods] = useState([]);
+
+// פונקציה לטעינת שיטות מומלצות
+const loadRecommendedMethods = async () => {
+  try {
+    const response = await fetch('/api/ai/recommended-methods', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ procurementType, description })
+    });
+    const methods = await response.json();
+    setRecommendedMethods(methods);
+  } catch (error) {
+    console.error('Error loading recommended methods:', error);
+  }
+};
+
+// רכיב שיטות אומדן מומלצות
+const RecommendedMethods = () => (
+  <Card className="mb-6">
+    <CardHeader>
+      <CardTitle>שיטות אומדן מומלצות</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {recommendedMethods.map(method => (
+          <div key={method.id} className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id={method.id}
+              checked={selectedMethods.includes(method.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedMethods([...selectedMethods, method.id]);
+                } else {
+                  setSelectedMethods(selectedMethods.filter(id => id !== method.id));
+                }
+              }}
+            />
+            <label htmlFor={method.id} className="flex-1">
+              <div className="font-medium">{method.name}</div>
+              <div className="text-sm text-gray-600">{method.description}</div>
+              <div className="text-sm text-blue-600">התאמה: {method.suitability}%</div>
+            </label>
+          </div>
+        ))}
+      </div>
+      <Button 
+        className="mt-4"
+        disabled={selectedMethods.length === 0}
+        onClick={generateEstimate}
+      >
+        יצור אומדן עלות
+      </Button>
+    </CardContent>
+  </Card>
+);
+```
+
+## הנחיות יישום
+
+### סדר ביצוע מומלץ:
+
+1. **יום 1-2:** עדכון מודל המשתמשים ומערכת האימות
+2. **יום 3-4:** יישום שירותי מחקר השוק הדינמי
+3. **יום 5-6:** יצירת ממשקי משתמש מותאמים לתפקידים
+4. **יום 7-8:** אינטגרציה ובדיקות מקיפות
+5. **יום 9-10:** שיפורים, אופטימיזציה ותיקוני באגים
+
+### נקודות חשובות:
+
+1. **שמור על התשתית הקיימת** - אל תשנה קבצים שעובדים טוב
+2. **הוסף בהדרגה** - בדוק כל שינוי לפני המעבר לבא
+3. **תעדוק מלא** - הוסף הערות לכל קוד חדש
+4. **בדיקות יסודיות** - בדוק כל פונקציונליות לפני סיום
+5. **אבטחה מתקדמת** - וודא שכל הנתיבים מוגנים כראוי
+
+### בדיקות נדרשות:
+
+1. בדיקת התחברות עם כל סוגי המשתמשים
+2. בדיקת הרשאות - כל משתמש רואה רק מה שמותר לו
+3. בדיקת מחקר שוק דינמי עם דרישות שונות
+4. בדיקת יצירת אומדנים עם שיטות שונות
+5. בדיקת ביצועים תחת עומס
+
+המטרה היא להשלים מערכת מקצועית ופעילה שמשתמשים אמיתיים יוכלו להשתמש בה מיד לאחר ההטמעה.
+
+בהצלחה ביישום!
+
