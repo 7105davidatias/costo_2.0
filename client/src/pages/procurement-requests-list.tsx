@@ -112,7 +112,7 @@ export default function ProcurementRequestsList() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
               <FileText className="h-8 w-8 text-info" />
@@ -124,7 +124,7 @@ export default function ProcurementRequestsList() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
               <Clock className="h-8 w-8 text-warning" />
@@ -138,7 +138,7 @@ export default function ProcurementRequestsList() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-success" />
@@ -152,7 +152,7 @@ export default function ProcurementRequestsList() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-primary" />

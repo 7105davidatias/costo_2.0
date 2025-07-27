@@ -73,7 +73,7 @@ export default function Dashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-card border-primary/20 card-hover">
+        <Card className="bg-card border-primary/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -93,7 +93,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-secondary/20 card-hover">
+        <Card className="bg-card border-secondary/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -113,7 +113,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-warning/20 card-hover">
+        <Card className="bg-card border-warning/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -133,7 +133,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-success/20 card-hover">
+        <Card className="bg-card border-success/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

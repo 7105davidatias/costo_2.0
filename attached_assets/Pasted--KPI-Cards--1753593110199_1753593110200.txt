@@ -1,0 +1,320 @@
+# פרומפט לשינוי יישור טקסט ב-KPI Cards - ממרכז במקום ימין
+
+תודה על העבודה המצוינת! נדרש שינוי עיצובי קטן אך חשוב בריבועי ה-KPI.
+
+## 🎯 המטרה
+
+שינוי יישור הטקסט בכל אחד מארבעת ריבועי ה-KPI בחלק העליון של:
+- **מסך לוח הבקרה** (Dashboard)
+- **מסך דרישות רכש** (Procurement Requests)
+
+**מה שצריך להשתנות:** יישור הטקסט מימין (text-align: right) למרכז (text-align: center)
+
+## 🔧 שינויים נדרשים ב-CSS
+
+### 1. זיהוי הקלאסים הרלוונטיים
+
+הריבועים שצריכים עדכון הם:
+- ריבוע "מדד דיוק AI" (90.8%)
+- ריבוע "עליות מחירים" (₪175,000)
+- ריבוע "חיסכון מצטבר" (₪991,000)
+- ריבוע "סה"כ הוצאה חזויה" (₪7,966,000)
+
+וכן בדף דרישות רכש:
+- ריבוע "ערך כולל" (₪7,801,000)
+- ריבוע "הושלמו" (1)
+- ריבוע "בעיבוד" (10)
+- ריבוע "סה"כ דרישות" (11)
+
+### 2. עדכון קובץ CSS
+
+```css
+/* עדכון יישור KPI cards למרכז */
+
+/* KPI Cards כלליים */
+.kpi-card,
+.stat-card,
+.metric-card {
+  text-align: center !important; /* שינוי מ-right ל-center */
+}
+
+/* תוכן KPI Cards */
+.kpi-card .kpi-value,
+.kpi-card .kpi-label,
+.kpi-card .kpi-change,
+.stat-card .stat-value,
+.stat-card .stat-label,
+.metric-card .metric-value,
+.metric-card .metric-label {
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* אייקונים ב-KPI Cards */
+.kpi-card .kpi-icon,
+.stat-card .stat-icon,
+.metric-card .metric-icon {
+  margin: 0 auto !important; /* מרכז את האייקון */
+  display: block !important;
+}
+
+/* מספרים גדולים ב-KPI */
+.kpi-card h2,
+.kpi-card h3,
+.stat-card h2,
+.stat-card h3,
+.metric-card h2,
+.metric-card h3 {
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+
+/* תיאורים ב-KPI */
+.kpi-card p,
+.kpi-card span,
+.stat-card p,
+.stat-card span,
+.metric-card p,
+.metric-card span {
+  text-align: center !important;
+}
+
+/* Flexbox alignment למרכז */
+.kpi-card,
+.stat-card,
+.metric-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Grid של KPI Cards */
+.kpi-grid,
+.stats-grid,
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* כל ילד של Grid */
+.kpi-grid > *,
+.stats-grid > *,
+.metrics-grid > * {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+```
+
+### 3. עדכון ספציפי לקלאסים קיימים
+
+אם יש קלאסים ספציפיים, הוסף גם:
+
+```css
+/* עדכון קלאסים ספציפיים אם קיימים */
+.dashboard-kpi,
+.dashboard-stat,
+.procurement-kpi,
+.procurement-stat {
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* עדכון לכל אלמנט עם data-attribute של KPI */
+[data-kpi],
+[data-stat],
+[data-metric] {
+  text-align: center !important;
+}
+
+/* עדכון לקונטיינרים של KPI */
+.kpi-container,
+.stat-container,
+.metric-container {
+  text-align: center !important;
+}
+
+.kpi-container > *,
+.stat-container > *,
+.metric-container > * {
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+```
+
+### 4. וידוא תמיכה ב-RTL
+
+```css
+/* וידוא שהמרכוז עובד גם ב-RTL */
+[dir="rtl"] .kpi-card,
+[dir="rtl"] .stat-card,
+[dir="rtl"] .metric-card {
+  text-align: center !important;
+  direction: rtl !important;
+}
+
+/* אייקונים ב-RTL */
+[dir="rtl"] .kpi-card .kpi-icon,
+[dir="rtl"] .stat-card .stat-icon,
+[dir="rtl"] .metric-card .metric-icon {
+  margin: 0 auto !important;
+}
+```
+
+## 🎨 שינויים נוספים לשיפור העיצוב
+
+### 1. שיפור המרווחים
+
+```css
+/* שיפור המרווחים כשהטקסט ממורכז */
+.kpi-card,
+.stat-card,
+.metric-card {
+  padding: 1.5rem 1rem !important; /* מרווח אחיד */
+}
+
+/* מרווח בין אלמנטים */
+.kpi-card > *,
+.stat-card > *,
+.metric-card > * {
+  margin-bottom: 0.5rem !important;
+}
+
+.kpi-card > *:last-child,
+.stat-card > *:last-child,
+.metric-card > *:last-child {
+  margin-bottom: 0 !important;
+}
+```
+
+### 2. שיפור האייקונים
+
+```css
+/* מרכוז ושיפור האייקונים */
+.kpi-icon,
+.stat-icon,
+.metric-icon {
+  display: block !important;
+  margin: 0 auto 1rem auto !important;
+  text-align: center !important;
+  font-size: 2rem !important;
+}
+
+/* אייקונים עם רקע */
+.kpi-icon.with-background,
+.stat-icon.with-background,
+.metric-icon.with-background {
+  width: 3rem !important;
+  height: 3rem !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 1rem auto !important;
+}
+```
+
+### 3. שיפור הטיפוגרפיה
+
+```css
+/* שיפור הטיפוגרפיה למרכוז */
+.kpi-value,
+.stat-value,
+.metric-value {
+  font-size: 2rem !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  margin: 0.5rem 0 !important;
+}
+
+.kpi-label,
+.stat-label,
+.metric-label {
+  font-size: 0.9rem !important;
+  text-align: center !important;
+  opacity: 0.8 !important;
+  margin: 0 !important;
+}
+
+.kpi-change,
+.stat-change,
+.metric-change {
+  font-size: 0.8rem !important;
+  text-align: center !important;
+  margin-top: 0.5rem !important;
+}
+```
+
+## 🔍 בדיקה ואימות
+
+לאחר השינוי, ודא ש:
+
+1. **כל ארבעת הריבועים** בלוח הבקרה מציגים תוכן ממורכז
+2. **כל ארבעת הריבועים** בדף דרישות רכש מציגים תוכן ממורכז
+3. **האייקונים** ממורכזים בחלק העליון של כל ריבוע
+4. **המספרים הגדולים** ממורכזים
+5. **התיאורים והתוויות** ממורכזים
+6. **אחוזי השינוי** ממורכזים
+7. **העיצוב נשמר** זהה למעט יישור הטקסט
+
+## ✅ מה שעובד מצוין (אל תשנה)
+
+- צבעי הרקע של הריבועים
+- גבולות וצללים
+- גדלים ופרופורציות
+- מרווחים בין הריבועים
+- צבעי הטקסט
+- האייקונים עצמם
+- אנימציות (אם יש)
+- רספונסיביות
+
+## 🎯 תוצאה מצופה
+
+לאחר השינוי, כל ריבוע KPI יציג:
+- אייקון ממורכז בחלק העליון
+- מספר גדול ממורכז באמצע
+- תיאור ממורכז בחלק התחתון
+- אחוז שינוי ממורכז (אם קיים)
+
+הכל יישאר זהה למעט שהטקסט יהיה ממורכז במקום מיושר לימין.
+
+## 📱 תמיכה במובייל
+
+ודא שהשינוי עובד גם במובייל:
+
+```css
+/* תמיכה במובייל */
+@media (max-width: 768px) {
+  .kpi-card,
+  .stat-card,
+  .metric-card {
+    text-align: center !important;
+    padding: 1rem 0.5rem !important;
+  }
+  
+  .kpi-grid,
+  .stats-grid,
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid,
+  .stats-grid,
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+```
+
+זהו שינוי פשוט אך חשוב שישפר את המראה הויזואלי של המערכת!
+
