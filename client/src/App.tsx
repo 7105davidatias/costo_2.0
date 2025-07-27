@@ -53,18 +53,32 @@ function Router() {
     <div className="min-h-screen bg-background" dir="rtl">
       {isLoggedIn && <Header />}
       {isLoggedIn ? (
-        <main className={isLoggedIn ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" : ""}>
-          <Switch>
-            <Route path="/login" component={Login} />
-            <Route path="/" component={UserDashboard} />
-            <Route path="/dashboard" component={UserDashboard} />
-            <Route path="/procurement-requests" component={ProcurementRequestsList} />
-            <Route path="/procurement-request/:id?" component={ProcurementRequest} />
-            <Route path="/cost-estimation/:id?" component={CostEstimation} />
-            <Route path="/market-research/:category?" component={MarketResearch} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
+        <Switch>
+          <Route path="/login" component={Login} />
+          <Route path="/" component={UserDashboard} />
+          <Route path="/dashboard" component={UserDashboard} />
+          <Route path="/procurement-requests">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <ProcurementRequestsList />
+            </main>
+          </Route>
+          <Route path="/procurement-request/:id?">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <ProcurementRequest />
+            </main>
+          </Route>
+          <Route path="/cost-estimation/:id?">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <CostEstimation />
+            </main>
+          </Route>
+          <Route path="/market-research/:category?">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <MarketResearch />
+            </main>
+          </Route>
+          <Route component={NotFound} />
+        </Switch>
       ) : (
         <Switch>
           <Route path="/login" component={Login} />

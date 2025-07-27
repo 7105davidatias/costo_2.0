@@ -71,19 +71,38 @@ export default function ProcurementDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">דשבורד איש רכש</h1>
-            <p className="text-muted-foreground">יצירה וניהול של דרישות רכש ואומדני עלויות</p>
+      {/* Header */}
+      <div className="bg-card shadow-sm border-b mb-8">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-600 p-2 rounded-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-primary">מרכז ניהול רכש</h1>
+                <p className="text-sm text-muted-foreground">יצירה וניהול דרישות רכש ואומדנים</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                <Calculator className="h-4 w-4 ml-2" />
+                איש רכש
+              </Badge>
+              <Link href="/procurement-request">
+                <Button size="sm">
+                  <Plus className="h-4 w-4 ml-2" />
+                  דרישה חדשה
+                </Button>
+              </Link>
+            </div>
           </div>
-          <Link href="/procurement-request">
-            <Button size="lg">
-              <Plus className="h-5 w-5 ml-2" />
-              יצירת דרישת רכש חדשה
-            </Button>
-          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-primary mb-2">הדרישות שלי</h2>
         </div>
 
         {/* סטטיסטיקות רכש */}

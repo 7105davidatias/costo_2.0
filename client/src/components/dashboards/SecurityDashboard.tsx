@@ -93,11 +93,30 @@ export default function SecurityDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Header */}
+      <div className="bg-card shadow-sm border-b mb-8">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-red-600 p-2 rounded-lg">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-primary">מרכז בקרת ביטחון</h1>
+                <p className="text-sm text-muted-foreground">בדיקת ביטחון מידע ואישור דרישות</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+              <Lock className="h-4 w-4 ml-2" />
+              קב"ט
+            </Badge>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">דשבורד קב"ט</h1>
-          <p className="text-muted-foreground">בקרת ביטחון מידע ואישור דרישות רכש</p>
+          <h2 className="text-xl font-semibold text-primary mb-2">בדיקות ביטחון ממתינות</h2>
         </div>
 
         {/* סטטיסטיקות ביטחון */}

@@ -65,56 +65,82 @@ export default function EconomistDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Header */}
+      <div className="bg-card shadow-sm border-b mb-8">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-600 p-2 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-primary">מרכז בקרת כלכלן</h1>
+                <p className="text-sm text-muted-foreground">אישור ובקרת אומדני עלויות</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <TrendingUp className="h-4 w-4 ml-2" />
+              כלכלן
+            </Badge>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">דשבורד כלכלן</h1>
-          <p className="text-muted-foreground">אישור ובקרת אומדני עלויות</p>
+          <h2 className="text-xl font-semibold text-primary mb-2">אומדנים ממתינים לאישור</h2>
         </div>
 
-        {/* סטטיסטיקות כלכליות */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">ממתינים לאישור</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-2">
+                <Clock className="h-8 w-8 text-orange-600" />
+              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">ממתינים לאישור</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{economicStats.pendingApprovals}</div>
-              <p className="text-xs text-muted-foreground">אומדנים</p>
+            <CardContent className="text-center">
+              <div className="text-3xl font-bold text-orange-600">{economicStats.pendingApprovals}</div>
+              <p className="text-sm text-muted-foreground">אומדנים דחופים</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">אושרו החודש</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-2">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">אושרו החודש</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{economicStats.approvedThisMonth}</div>
-              <p className="text-xs text-muted-foreground">אומדנים</p>
+            <CardContent className="text-center">
+              <div className="text-3xl font-bold text-green-600">{economicStats.approvedThisMonth}</div>
+              <p className="text-sm text-muted-foreground">אומדנים</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">חיסכון כולל</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-2">
+                <TrendingUp className="h-8 w-8 text-blue-600" />
+              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">חיסכון מצטבר</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{economicStats.totalSavings}</div>
-              <p className="text-xs text-muted-foreground">השנה</p>
+            <CardContent className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{economicStats.totalSavings}</div>
+              <p className="text-sm text-muted-foreground">השנה</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">דיוק ממוצע</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-2">
+                <TrendingUp className="h-8 w-8 text-purple-600" />
+              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">דיוק ממוצע</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{economicStats.averageAccuracy}</div>
-              <p className="text-xs text-muted-foreground">האומדנים</p>
+            <CardContent className="text-center">
+              <div className="text-3xl font-bold text-purple-600">{economicStats.averageAccuracy}</div>
+              <p className="text-sm text-muted-foreground">אומדני AI</p>
             </CardContent>
           </Card>
         </div>
