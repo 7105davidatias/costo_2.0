@@ -9,6 +9,7 @@ import ProcurementRequest from "@/pages/procurement-request";
 import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
+import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Switch>
+          <Route path="/login" component={Login} />
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/procurement-requests" component={ProcurementRequestsList} />
