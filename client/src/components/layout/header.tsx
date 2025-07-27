@@ -1,30 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Bell, User, Calculator, LogOut } from "lucide-react";
+import { Bell, User, Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
 
 export default function Header() {
-  const [location, setLocation] = useLocation();
-  const [user, setUser] = useState<any>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsLoggedIn(false);
-    setLocation('/login');
-  };
+  const [location] = useLocation();
 
   const navigationItems = [
     { path: "/dashboard", label: "לוח בקרה", icon: Calculator },
@@ -55,61 +35,37 @@ export default function Header() {
           </div>
           
           {/* Navigation Menu */}
-          {isLoggedIn && (
-            <nav className="hidden md:flex space-x-reverse space-x-8">
-              {navigationItems.map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant="ghost"
-                    className={`${
-                      isActive(item.path)
-                        ? "text-primary border-b-2 border-primary pb-1 bg-primary/10"
-                        : "text-muted-foreground hover:text-primary"
-                    } transition-colors rounded-none`}
-                  >
-                    {item.label}
-                  </Button>
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav className="hidden md:flex space-x-reverse space-x-8">
+            {navigationItems.map((item) => (
+              <Link key={item.path} href={item.path}>
+                <Button
+                  variant="ghost"
+                  className={`${
+                    isActive(item.path)
+                      ? "text-primary border-b-2 border-primary pb-1 bg-primary/10"
+                      : "text-muted-foreground hover:text-primary"
+                  } transition-colors rounded-none`}
+                >
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
+          </nav>
           
           {/* User Menu */}
           <div className="flex items-center space-x-reverse space-x-4">
-            {isLoggedIn ? (
-              <>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="w-5 h-5" />
-                  <Badge variant="destructive" className="absolute -top-1 -left-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
-                    3
-                  </Badge>
-                </Button>
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-                    <User className="text-primary-foreground w-4 h-4" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{user?.firstName} {user?.lastName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {user?.role === 'system_admin' ? 'מנהל מערכת' : 
-                       user?.role === 'economist' ? 'כלכלן' :
-                       user?.role === 'procurement' ? 'איש רכש' : 'קב"ט'}
-                    </div>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 ml-2" />
-                  יציאה
-                </Button>
-              </>
-            ) : (
-              <Link href="/login">
-                <Button variant="default" size="sm">
-                  <User className="w-4 h-4 ml-2" />
-                  כניסה למערכת
-                </Button>
-              </Link>
-            )}
+            <Button variant="ghost" size="sm" className="relative">
+              <Bell className="w-5 h-5" />
+              <Badge variant="destructive" className="absolute -top-1 -left-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                3
+              </Badge>
+            </Button>
+            <div className="flex items-center space-x-reverse space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                <User className="text-primary-foreground w-4 h-4" />
+              </div>
+              <span className="text-sm text-muted-foreground">אהרון כהן</span>
+            </div>
           </div>
         </div>
       </div>
