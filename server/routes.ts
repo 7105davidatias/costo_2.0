@@ -806,6 +806,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Analysis API
+  app.post("/api/ai-analysis", async (req, res) => {
+    try {
+      const { requestId, title, description } = req.body;
+      
+      // Simulate AI analysis
+      const analysisResult = {
+        requestId,
+        title,
+        description,
+        complexity: "בינוני",
+        estimatedAccuracy: "92%",
+        recommendedMethods: ["parametric", "vendor_quotes", "market_price"],
+        riskFactors: [
+          "תלות בספק יחיד",
+          "שינויי מחירים צפויים", 
+          "לוחות זמנים דחוקים"
+        ],
+        costBreakdown: {
+          baseCost: 2100000,
+          vat: 357000,
+          additionalCosts: 43000,
+          total: 2500000
+        },
+        confidence: 0.92,
+        analysisDate: new Date().toISOString()
+      };
+
+      res.json(analysisResult);
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      res.status(500).json({ error: "Failed to perform AI analysis" });
+    }
+  });
+
+  // Estimates API
+  app.post("/api/estimates/draft", async (req, res) => {
+    try {
+      const estimateData = req.body;
+      const draft = {
+        ...estimateData,
+        id: `DRAFT-${Date.now()}`,
+        status: 'draft',
+        createdAt: new Date().toISOString()
+      };
+      
+      res.json(draft);
+    } catch (error) {
+      console.error("Save draft error:", error);
+      res.status(500).json({ error: "Failed to save draft" });
+    }
+  });
+
+  app.post("/api/estimates/submit", async (req, res) => {
+    try {
+      const estimateData = req.body;
+      const estimate = {
+        ...estimateData,
+        id: `EST-${Date.now()}`,
+        status: 'pending_approval',
+        submittedAt: new Date().toISOString()
+      };
+      
+      res.json({ estimateId: estimate.id, status: 'submitted' });
+    } catch (error) {
+      console.error("Submit estimate error:", error);
+      res.status(500).json({ error: "Failed to submit estimate" });
+    }
+  });
+
+  app.post("/api/estimates/:id/approve", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { approvalNotes, approvedBy } = req.body;
+      
+      const result = {
+        id,
+        status: 'approved',
+        approvedBy,
+        approvalNotes,
+        approvedAt: new Date().toISOString()
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Approve estimate error:", error);
+      res.status(500).json({ error: "Failed to approve estimate" });
+    }
+  });
+
+  app.post("/api/estimates/:id/reject", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rejectionNotes, rejectedBy } = req.body;
+      
+      const result = {
+        id,
+        status: 'rejected',
+        rejectedBy,
+        rejectionNotes,
+        rejectedAt: new Date().toISOString()
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Reject estimate error:", error);
+      res.status(500).json({ error: "Failed to reject estimate" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

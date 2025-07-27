@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Clock, TrendingUp } from "lucide-react";
+import { CheckCircle, XCircle, Clock, TrendingUp, Eye } from "lucide-react";
+import EstimateReview from "../workflows/EstimateReview";
 
 interface PendingApproval {
   id: string;
@@ -21,7 +22,10 @@ interface EconomicStats {
 }
 
 export default function EconomistDashboard() {
-  const [pendingApprovals] = useState<PendingApproval[]>([
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedRequest, setSelectedRequest] = useState<PendingApproval | null>(null);
+  
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([
     {
       id: 'REQ-2024-016',
       title: 'רכש 10 רכבי צי',
@@ -48,20 +52,99 @@ export default function EconomistDashboard() {
     }
   ]);
 
-  const [economicStats] = useState<EconomicStats>({
+  const [economicStats, setEconomicStats] = useState<EconomicStats>({
     pendingApprovals: 5,
     approvedThisMonth: 23,
     totalSavings: '₪1,250,000',
     averageAccuracy: '94.2%'
   });
 
-  const handleApprove = (id: string) => {
-    console.log(`Approving request ${id}`);
+  const handleApprove = async (id: string, notes: string = '') => {
+    try {
+      const response = await fetch(`/api/estimates/${id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          approvedBy: JSON.parse(localStorage.getItem('user') || '{}').id,
+          approvalNotes: notes,
+          approvedAt: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        // עדכן סטטוס האומדן
+        setPendingApprovals((prev: PendingApproval[]) => prev.filter((req: PendingApproval) => req.id !== id));
+        setEconomicStats((prev: EconomicStats) => ({
+          ...prev,
+          pendingApprovals: prev.pendingApprovals - 1,
+          approvedThisMonth: prev.approvedThisMonth + 1
+        }));
+        
+        alert('האומדן אושר בהצלחה והועבר לשלב הבא');
+        setCurrentView('dashboard');
+      }
+    } catch (error) {
+      console.error('שגיאה באישור אומדן:', error);
+      alert('שגיאה באישור האומדן');
+    }
   };
 
-  const handleReject = (id: string) => {
-    console.log(`Rejecting request ${id}`);
+  const handleReject = async (id: string, notes: string = '') => {
+    if (!notes.trim()) {
+      alert('יש להוסיף הערות לדחיית האומדן');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/estimates/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          status: 'rejected',
+          rejectedBy: JSON.parse(localStorage.getItem('user') || '{}').id,
+          rejectionNotes: notes,
+          rejectedAt: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        setPendingApprovals((prev: PendingApproval[]) => prev.filter((req: PendingApproval) => req.id !== id));
+        setEconomicStats((prev: EconomicStats) => ({
+          ...prev,
+          pendingApprovals: prev.pendingApprovals - 1
+        }));
+        
+        alert('האומדן נדחה והוחזר לאיש הרכש לתיקון');
+        setCurrentView('dashboard');
+      }
+    } catch (error) {
+      console.error('שגיאה בדחיית אומדן:', error);
+      alert('שגיאה בדחיית האומדן');
+    }
   };
+
+  const handleViewDetails = (request: PendingApproval) => {
+    setSelectedRequest(request);
+    setCurrentView('estimate_review');
+  };
+
+  if (currentView === 'estimate_review' && selectedRequest) {
+    return (
+      <EstimateReview 
+        requestData={selectedRequest}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -171,23 +254,28 @@ export default function EconomistDashboard() {
                   </div>
                   <div className="flex gap-2">
                     <Button 
+                      size="sm"
+                      onClick={() => handleViewDetails(approval)}
+                      variant="outline"
+                    >
+                      <Eye className="h-4 w-4 ml-2" />
+                      בדוק אומדן
+                    </Button>
+                    <Button 
                       size="sm" 
                       onClick={() => handleApprove(approval.id)}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="h-4 w-4 ml-2" />
-                      אשר אומדן
+                      אשר מהיר
                     </Button>
                     <Button 
                       size="sm" 
                       variant="destructive"
-                      onClick={() => handleReject(approval.id)}
+                      onClick={() => handleReject(approval.id, 'דחייה מהירה')}
                     >
                       <XCircle className="h-4 w-4 ml-2" />
-                      דחה אומדן
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      צפה בפרטים
+                      דחה
                     </Button>
                   </div>
                 </div>

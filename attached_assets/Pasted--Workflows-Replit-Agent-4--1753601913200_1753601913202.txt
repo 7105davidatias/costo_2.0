@@ -1,0 +1,1619 @@
+# פרומפט לפיתוח Workflows מלאים במערכת - Replit Agent
+
+## מצב נוכחי והישגים
+
+המערכת כעת מציגה 4 ממשקים מותאמים אישית לכל תפקיד:
+- **איש רכש** - ממשק לניהול דרישות רכש ויצירת אומדנים
+- **כלכלן** - ממשק לאישור אומדנים ובקרת עלויות  
+- **קב"ט** - ממשק לבדיקת ביטחון ואישור דרישות
+- **מנהל מערכת** - ממשק לניהול משתמשים ובקרת המערכת
+
+## המשימה הבאה: פיתוח Workflows מלאים
+
+יש לפתח זרימות עבודה מלאות ופונקציונליות בין התפקידים השונים, כולל עדכון תורי עבודה בזמן אמת ושמירת מצב העבודה.
+
+## Workflow 1: זרימת עבודה איש רכש → כלכלן
+
+### שלב 1: פיתוח מנגנון בחירת דרישת רכש (איש רכש)
+
+עדכן את `src/components/ProcurementDashboard.jsx` להוסיף פונקציונליות מלאה:
+
+```javascript
+// הוסף למצב הקומפוננט
+const [selectedRequest, setSelectedRequest] = useState(null);
+const [estimateData, setEstimateData] = useState({
+  requestId: '',
+  title: '',
+  description: '',
+  estimatedValue: '',
+  estimationMethods: [],
+  aiAnalysis: null,
+  marketResearch: null,
+  status: 'draft'
+});
+
+// פונקציה לבחירת דרישת רכש
+const handleSelectRequest = async (request) => {
+  setSelectedRequest(request);
+  setEstimateData({
+    requestId: request.id,
+    title: request.title,
+    description: request.description,
+    estimatedValue: request.estimatedValue,
+    estimationMethods: [],
+    aiAnalysis: null,
+    marketResearch: null,
+    status: 'draft'
+  });
+  
+  // עבור לממשק יצירת אומדן
+  setCurrentView('create_estimate');
+};
+
+// פונקציה ליצירת אומדן חדש
+const handleCreateEstimate = async () => {
+  try {
+    const response = await fetch('/api/estimates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        ...estimateData,
+        createdBy: user.id,
+        createdAt: new Date().toISOString(),
+        status: 'pending_approval'
+      })
+    });
+
+    if (response.ok) {
+      const newEstimate = await response.json();
+      
+      // עדכן תור העבודה של איש הרכש
+      await updateProcurementQueue(estimateData.requestId, 'in_progress');
+      
+      // עדכן תור העבודה של הכלכלן
+      await updateEconomistQueue(newEstimate.id, 'pending_approval');
+      
+      // הצג הודעת הצלחה
+      alert('האומדן נוצר בהצלחה והועבר לאישור הכלכלן');
+      
+      // חזור לדשבורד
+      setCurrentView('procurement_dashboard');
+      
+      // רענן נתונים
+      await refreshDashboardData();
+    }
+  } catch (error) {
+    console.error('שגיאה ביצירת אומדן:', error);
+    alert('שגיאה ביצירת האומדן');
+  }
+};
+```
+
+### שלב 2: יצירת ממשק יצירת אומדן
+
+צור קובץ חדש: `src/components/CreateEstimate.jsx`
+
+```javascript
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowRight, Save, Send, Calculator, Search, Brain } from 'lucide-react';
+
+const CreateEstimate = ({ requestData, onSave, onSubmit, onCancel, setCurrentView }) => {
+  const [estimateData, setEstimateData] = useState({
+    requestId: requestData?.id || '',
+    title: requestData?.title || '',
+    description: requestData?.description || '',
+    estimatedValue: requestData?.estimatedValue || '',
+    selectedMethods: [],
+    aiAnalysisCompleted: false,
+    marketResearchCompleted: false,
+    notes: '',
+    assumptions: '',
+    riskFactors: ''
+  });
+
+  const [availableMethods, setAvailableMethods] = useState([
+    { id: 'parametric', name: 'אומדן פרמטרי', suitable: true, accuracy: '92%' },
+    { id: 'analogous', name: 'אומדן אנלוגי', suitable: true, accuracy: '88%' },
+    { id: 'bottom_up', name: 'אומדן מלמטה למעלה', suitable: false, accuracy: '95%' },
+    { id: 'three_point', name: 'אומדן שלוש נקודות', suitable: true, accuracy: '85%' },
+    { id: 'expert_judgment', name: 'שיקול דעת מומחה', suitable: true, accuracy: '80%' },
+    { id: 'vendor_quotes', name: 'הצעות ספקים', suitable: true, accuracy: '96%' },
+    { id: 'market_price', name: 'מחיר שוק', suitable: true, accuracy: '90%' },
+    { id: 'historical_data', name: 'נתונים היסטוריים', suitable: false, accuracy: '87%' }
+  ]);
+
+  const handleMethodToggle = (methodId) => {
+    setEstimateData(prev => ({
+      ...prev,
+      selectedMethods: prev.selectedMethods.includes(methodId)
+        ? prev.selectedMethods.filter(id => id !== methodId)
+        : [...prev.selectedMethods, methodId]
+    }));
+  };
+
+  const handleAIAnalysis = async () => {
+    try {
+      // הצג מסך טעינה
+      setCurrentView('ai_analysis_loading');
+      
+      const response = await fetch('/api/ai-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          requestId: estimateData.requestId,
+          title: estimateData.title,
+          description: estimateData.description
+        })
+      });
+
+      if (response.ok) {
+        const analysisResult = await response.json();
+        setEstimateData(prev => ({
+          ...prev,
+          aiAnalysisCompleted: true,
+          aiAnalysisData: analysisResult
+        }));
+        
+        // עבור למסך תוצאות ניתוח AI
+        setCurrentView('ai_analysis_results');
+      }
+    } catch (error) {
+      console.error('שגיאה בניתוח AI:', error);
+      alert('שגיאה בביצוע ניתוח AI');
+    }
+  };
+
+  const handleMarketResearch = async () => {
+    try {
+      // הצג מסך טעינה
+      setCurrentView('market_research_loading');
+      
+      const response = await fetch('/api/market-research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          requestId: estimateData.requestId,
+          title: estimateData.title,
+          description: estimateData.description,
+          category: requestData.category
+        })
+      });
+
+      if (response.ok) {
+        const researchResult = await response.json();
+        setEstimateData(prev => ({
+          ...prev,
+          marketResearchCompleted: true,
+          marketResearchData: researchResult
+        }));
+        
+        // עבור למסך תוצאות מחקר שוק
+        setCurrentView('market_research_results');
+      }
+    } catch (error) {
+      console.error('שגיאה במחקר שוק:', error);
+      alert('שגיאה בביצוע מחקר שוק');
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      const response = await fetch('/api/estimates/draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          ...estimateData,
+          status: 'draft',
+          lastModified: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        alert('הטיוטה נשמרה בהצלחה');
+        onSave && onSave(estimateData);
+      }
+    } catch (error) {
+      console.error('שגיאה בשמירת טיוטה:', error);
+      alert('שגיאה בשמירת הטיוטה');
+    }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (estimateData.selectedMethods.length === 0) {
+      alert('יש לבחור לפחות שיטת אומדן אחת');
+      return;
+    }
+
+    if (!estimateData.aiAnalysisCompleted) {
+      alert('יש לבצע ניתוח AI לפני הגשה לאישור');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/estimates/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          ...estimateData,
+          status: 'pending_approval',
+          submittedAt: new Date().toISOString(),
+          submittedBy: JSON.parse(localStorage.getItem('user')).id
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // עדכן תורי עבודה
+        await updateWorkQueues(result.estimateId);
+        
+        alert('האומדן הוגש לאישור הכלכלן בהצלחה');
+        onSubmit && onSubmit(result);
+        
+        // חזור לדשבורד איש רכש
+        setCurrentView('procurement_dashboard');
+      }
+    } catch (error) {
+      console.error('שגיאה בהגשת אומדן:', error);
+      alert('שגיאה בהגשת האומדן לאישור');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 rtl">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Calculator className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">יצירת אומדן חדש</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={onCancel}>
+                ביטול
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSaveDraft}>
+                <Save className="h-4 w-4 mr-2" />
+                שמור טיוטה
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* פרטי הדרישה */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>פרטי דרישת הרכש</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">מספר דרישה</label>
+                <Input value={estimateData.requestId} disabled />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">ערך מוערך</label>
+                <Input value={estimateData.estimatedValue} disabled />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">כותרת</label>
+                <Input 
+                  value={estimateData.title} 
+                  onChange={(e) => setEstimateData(prev => ({...prev, title: e.target.value}))}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">תיאור</label>
+                <Textarea 
+                  value={estimateData.description}
+                  onChange={(e) => setEstimateData(prev => ({...prev, description: e.target.value}))}
+                  rows={3}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* כלי ניתוח */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-blue-600" />
+                ניתוח AI
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                {estimateData.aiAnalysisCompleted ? (
+                  <div>
+                    <Badge className="bg-green-100 text-green-800 mb-4">הושלם</Badge>
+                    <p className="text-sm text-gray-600 mb-4">ניתוח AI הושלם בהצלחה</p>
+                    <Button variant="outline" onClick={() => setCurrentView('ai_analysis_results')}>
+                      צפה בתוצאות
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-4">בצע ניתוח AI לקבלת המלצות על שיטות אומדן</p>
+                    <Button onClick={handleAIAnalysis} className="bg-blue-600 hover:bg-blue-700">
+                      <Brain className="h-4 w-4 mr-2" />
+                      התחל ניתוח AI
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-green-600" />
+                מחקר שוק
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                {estimateData.marketResearchCompleted ? (
+                  <div>
+                    <Badge className="bg-green-100 text-green-800 mb-4">הושלם</Badge>
+                    <p className="text-sm text-gray-600 mb-4">מחקר שוק הושלם בהצלחה</p>
+                    <Button variant="outline" onClick={() => setCurrentView('market_research_results')}>
+                      צפה בתוצאות
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-4">בצע מחקר שוק לקבלת נתוני ספקים ומחירים</p>
+                    <Button onClick={handleMarketResearch} className="bg-green-600 hover:bg-green-700">
+                      <Search className="h-4 w-4 mr-2" />
+                      התחל מחקר שוק
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* בחירת שיטות אומדן */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>שיטות אומדן מומלצות</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availableMethods.map(method => (
+                <div key={method.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <Checkbox
+                    id={method.id}
+                    checked={estimateData.selectedMethods.includes(method.id)}
+                    onCheckedChange={() => handleMethodToggle(method.id)}
+                    disabled={!method.suitable}
+                  />
+                  <div className="flex-1">
+                    <label htmlFor={method.id} className="font-medium cursor-pointer">
+                      {method.name}
+                    </label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className={method.suitable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
+                        {method.suitable ? 'מתאים' : 'לא מתאים'}
+                      </Badge>
+                      <span className="text-sm text-gray-600">דיוק: {method.accuracy}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* הערות והנחות */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>הערות והנחות</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">הערות כלליות</label>
+                <Textarea 
+                  value={estimateData.notes}
+                  onChange={(e) => setEstimateData(prev => ({...prev, notes: e.target.value}))}
+                  placeholder="הערות נוספות על האומדן..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">הנחות יסוד</label>
+                <Textarea 
+                  value={estimateData.assumptions}
+                  onChange={(e) => setEstimateData(prev => ({...prev, assumptions: e.target.value}))}
+                  placeholder="הנחות יסוד לאומדן..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">גורמי סיכון</label>
+                <Textarea 
+                  value={estimateData.riskFactors}
+                  onChange={(e) => setEstimateData(prev => ({...prev, riskFactors: e.target.value}))}
+                  placeholder="גורמי סיכון שזוהו..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* כפתורי פעולה */}
+        <div className="flex justify-end gap-4">
+          <Button variant="outline" onClick={onCancel}>
+            ביטול
+          </Button>
+          <Button variant="outline" onClick={handleSaveDraft}>
+            <Save className="h-4 w-4 mr-2" />
+            שמור טיוטה
+          </Button>
+          <Button 
+            onClick={handleSubmitForApproval}
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={estimateData.selectedMethods.length === 0 || !estimateData.aiAnalysisCompleted}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            הגש לאישור כלכלן
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateEstimate;
+```
+
+### שלב 3: פיתוח API endpoints לניהול אומדנים
+
+עדכן את `ai-cost-backend/src/routes/procurement.py`:
+
+```python
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
+import uuid
+
+procurement_bp = Blueprint('procurement', __name__)
+
+# מודל אומדן
+estimates = []
+work_queues = {
+    'procurement': [],
+    'economist': [],
+    'security': [],
+    'system_admin': []
+}
+
+@procurement_bp.route('/api/estimates', methods=['POST'])
+@jwt_required()
+def create_estimate():
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        estimate_id = str(uuid.uuid4())
+        estimate = {
+            'id': estimate_id,
+            'requestId': data.get('requestId'),
+            'title': data.get('title'),
+            'description': data.get('description'),
+            'estimatedValue': data.get('estimatedValue'),
+            'selectedMethods': data.get('selectedMethods', []),
+            'aiAnalysisData': data.get('aiAnalysisData'),
+            'marketResearchData': data.get('marketResearchData'),
+            'notes': data.get('notes', ''),
+            'assumptions': data.get('assumptions', ''),
+            'riskFactors': data.get('riskFactors', ''),
+            'status': data.get('status', 'draft'),
+            'createdBy': current_user,
+            'createdAt': datetime.now().isoformat(),
+            'lastModified': datetime.now().isoformat(),
+            'submittedAt': data.get('submittedAt'),
+            'approvedAt': None,
+            'approvedBy': None,
+            'rejectedAt': None,
+            'rejectedBy': None,
+            'rejectionReason': None
+        }
+        
+        estimates.append(estimate)
+        
+        # עדכן תורי עבודה
+        if estimate['status'] == 'pending_approval':
+            # הוסף לתור הכלכלן
+            work_queues['economist'].append({
+                'estimateId': estimate_id,
+                'requestId': estimate['requestId'],
+                'title': estimate['title'],
+                'amount': estimate['estimatedValue'],
+                'submittedBy': current_user,
+                'submittedAt': estimate['submittedAt'],
+                'priority': 'בינוני',
+                'type': 'approval_required'
+            })
+            
+            # עדכן סטטוס בתור איש הרכש
+            for item in work_queues['procurement']:
+                if item.get('requestId') == estimate['requestId']:
+                    item['status'] = 'pending_approval'
+                    break
+        
+        return jsonify({
+            'success': True,
+            'estimateId': estimate_id,
+            'message': 'האומדן נוצר בהצלחה'
+        }), 201
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/estimates/draft', methods=['POST'])
+@jwt_required()
+def save_draft():
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        # חפש טיוטה קיימת
+        existing_draft = None
+        for estimate in estimates:
+            if (estimate['requestId'] == data.get('requestId') and 
+                estimate['createdBy'] == current_user and 
+                estimate['status'] == 'draft'):
+                existing_draft = estimate
+                break
+        
+        if existing_draft:
+            # עדכן טיוטה קיימת
+            existing_draft.update({
+                'title': data.get('title'),
+                'description': data.get('description'),
+                'selectedMethods': data.get('selectedMethods', []),
+                'notes': data.get('notes', ''),
+                'assumptions': data.get('assumptions', ''),
+                'riskFactors': data.get('riskFactors', ''),
+                'lastModified': datetime.now().isoformat()
+            })
+            estimate_id = existing_draft['id']
+        else:
+            # צור טיוטה חדשה
+            estimate_id = str(uuid.uuid4())
+            estimate = {
+                'id': estimate_id,
+                'requestId': data.get('requestId'),
+                'title': data.get('title'),
+                'description': data.get('description'),
+                'estimatedValue': data.get('estimatedValue'),
+                'selectedMethods': data.get('selectedMethods', []),
+                'notes': data.get('notes', ''),
+                'assumptions': data.get('assumptions', ''),
+                'riskFactors': data.get('riskFactors', ''),
+                'status': 'draft',
+                'createdBy': current_user,
+                'createdAt': datetime.now().isoformat(),
+                'lastModified': datetime.now().isoformat()
+            }
+            estimates.append(estimate)
+        
+        return jsonify({
+            'success': True,
+            'estimateId': estimate_id,
+            'message': 'הטיוטה נשמרה בהצלחה'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/estimates/submit', methods=['POST'])
+@jwt_required()
+def submit_estimate():
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        # מצא את האומדן
+        estimate = None
+        for est in estimates:
+            if est['requestId'] == data.get('requestId') and est['createdBy'] == current_user:
+                estimate = est
+                break
+        
+        if not estimate:
+            return jsonify({
+                'success': False,
+                'error': 'אומדן לא נמצא'
+            }), 404
+        
+        # עדכן את האומדן
+        estimate.update({
+            'selectedMethods': data.get('selectedMethods', []),
+            'notes': data.get('notes', ''),
+            'assumptions': data.get('assumptions', ''),
+            'riskFactors': data.get('riskFactors', ''),
+            'status': 'pending_approval',
+            'submittedAt': datetime.now().isoformat(),
+            'lastModified': datetime.now().isoformat()
+        })
+        
+        # הוסף לתור הכלכלן
+        work_queues['economist'].append({
+            'estimateId': estimate['id'],
+            'requestId': estimate['requestId'],
+            'title': estimate['title'],
+            'amount': estimate['estimatedValue'],
+            'submittedBy': current_user,
+            'submittedAt': estimate['submittedAt'],
+            'priority': 'בינוני',
+            'type': 'approval_required',
+            'estimationMethods': estimate['selectedMethods']
+        })
+        
+        return jsonify({
+            'success': True,
+            'estimateId': estimate['id'],
+            'message': 'האומדן הוגש לאישור בהצלחה'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/work-queue/<role>', methods=['GET'])
+@jwt_required()
+def get_work_queue(role):
+    try:
+        current_user = get_jwt_identity()
+        
+        if role not in work_queues:
+            return jsonify({
+                'success': False,
+                'error': 'תפקיד לא חוקי'
+            }), 400
+        
+        queue = work_queues[role]
+        
+        return jsonify({
+            'success': True,
+            'queue': queue
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/estimates/<estimate_id>', methods=['GET'])
+@jwt_required()
+def get_estimate(estimate_id):
+    try:
+        estimate = None
+        for est in estimates:
+            if est['id'] == estimate_id:
+                estimate = est
+                break
+        
+        if not estimate:
+            return jsonify({
+                'success': False,
+                'error': 'אומדן לא נמצא'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'estimate': estimate
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+```
+
+## Workflow 2: זרימת עבודה כלכלן - אישור/דחיית אומדנים
+
+### שלב 4: עדכון דשבורד כלכלן לטיפול באומדנים
+
+עדכן את `src/components/EconomistDashboard.jsx`:
+
+```javascript
+// הוסף פונקציות לטיפול באומדנים
+const [selectedEstimate, setSelectedEstimate] = useState(null);
+const [approvalModal, setApprovalModal] = useState(false);
+const [rejectionModal, setRejectionModal] = useState(false);
+const [rejectionReason, setRejectionReason] = useState('');
+
+const handleViewEstimate = async (estimateId) => {
+  try {
+    const response = await fetch(`/api/estimates/${estimateId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (response.ok) {
+      const estimate = await response.json();
+      setSelectedEstimate(estimate.estimate);
+      setCurrentView('estimate_review');
+    }
+  } catch (error) {
+    console.error('שגיאה בטעינת אומדן:', error);
+  }
+};
+
+const handleApproveEstimate = async (estimateId) => {
+  try {
+    const response = await fetch(`/api/estimates/${estimateId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        approvedAt: new Date().toISOString(),
+        approverNotes: ''
+      })
+    });
+
+    if (response.ok) {
+      alert('האומדן אושר בהצלחה');
+      await refreshDashboardData();
+      setApprovalModal(false);
+    }
+  } catch (error) {
+    console.error('שגיאה באישור אומדן:', error);
+    alert('שגיאה באישור האומדן');
+  }
+};
+
+const handleRejectEstimate = async (estimateId) => {
+  if (!rejectionReason.trim()) {
+    alert('יש להזין סיבת דחייה');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/estimates/${estimateId}/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        rejectedAt: new Date().toISOString(),
+        rejectionReason: rejectionReason
+      })
+    });
+
+    if (response.ok) {
+      alert('האומדן נדחה');
+      await refreshDashboardData();
+      setRejectionModal(false);
+      setRejectionReason('');
+    }
+  } catch (error) {
+    console.error('שגיאה בדחיית אומדן:', error);
+    alert('שגיאה בדחיית האומדן');
+  }
+};
+
+// עדכן את הכפתורים בתור האישורים
+<div className="flex gap-2">
+  <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApproveEstimate(approval.estimateId)}>
+    <CheckCircle className="h-4 w-4 mr-1" />
+    אשר
+  </Button>
+  <Button size="sm" variant="outline" onClick={() => handleViewEstimate(approval.estimateId)}>
+    בדוק פרטים
+  </Button>
+  <Button size="sm" variant="outline" className="text-red-600 border-red-300" onClick={() => {
+    setSelectedEstimate(approval);
+    setRejectionModal(true);
+  }}>
+    דחה
+  </Button>
+</div>
+```
+
+### שלב 5: יצירת ממשק בדיקת אומדן לכלכלן
+
+צור קובץ חדש: `src/components/EstimateReview.jsx`
+
+```javascript
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { CheckCircle, XCircle, Edit, ArrowLeft, Calculator, FileText } from 'lucide-react';
+
+const EstimateReview = ({ estimate, onApprove, onReject, onEdit, onBack }) => {
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectionForm, setShowRejectionForm] = useState(false);
+  const [editedEstimate, setEditedEstimate] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (estimate) {
+      setEditedEstimate({...estimate});
+    }
+  }, [estimate]);
+
+  const handleApprove = async () => {
+    if (window.confirm('האם אתה בטוח שברצונך לאשר את האומדן?')) {
+      await onApprove(estimate.id, reviewNotes);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert('יש להזין סיבת דחייה');
+      return;
+    }
+    
+    if (window.confirm('האם אתה בטוח שברצונך לדחות את האומדן?')) {
+      await onReject(estimate.id, rejectionReason);
+    }
+  };
+
+  const handleSaveEdits = async () => {
+    try {
+      const response = await fetch(`/api/estimates/${estimate.id}/edit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          ...editedEstimate,
+          editedBy: JSON.parse(localStorage.getItem('user')).id,
+          editedAt: new Date().toISOString(),
+          editorNotes: reviewNotes
+        })
+      });
+
+      if (response.ok) {
+        alert('השינויים נשמרו בהצלחה');
+        setIsEditing(false);
+        // רענן את הנתונים
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('שגיאה בשמירת שינויים:', error);
+      alert('שגיאה בשמירת השינויים');
+    }
+  };
+
+  if (!estimate) {
+    return <div>טוען...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 rtl">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={onBack}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                חזור
+              </Button>
+              <Calculator className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">בדיקת אומדן - {estimate.title}</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge className="bg-orange-100 text-orange-800">
+                {estimate.status === 'pending_approval' ? 'ממתין לאישור' : estimate.status}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* פרטי האומדן */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>פרטי האומדן</CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditing(!isEditing)}
+                className={isEditing ? 'bg-blue-50' : ''}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                {isEditing ? 'בטל עריכה' : 'ערוך אומדן'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">מספר דרישה</label>
+                <div className="p-2 bg-gray-50 rounded">{estimate.requestId}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">ערך מוערך</label>
+                {isEditing ? (
+                  <input 
+                    type="text" 
+                    value={editedEstimate.estimatedValue}
+                    onChange={(e) => setEditedEstimate(prev => ({...prev, estimatedValue: e.target.value}))}
+                    className="w-full p-2 border rounded"
+                  />
+                ) : (
+                  <div className="p-2 bg-gray-50 rounded font-bold text-blue-600">{estimate.estimatedValue}</div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">כותרת</label>
+                {isEditing ? (
+                  <input 
+                    type="text" 
+                    value={editedEstimate.title}
+                    onChange={(e) => setEditedEstimate(prev => ({...prev, title: e.target.value}))}
+                    className="w-full p-2 border rounded"
+                  />
+                ) : (
+                  <div className="p-2 bg-gray-50 rounded">{estimate.title}</div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">תיאור</label>
+                {isEditing ? (
+                  <textarea 
+                    value={editedEstimate.description}
+                    onChange={(e) => setEditedEstimate(prev => ({...prev, description: e.target.value}))}
+                    className="w-full p-2 border rounded"
+                    rows={3}
+                  />
+                ) : (
+                  <div className="p-2 bg-gray-50 rounded">{estimate.description}</div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* שיטות אומדן שנבחרו */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>שיטות אומדן שנבחרו</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {estimate.selectedMethods && estimate.selectedMethods.map((method, index) => (
+                <div key={index} className="p-3 border rounded-lg bg-blue-50">
+                  <div className="font-medium">{method}</div>
+                  <Badge className="bg-green-100 text-green-800 mt-1">נבחר</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* הערות והנחות */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>הערות</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <textarea 
+                  value={editedEstimate.notes}
+                  onChange={(e) => setEditedEstimate(prev => ({...prev, notes: e.target.value}))}
+                  className="w-full p-2 border rounded"
+                  rows={4}
+                />
+              ) : (
+                <div className="text-sm">{estimate.notes || 'אין הערות'}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>הנחות יסוד</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <textarea 
+                  value={editedEstimate.assumptions}
+                  onChange={(e) => setEditedEstimate(prev => ({...prev, assumptions: e.target.value}))}
+                  className="w-full p-2 border rounded"
+                  rows={4}
+                />
+              ) : (
+                <div className="text-sm">{estimate.assumptions || 'אין הנחות'}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>גורמי סיכון</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <textarea 
+                  value={editedEstimate.riskFactors}
+                  onChange={(e) => setEditedEstimate(prev => ({...prev, riskFactors: e.target.value}))}
+                  className="w-full p-2 border rounded"
+                  rows={4}
+                />
+              ) : (
+                <div className="text-sm">{estimate.riskFactors || 'לא זוהו סיכונים'}</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* הערות כלכלן */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>הערות כלכלן</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea 
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              placeholder="הערות לאומדן..."
+              rows={4}
+            />
+          </CardContent>
+        </Card>
+
+        {/* כפתורי פעולה */}
+        <div className="flex justify-end gap-4">
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                ביטול
+              </Button>
+              <Button onClick={handleSaveEdits} className="bg-blue-600 hover:bg-blue-700">
+                שמור שינויים
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onBack}>
+                חזור
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-red-600 border-red-300"
+                onClick={() => setShowRejectionForm(true)}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                דחה אומדן
+              </Button>
+              <Button onClick={handleApprove} className="bg-green-600 hover:bg-green-700">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                אשר אומדן
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* טופס דחיית אומדן */}
+        {showRejectionForm && (
+          <Card className="mt-8 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-700">דחיית אומדן</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">סיבת דחייה</label>
+                  <Textarea 
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="הזן סיבת דחייה מפורטת..."
+                    rows={4}
+                  />
+                </div>
+                <div className="flex justify-end gap-4">
+                  <Button variant="outline" onClick={() => setShowRejectionForm(false)}>
+                    ביטול
+                  </Button>
+                  <Button onClick={handleReject} className="bg-red-600 hover:bg-red-700">
+                    דחה אומדן
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EstimateReview;
+```
+
+### שלב 6: הוספת API endpoints לאישור/דחיית אומדנים
+
+הוסף ל-`ai-cost-backend/src/routes/procurement.py`:
+
+```python
+@procurement_bp.route('/api/estimates/<estimate_id>/approve', methods=['POST'])
+@jwt_required()
+def approve_estimate(estimate_id):
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        # מצא את האומדן
+        estimate = None
+        for est in estimates:
+            if est['id'] == estimate_id:
+                estimate = est
+                break
+        
+        if not estimate:
+            return jsonify({
+                'success': False,
+                'error': 'אומדן לא נמצא'
+            }), 404
+        
+        # עדכן את האומדן
+        estimate.update({
+            'status': 'approved',
+            'approvedAt': datetime.now().isoformat(),
+            'approvedBy': current_user,
+            'approverNotes': data.get('approverNotes', ''),
+            'lastModified': datetime.now().isoformat()
+        })
+        
+        # הסר מתור הכלכלן
+        work_queues['economist'] = [
+            item for item in work_queues['economist'] 
+            if item.get('estimateId') != estimate_id
+        ]
+        
+        # עדכן תור איש הרכש
+        for item in work_queues['procurement']:
+            if item.get('requestId') == estimate['requestId']:
+                item['status'] = 'approved'
+                break
+        
+        # הוסף לתור קב"ט לבדיקת ביטחון
+        work_queues['security'].append({
+            'estimateId': estimate_id,
+            'requestId': estimate['requestId'],
+            'title': estimate['title'],
+            'amount': estimate['estimatedValue'],
+            'approvedBy': current_user,
+            'approvedAt': estimate['approvedAt'],
+            'type': 'security_review',
+            'priority': 'בינוני'
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'האומדן אושר בהצלחה והועבר לבדיקת קב"ט'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/estimates/<estimate_id>/reject', methods=['POST'])
+@jwt_required()
+def reject_estimate(estimate_id):
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        # מצא את האומדן
+        estimate = None
+        for est in estimates:
+            if est['id'] == estimate_id:
+                estimate = est
+                break
+        
+        if not estimate:
+            return jsonify({
+                'success': False,
+                'error': 'אומדן לא נמצא'
+            }), 404
+        
+        # עדכן את האומדן
+        estimate.update({
+            'status': 'rejected',
+            'rejectedAt': datetime.now().isoformat(),
+            'rejectedBy': current_user,
+            'rejectionReason': data.get('rejectionReason', ''),
+            'lastModified': datetime.now().isoformat()
+        })
+        
+        # הסר מתור הכלכלן
+        work_queues['economist'] = [
+            item for item in work_queues['economist'] 
+            if item.get('estimateId') != estimate_id
+        ]
+        
+        # החזר לתור איש הרכש לתיקון
+        work_queues['procurement'].append({
+            'estimateId': estimate_id,
+            'requestId': estimate['requestId'],
+            'title': estimate['title'],
+            'amount': estimate['estimatedValue'],
+            'rejectedBy': current_user,
+            'rejectedAt': estimate['rejectedAt'],
+            'rejectionReason': estimate['rejectionReason'],
+            'type': 'revision_required',
+            'priority': 'גבוה'
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'האומדן נדחה והוחזר לאיש הרכש לתיקון'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/estimates/<estimate_id>/edit', methods=['PUT'])
+@jwt_required()
+def edit_estimate(estimate_id):
+    try:
+        current_user = get_jwt_identity()
+        data = request.get_json()
+        
+        # מצא את האומדן
+        estimate = None
+        for est in estimates:
+            if est['id'] == estimate_id:
+                estimate = est
+                break
+        
+        if not estimate:
+            return jsonify({
+                'success': False,
+                'error': 'אומדן לא נמצא'
+            }), 404
+        
+        # עדכן את האומדן
+        estimate.update({
+            'title': data.get('title'),
+            'description': data.get('description'),
+            'estimatedValue': data.get('estimatedValue'),
+            'notes': data.get('notes'),
+            'assumptions': data.get('assumptions'),
+            'riskFactors': data.get('riskFactors'),
+            'editedBy': current_user,
+            'editedAt': datetime.now().isoformat(),
+            'editorNotes': data.get('editorNotes', ''),
+            'lastModified': datetime.now().isoformat()
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'האומדן עודכן בהצלחה'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+```
+
+## Workflow 3: עדכון תורי עבודה בזמן אמת
+
+### שלב 7: יצירת מנגנון עדכון תורי עבודה
+
+צור קובץ חדש: `src/utils/workflowManager.js`
+
+```javascript
+class WorkflowManager {
+  constructor() {
+    this.subscribers = new Map();
+  }
+
+  // הרשמה לעדכוני תור עבודה
+  subscribe(role, callback) {
+    if (!this.subscribers.has(role)) {
+      this.subscribers.set(role, []);
+    }
+    this.subscribers.get(role).push(callback);
+  }
+
+  // ביטול הרשמה
+  unsubscribe(role, callback) {
+    if (this.subscribers.has(role)) {
+      const callbacks = this.subscribers.get(role);
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  }
+
+  // עדכון תור עבודה
+  async updateWorkQueue(role, action, data) {
+    try {
+      const response = await fetch('/api/workflow/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          role,
+          action,
+          data
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // עדכן את כל המנויים
+        if (this.subscribers.has(role)) {
+          this.subscribers.get(role).forEach(callback => {
+            callback(result.queue);
+          });
+        }
+        
+        return result;
+      }
+    } catch (error) {
+      console.error('שגיאה בעדכון תור עבודה:', error);
+      throw error;
+    }
+  }
+
+  // קבלת תור עבודה נוכחי
+  async getWorkQueue(role) {
+    try {
+      const response = await fetch(`/api/work-queue/${role}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result.queue;
+      }
+    } catch (error) {
+      console.error('שגיאה בקבלת תור עבודה:', error);
+      throw error;
+    }
+  }
+
+  // זרימת עבודה: איש רכש יוצר אומדן
+  async procurementCreateEstimate(requestId, estimateData) {
+    try {
+      // צור אומדן
+      const createResponse = await fetch('/api/estimates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(estimateData)
+      });
+
+      if (createResponse.ok) {
+        const result = await createResponse.json();
+        
+        // עדכן תור איש רכש
+        await this.updateWorkQueue('procurement', 'estimate_created', {
+          requestId,
+          estimateId: result.estimateId,
+          status: 'pending_approval'
+        });
+        
+        // עדכן תור כלכלן
+        await this.updateWorkQueue('economist', 'new_approval_request', {
+          estimateId: result.estimateId,
+          requestId,
+          title: estimateData.title,
+          amount: estimateData.estimatedValue,
+          submittedBy: JSON.parse(localStorage.getItem('user')).name,
+          submittedAt: new Date().toISOString()
+        });
+        
+        return result;
+      }
+    } catch (error) {
+      console.error('שגיאה בזרימת יצירת אומדן:', error);
+      throw error;
+    }
+  }
+
+  // זרימת עבודה: כלכלן מאשר אומדן
+  async economistApproveEstimate(estimateId, approverNotes) {
+    try {
+      const response = await fetch(`/api/estimates/${estimateId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ approverNotes })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // עדכן תור כלכלן (הסר פריט)
+        await this.updateWorkQueue('economist', 'estimate_approved', {
+          estimateId
+        });
+        
+        // עדכן תור איש רכש
+        await this.updateWorkQueue('procurement', 'estimate_approved', {
+          estimateId,
+          status: 'approved'
+        });
+        
+        // עדכן תור קב"ט
+        await this.updateWorkQueue('security', 'new_security_review', {
+          estimateId,
+          type: 'security_review',
+          priority: 'בינוני'
+        });
+        
+        return result;
+      }
+    } catch (error) {
+      console.error('שגיאה בזרימת אישור אומדן:', error);
+      throw error;
+    }
+  }
+
+  // זרימת עבודה: כלכלן דוחה אומדן
+  async economistRejectEstimate(estimateId, rejectionReason) {
+    try {
+      const response = await fetch(`/api/estimates/${estimateId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ rejectionReason })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // עדכן תור כלכלן (הסר פריט)
+        await this.updateWorkQueue('economist', 'estimate_rejected', {
+          estimateId
+        });
+        
+        // עדכן תור איש רכש (החזר לתיקון)
+        await this.updateWorkQueue('procurement', 'estimate_rejected', {
+          estimateId,
+          status: 'revision_required',
+          rejectionReason,
+          priority: 'גבוה'
+        });
+        
+        return result;
+      }
+    } catch (error) {
+      console.error('שגיאה בזרימת דחיית אומדן:', error);
+      throw error;
+    }
+  }
+}
+
+// יצירת instance יחיד
+const workflowManager = new WorkflowManager();
+export default workflowManager;
+```
+
+### שלב 8: אינטגרציה עם הדשבורדים
+
+עדכן את הדשבורדים להשתמש ב-WorkflowManager:
+
+```javascript
+// בכל דשבורד, הוסף:
+import workflowManager from '../utils/workflowManager';
+
+// ב-useEffect:
+useEffect(() => {
+  const handleQueueUpdate = (newQueue) => {
+    // עדכן את המצב המקומי
+    setWorkQueue(newQueue);
+  };
+
+  // הירשם לעדכונים
+  workflowManager.subscribe(userRole, handleQueueUpdate);
+
+  // טען תור עבודה ראשוני
+  workflowManager.getWorkQueue(userRole).then(setWorkQueue);
+
+  return () => {
+    // בטל הרשמה בעת unmount
+    workflowManager.unsubscribe(userRole, handleQueueUpdate);
+  };
+}, [userRole]);
+```
+
+## הנחיות יישום
+
+1. **צור את כל הקבצים החדשים** - CreateEstimate.jsx, EstimateReview.jsx, workflowManager.js
+2. **עדכן את הקבצים הקיימים** - ProcurementDashboard.jsx, EconomistDashboard.jsx, procurement.py
+3. **הוסף את הנתיבים החדשים ל-App.jsx**
+4. **בדוק את כל הזרימות** - מיצירת אומדן ועד אישור/דחייה
+5. **וודא עדכון תורי עבודה** - בכל שלב בזרימה
+
+## בדיקות נדרשות
+
+1. **זרימת איש רכש:**
+   - בחירת דרישת רכש
+   - יצירת אומדן חדש
+   - ביצוע ניתוח AI ומחקר שוק
+   - הגשה לאישור כלכלן
+
+2. **זרימת כלכלן:**
+   - קבלת אומדן לאישור
+   - בדיקת פרטי האומדן
+   - עריכת אומדן (אם נדרש)
+   - אישור או דחיית האומדן
+
+3. **עדכון תורי עבודה:**
+   - וידוא שהתורים מתעדכנים בזמן אמת
+   - בדיקת סטטוסים נכונים
+   - וידוא שההודעות מוצגות נכון
+
+המטרה היא ליצור זרימת עבודה חלקה ואוטומטית בין התפקידים השונים במערכת.
+

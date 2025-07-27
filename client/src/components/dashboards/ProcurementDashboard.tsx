@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, Calculator, TrendingUp } from "lucide-react";
+import { Plus, FileText, Calculator, TrendingUp, Edit } from "lucide-react";
 import { Link } from "wouter";
+import CreateEstimate from "../workflows/CreateEstimate";
 
 interface ProcurementStats {
   activeRequests: number;
@@ -22,6 +23,9 @@ interface RecentRequest {
 }
 
 export default function ProcurementDashboard() {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedRequest, setSelectedRequest] = useState<RecentRequest | null>(null);
+  
   const [procurementStats] = useState<ProcurementStats>({
     activeRequests: 12,
     pendingEstimates: 5,
@@ -68,6 +72,34 @@ export default function ProcurementDashboard() {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
     }
   };
+
+  const handleCreateEstimate = (request: RecentRequest) => {
+    setSelectedRequest(request);
+    setCurrentView('create_estimate');
+  };
+
+  const handleEstimateCancel = () => {
+    setSelectedRequest(null);
+    setCurrentView('dashboard');
+  };
+
+  const handleEstimateSubmit = (result: any) => {
+    console.log('Estimate submitted:', result);
+    setSelectedRequest(null);
+    setCurrentView('dashboard');
+    // TODO: Refresh dashboard data
+  };
+
+  if (currentView === 'create_estimate' && selectedRequest) {
+    return (
+      <CreateEstimate 
+        requestData={selectedRequest}
+        onCancel={handleEstimateCancel}
+        onSubmit={handleEstimateSubmit}
+        setCurrentView={setCurrentView}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -182,18 +214,30 @@ export default function ProcurementDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/cost-estimation/${request.id.split('-').pop()}`}>
-                      <Button size="sm">
+                    {request.status === 'בתהליך אומדן' ? (
+                      <Button 
+                        size="sm"
+                        onClick={() => handleCreateEstimate(request)}
+                      >
                         <Calculator className="h-4 w-4 ml-2" />
-                        צפה באומדן
+                        צור אומדן
                       </Button>
-                    </Link>
-                    <Link href={`/procurement-request/${request.id.split('-').pop()}`}>
-                      <Button size="sm" variant="outline">
-                        <FileText className="h-4 w-4 ml-2" />
-                        ערוך דרישה
-                      </Button>
-                    </Link>
+                    ) : (
+                      <Link href={`/cost-estimation/${request.id.split('-').pop()}`}>
+                        <Button size="sm">
+                          <Calculator className="h-4 w-4 ml-2" />
+                          צפה באומדן
+                        </Button>
+                      </Link>
+                    )}
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleCreateEstimate(request)}
+                    >
+                      <Edit className="h-4 w-4 ml-2" />
+                      עריכה
+                    </Button>
                     <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
                       <Button size="sm" variant="outline">
                         מחקר שוק
