@@ -23,7 +23,8 @@ export const procurementRequests = pgTable("procurement_requests", {
   requestedBy: text("requested_by").notNull(),
   department: text("department").notNull(),
   status: text("status").notNull().default("new"), // new, processing, completed, cancelled
-  estimatedCost: decimal("estimated_cost", { precision: 12, scale: 2 }),
+  emf: decimal("emf", { precision: 12, scale: 2 }), // Estimated Maximum Funding - התקציב המוקצה
+  estimatedCost: decimal("estimated_cost", { precision: 12, scale: 2 }), // אומדן עלות שנוצר במערכת
   specifications: jsonb("specifications"),
   userId: integer("user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),

@@ -157,9 +157,9 @@ export default function ProcurementRequestsList() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-primary" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-muted-foreground">ערך כולל</p>
+                <p className="text-sm font-medium text-muted-foreground">תקציב EMF כולל</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {formatCurrency(requests.reduce((sum, r) => sum + (parseFloat(r.estimatedCost) || 0), 0))}
+                  {formatCurrency(requests.reduce((sum, r) => sum + (parseFloat(r.emf || "0") || 0), 0))}
                 </p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function ProcurementRequestsList() {
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Calendar className="h-4 w-4 ml-1" />
-                  <span>{formatDate(request.targetDate)}</span>
+                  <span>{request.targetDate ? formatDate(request.targetDate) : 'לא צוין'}</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Badge variant="outline" className={getPriorityBadge(request.priority).className}>
@@ -208,13 +208,30 @@ export default function ProcurementRequestsList() {
                 </div>
               </div>
               
-              <div className="pt-3 border-t">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm text-muted-foreground">עלות מוערכת</span>
-                  <span className="font-bold text-primary">
-                    {formatCurrency(request.estimatedCost)}
+              <div className="pt-3 border-t space-y-2">
+                {/* EMF Display */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">תקציב מוקצה (EMF)</span>
+                  <span className="font-bold text-info">
+                    {formatCurrency(request.emf)}
                   </span>
                 </div>
+                
+                {/* Estimated Cost Display */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">אומדן עלות</span>
+                  {request.estimatedCost ? (
+                    <span className="font-bold text-success">
+                      {formatCurrency(request.estimatedCost)}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">טרם נוצר</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t">
+                <div className="pb-3"></div>
                 
                 <div className="flex gap-2">
                   <Link href={`/procurement-request/${request.id}`} className="flex-1">

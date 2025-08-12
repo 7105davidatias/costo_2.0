@@ -1,0 +1,1309 @@
+# הנחיות לביצוע שינויים ספציפיים במערכת ניהול אומדני עלויות רכש
+
+## סקירה כללית
+
+אתה נדרש לבצע שינויים ספציפיים ומוגדרים במערכת הקיימת של ניהול אומדני עלויות רכש. השינויים מתמקדים בשיפור הצגת נתוני עלויות והוספת יכולת צפייה במסמכים. חשוב מאוד לבצע רק את השינויים המפורטים להלן ולא לשנות דבר אחר במערכת הקיימת.
+
+## שינוי 1: הוספת שדה EMF (Estimated Maximum Funding)
+
+### רקע ומטרה
+
+השדה "עלות מוערכת" הנוכחי במסך דרישות רכש ובמסך פרטי דרישת רכש צריך להציג את נתון ה-EMF (Estimated Maximum Funding), שהוא התקציב המוקצה למימוש דרישת הרכש. נתון זה מגיע כחלק מפרטי הדרישה הראשוניים בעת קליטת דרישות רכש חדשות למערכת.
+
+### שינויים נדרשים במסד הנתונים
+
+עדכן את מודל הדרישה (ProcurementRequest) להוסיף שדה EMF:
+
+```python
+# בקובץ ai-cost-backend/src/models/procurement_request.py
+class ProcurementRequest(db.Model):
+    # שדות קיימים...
+    emf = db.Column(db.Float, nullable=True)  # Estimated Maximum Funding
+    estimated_cost = db.Column(db.Float, nullable=True)  # אומדן עלות שנוצר במערכת
+```
+
+### עדכון נתונים מדומים
+
+עדכן את הנתונים המדומים להכיל ערכי EMF:
+
+```python
+# בקובץ ai-cost-backend/src/routes/procurement.py
+mock_requests = [
+    {
+        "id": "REQ-2024-013",
+        "title": "מחשבים ניידים Dell Latitude 5520",
+        "description": "מחשבים ניידים לעובדי המשרד",
+        "category": "IT",
+        "priority": "בינונית",
+        "date": "15 במרץ 2024",
+        "status": "חדש",
+        "emf": 125000,  # EMF - התקציב המוקצה
+        "estimated_cost": None  # אומדן עלות - עדיין לא נוצר
+    },
+    {
+        "id": "REQ-2024-014",
+        "title": "רכש 50 מחשבי עבודה",
+        "description": "מחשבי עבודה למחלקת הפיתוח",
+        "category": "טכנולוגיה",
+        "priority": "גבוהה",
+        "date": "14 במרץ 2024",
+        "status": "בעיבוד",
+        "emf": 850000,
+        "estimated_cost": 780000  # אומדן עלות שנוצר במערכת
+    },
+    {
+        "id": "REQ-2024-015",
+        "title": "רכש 10 רכבי צי",
+        "description": "רכבי צי לצרכי החברה",
+        "category": "קטגוריה",
+        "priority": "בינונית",
+        "date": "15 במרץ 2024",
+        "status": "ממתין לאישור כלכלן",
+        "emf": 2400000,
+        "estimated_cost": 2250000
+    },
+    {
+        "id": "REQ-2024-016",
+        "title": "שדרוג מערכת מחשוב",
+        "description": "שדרוג תשתית מחשוב חדשה",
+        "category": "טכנולוגיה",
+        "priority": "גבוהה",
+        "date": "13 במרץ 2024",
+        "status": "הושלם",
+        "emf": 125000,
+        "estimated_cost": 118000
+    }
+]
+```
+
+### עדכון ממשק המשתמש - מסך דרישות רכש
+
+עדכן את קומפוננט ProcurementRequest להציג את שדה ה-EMF:
+
+```jsx
+// בקובץ ai-cost-estimation/src/components/ProcurementRequest.jsx
+// במקום השדה הנוכחי "עלות מוערכת", הוסף:
+
+<div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+  <div className="flex justify-between items-center mb-2">
+    <span className="text-gray-400 text-sm">EMF (תקציב מוקצה)</span>
+    <span className="text-blue-400 text-lg font-semibold">
+      ₪{request.emf?.toLocaleString()}
+    </span>
+  </div>
+  
+  {request.estimated_cost && (
+    <div className="flex justify-between items-center border-t border-gray-700 pt-2">
+      <span className="text-gray-400 text-sm">אומדן עלות</span>
+      <span className="text-green-400 text-lg font-semibold">
+        ₪{request.estimated_cost.toLocaleString()}
+      </span>
+    </div>
+  )}
+  
+  {!request.estimated_cost && (
+    <div className="flex justify-between items-center border-t border-gray-700 pt-2">
+      <span className="text-gray-500 text-sm">אומדן עלות</span>
+      <span className="text-gray-500 text-sm">טרם נוצר</span>
+    </div>
+  )}
+</div>
+```
+
+### עדכון ממשק המשתמש - מסך פרטי דרישת רכש
+
+עדכן את מסך פרטי דרישת רכש להציג את שני הנתונים:
+
+```jsx
+// בקומפוננט פרטי דרישת רכש
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  {/* EMF Card */}
+  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-2">EMF (תקציב מוקצה)</h3>
+        <p className="text-gray-400 text-sm">התקציב המוקצה למימוש הדרישה</p>
+      </div>
+      <div className="text-left">
+        <span className="text-2xl font-bold text-blue-400">
+          ₪{request.emf?.toLocaleString()}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* Estimated Cost Card */}
+  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-2">אומדן עלות</h3>
+        <p className="text-gray-400 text-sm">אומדן שנוצר במערכת</p>
+      </div>
+      <div className="text-left">
+        {request.estimated_cost ? (
+          <span className="text-2xl font-bold text-green-400">
+            ₪{request.estimated_cost.toLocaleString()}
+          </span>
+        ) : (
+          <span className="text-xl text-gray-500">טרם נוצר</span>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+## שינוי 2: הפרדה בין EMF לאומדן עלות
+
+### רקע ומטרה
+
+נתון אומדן העלות מיוצר במערכת ונשמר על ידי המשתמש במסגרת תהליך יצירת אומדן. נתון זה אינו קיים עדיין עבור דרישות חדשות שנקלטו למערכת וטרם טופלו על ידי המשתמש. לאחר יצירת הנתון על ידי המשתמש הוא צריך להופיע לצד נתון ה-EMF.
+
+### לוגיקה עסקית
+
+1. **דרישות חדשות**: מציגות רק EMF, אומדן עלות מוצג כ"טרם נוצר"
+2. **דרישות בעיבוד**: מציגות EMF + אומדן עלות (אם נוצר)
+3. **דרישות שהושלמו**: מציגות EMF + אומדן עלות סופי
+
+### עדכון API endpoints
+
+עדכן את ה-API להחזיר את שני הנתונים בנפרד:
+
+```python
+# בקובץ ai-cost-backend/src/routes/procurement.py
+
+@procurement_bp.route('/api/procurement-requests/<request_id>', methods=['GET'])
+def get_procurement_request(request_id):
+    # מצא את הדרישה
+    request = next((r for r in mock_requests if r['id'] == request_id), None)
+    if not request:
+        return jsonify({'error': 'Request not found'}), 404
+    
+    # החזר את הנתונים כולל EMF ואומדן עלות בנפרד
+    return jsonify({
+        'id': request['id'],
+        'title': request['title'],
+        'description': request['description'],
+        'category': request['category'],
+        'priority': request['priority'],
+        'date': request['date'],
+        'status': request['status'],
+        'emf': request['emf'],
+        'estimated_cost': request.get('estimated_cost'),
+        'has_estimate': request.get('estimated_cost') is not None
+    })
+
+@procurement_bp.route('/api/procurement-requests/<request_id>/estimate', methods=['POST'])
+def save_estimate(request_id):
+    """שמירת אומדן עלות שנוצר במערכת"""
+    data = request.get_json()
+    estimated_cost = data.get('estimated_cost')
+    
+    # מצא את הדרישה ועדכן את האומדן
+    for req in mock_requests:
+        if req['id'] == request_id:
+            req['estimated_cost'] = estimated_cost
+            req['status'] = 'בעיבוד'  # עדכן סטטוס
+            break
+    
+    return jsonify({'success': True, 'estimated_cost': estimated_cost})
+```
+
+## שינוי 3: הוספת מסמכים לצפייה
+
+### רקע ומטרה
+
+הוספת יכולת צפייה במסמכים במסך פרטי דרישת רכש. המסמכים יוצגו לאחר לחיצה על אחת הדרישות ממסך דרישות הרכש או מרכיב הדרישות האחרונות בלוח הבקרה. בעת לחיצה על מסמך, תוכן המסמך יוצג למשתמש. דוגמאות למסמכים: מפרט טכני, תרשימים, מסמך SOW וכו'.
+
+### הוספת מסמכים למסד הנתונים
+
+הוסף מסמכים לנתונים המדומים:
+
+```python
+# בקובץ ai-cost-backend/src/routes/procurement.py
+
+mock_documents = {
+    "REQ-2024-013": [
+        {
+            "id": "DOC-001",
+            "name": "מפרט טכני - Dell Latitude 5520",
+            "type": "technical_spec",
+            "size": "2.3 MB",
+            "format": "PDF",
+            "content": """
+# מפרט טכני - מחשבים ניידים Dell Latitude 5520
+
+## דרישות כלליות
+- כמות: 25 יחידות
+- יעד: עובדי משרד
+- תקופת אחריות: 3 שנים
+
+## מפרט טכני מפורט
+
+### מעבד
+- Intel Core i7-1165G7 (דור 11)
+- 4 ליבות, 8 threads
+- תדירות בסיס: 2.8GHz
+- תדירות מקסימלית: 4.7GHz
+
+### זיכרון
+- 16GB DDR4-3200
+- 2 חריצי זיכרון
+- ניתן להרחבה עד 64GB
+
+### אחסון
+- SSD NVMe 512GB
+- מהירות קריאה: עד 3,500 MB/s
+- מהירות כתיבה: עד 2,900 MB/s
+
+### מסך
+- 15.6 אינץ' Full HD (1920x1080)
+- טכנולוגיה IPS
+- בהירות: 250 nits
+- כיסוי צבע: 45% NTSC
+
+### כרטיס מסך
+- Intel Iris Xe Graphics
+- זיכרון משותף עם זיכרון המערכת
+- תמיכה ב-4K external display
+
+### קישוריות
+- 2x USB 3.2 Gen 1
+- 1x USB-C עם Thunderbolt 4
+- 1x HDMI 1.4
+- 1x RJ45 Ethernet
+- 1x כניסת אוזניות/מיקרופון
+- Wi-Fi 6 (802.11ax)
+- Bluetooth 5.1
+
+### סוללה
+- 4-cell 54Wh
+- חיי סוללה: עד 8 שעות
+- טעינה מהירה: 80% תוך שעה
+
+### מערכת הפעלה
+- Windows 11 Pro
+- רישיון מקורי
+- תמיכה בעדכונים אוטומטיים
+
+### אבטחה
+- TPM 2.0
+- קורא טביעות אצבע
+- מצלמה עם תריס פרטיות
+- הצפנת דיסק BitLocker
+
+## דרישות נוספות
+- מקלדת בעברית ואנגלית
+- עכבר אופטי אלחוטי
+- תיק נשיאה מקורי
+- הדרכה למשתמשים
+
+## תנאי אחריות
+- אחריות יצרן: 3 שנים
+- תמיכה טכנית: 24/7
+- שירות באתר הלקוח
+- החלפת חלקים מקוריים
+
+## לוח זמנים
+- הזמנה: תוך 5 ימי עסקים
+- אספקה: תוך 14 ימי עסקים
+- התקנה והדרכה: תוך 7 ימי עסקים נוספים
+            """
+        },
+        {
+            "id": "DOC-002", 
+            "name": "תרשים רשת ותשתיות",
+            "type": "diagram",
+            "size": "1.8 MB",
+            "format": "PDF",
+            "content": """
+# תרשים רשת ותשתיות - פריסת מחשבים ניידים
+
+## סקירה כללית
+תרשים זה מציג את התכנון לפריסת 25 מחשבים ניידים חדשים ברחבי המשרד, כולל חיבור לרשת הארגונית ותשתיות התמיכה הנדרשות.
+
+## מבנה הרשת הקיים
+
+### שרת מרכזי
+- Windows Server 2019
+- Active Directory Domain Services
+- DNS ו-DHCP Services
+- File Server עם 10TB אחסון
+
+### תשתית רשת
+- Switch מרכזי: Cisco Catalyst 2960-X
+- 48 פורטים Gigabit Ethernet
+- 4 פורטים SFP+ 10Gb
+- Wi-Fi: Cisco Meraki MR46
+
+### אבטחת רשת
+- Firewall: Fortinet FortiGate 100F
+- Antivirus: Symantec Endpoint Protection
+- VPN: SSL-VPN לגישה מרחוק
+
+## פריסת המחשבים החדשים
+
+### קומה ראשונה (10 מחשבים)
+- מחלקת משאבי אנוש: 3 מחשבים
+- מחלקת כספים: 4 מחשבים  
+- מחלקת שיווק: 3 מחשבים
+
+### קומה שנייה (10 מחשבים)
+- מחלקת פיתוח: 6 מחשבים
+- מחלקת QA: 2 מחשבים
+- מחלקת DevOps: 2 מחשבים
+
+### קומה שלישית (5 מחשבים)
+- הנהלה: 2 מחשבים
+- מחלקת מכירות: 3 מחשבים
+
+## דרישות חיבור
+
+### חיבור קווי
+- כל מחשב יחובר לנקודת רשת ייעודית
+- כבלי Cat6 באורך מתאים
+- בדיקת קישוריות לפני הפעלה
+
+### חיבור אלחוטי
+- גיבוי Wi-Fi לכל מחשב
+- רשת אלחוטית מאובטחת (WPA3)
+- הפרדת רשת אורחים
+
+## הגדרות אבטחה
+
+### Domain Join
+- כל מחשב יצורף ל-Active Directory
+- Group Policy מרכזית
+- הגדרות אבטחה אחידות
+
+### גיבויים
+- גיבוי אוטומטי לשרת מרכזי
+- גיבוי מקומי על SSD
+- גיבוי ענן לקבצים קריטיים
+
+### עדכונים
+- Windows Update מרכזי
+- עדכוני אבטחה אוטומטיים
+- עדכוני תוכנות דרך WSUS
+
+## תמיכה טכנית
+
+### Remote Support
+- TeamViewer Business
+- Windows Remote Desktop
+- VPN לגישה מרחוק
+
+### Monitoring
+- PRTG Network Monitor
+- ניטור ביצועים בזמן אמת
+- התראות אוטומטיות
+
+## לוח זמנים להטמעה
+
+### שבוע 1
+- הכנת תשתיות רשת
+- בדיקת נקודות חיבור
+- הכנת הגדרות Domain
+
+### שבוע 2  
+- התקנת מחשבים קומה ראשונה
+- חיבור לרשת ובדיקות
+- הדרכת משתמשים
+
+### שבוע 3
+- התקנת מחשבים קומה שנייה
+- חיבור לרשת ובדיקות
+- הדרכת משתמשים
+
+### שבוע 4
+- התקנת מחשבים קומה שלישית
+- בדיקות סופיות
+- סיום פרויקט ומסירה
+            """
+        }
+    ],
+    "REQ-2024-014": [
+        {
+            "id": "DOC-003",
+            "name": "מפרט טכני - תחנות עבודה למפתחים",
+            "type": "technical_spec", 
+            "size": "3.1 MB",
+            "format": "PDF",
+            "content": """
+# מפרט טכני - תחנות עבודה למפתחים
+
+## דרישות כלליות
+- כמות: 50 יחידות
+- יעד: מחלקת פיתוח תוכנה
+- תקופת אחריות: 3 שנים
+- תמיכה: 24/7
+
+## מפרט טכני מפורט
+
+### מעבד (CPU)
+- Intel Core i9-12900K או AMD Ryzen 9 5900X
+- 12+ ליבות פיזיות
+- 24+ threads
+- תדירות בסיס: 3.2GHz+
+- תדירות boost: 5.0GHz+
+- Cache L3: 30MB+
+
+### זיכרון (RAM)
+- 32GB DDR4-3200 (מינימום)
+- 4 מודולים של 8GB כל אחד
+- ECC לא נדרש
+- ניתן להרחבה עד 128GB
+- Dual Channel configuration
+
+### אחסון
+- SSD NVMe ראשי: 1TB (מערכת הפעלה ותוכנות)
+- SSD NVMe שני: 2TB (פרויקטים ונתונים)
+- מהירות קריאה: 3,500+ MB/s
+- מהירות כתיבה: 3,000+ MB/s
+- MTBF: 1.5M שעות
+
+### כרטיס מסך
+- NVIDIA RTX 4070 או RTX 4080
+- 12GB+ VRAM GDDR6X
+- CUDA Cores: 5,888+
+- RT Cores: 46+
+- Tensor Cores: 184+
+- תמיכה ב-4K@120Hz
+
+### לוח אם (Motherboard)
+- Chipset: Z690/Z790 (Intel) או X570/B550 (AMD)
+- 4+ חריצי RAM
+- 2+ חריצי M.2 NVMe
+- Wi-Fi 6E מובנה
+- Bluetooth 5.2+
+- Gigabit Ethernet
+
+### ספק כוח (PSU)
+- הספק: 850W (מינימום)
+- יעילות: 80+ Gold
+- Modular cables
+- הגנות: OVP, UVP, OCP, SCP
+- אחריות: 7 שנים
+
+### קירור
+- מערכת קירור נוזלית AIO 240mm
+- 2 מאווררי רדיאטור 120mm
+- מאוורר CPU backup
+- 3 מאווררי case (intake/exhaust)
+- ניטור טמפרטורות
+
+### מארז (Case)
+- Mid-Tower או Full-Tower
+- תמיכה ב-GPU עד 350mm
+- תמיכה ב-AIO עד 280mm
+- מינימום 6 חריצי expansion
+- USB 3.0/3.1 קדמיים
+- Audio jacks קדמיים
+
+### מסכים
+- 2 מסכים לכל תחנה
+- גודל: 27" כל אחד
+- רזולוציה: 2560x1440 (QHD)
+- תדירות רענון: 144Hz
+- טכנולוגיה: IPS
+- כיסוי צבע: 99% sRGB
+
+### ציוד נלווה
+- מקלדת מכנית (Cherry MX switches)
+- עכבר גיימינג עם DPI גבוה
+- אוזניות עם מיקרופון
+- מצלמת web 4K
+- רמקולים סטריאו
+
+## תוכנות ורישיונות
+
+### מערכת הפעלה
+- Windows 11 Pro (רישיון מקורי)
+- או Ubuntu 22.04 LTS (לפי בחירה)
+- Dual boot option
+
+### כלי פיתוח
+- Visual Studio 2022 Professional
+- JetBrains IntelliJ IDEA Ultimate
+- Docker Desktop
+- Git for Windows
+- Node.js LTS
+- Python 3.11+
+
+### כלי עיצוב ומולטימדיה
+- Adobe Creative Suite (Photoshop, Illustrator)
+- Figma Desktop
+- Blender
+- OBS Studio
+
+### כלי DevOps
+- Kubernetes CLI (kubectl)
+- Terraform
+- Ansible
+- Jenkins agent
+- AWS CLI
+- Azure CLI
+
+## דרישות רשת ואבטחה
+
+### קישוריות
+- Gigabit Ethernet (חובה)
+- Wi-Fi 6E (גיבוי)
+- Bluetooth 5.2+
+- USB-C עם Thunderbolt 4
+
+### אבטחה
+- TPM 2.0 chip
+- Secure Boot
+- BitLocker encryption
+- Windows Hello (fingerprint/face)
+- Hardware security key support
+
+### ניטור
+- SNMP support
+- Remote management (Intel vPro/AMD PRO)
+- Wake-on-LAN
+- Asset tracking
+
+## ביצועים נדרשים
+
+### Benchmarks
+- Cinebench R23: 25,000+ (multi-core)
+- Geekbench 5: 1,700+ (single), 17,000+ (multi)
+- 3DMark Time Spy: 13,000+
+- Crystal Disk Mark: 3,500+ MB/s (read)
+
+### זמני קומפילציה
+- Large C++ project: <5 דקות
+- React application: <2 דקות
+- Docker image build: <3 דקות
+- Unit tests suite: <1 דקה
+
+## תנאי אחריות ותמיכה
+
+### אחריות חומרה
+- 3 שנים אחריות מלאה
+- החלפת חלקים באתר הלקוח
+- זמן תגובה: 4 שעות
+- זמן תיקון: 24 שעות מקסימום
+
+### תמיכה טכנית
+- 24/7 phone support
+- Remote assistance
+- On-site support בתוך 4 שעות
+- Escalation למהנדס בכיר
+
+### SLA
+- Uptime: 99.5%
+- Mean Time To Repair: <4 שעות
+- Mean Time Between Failures: >8,760 שעות
+- Customer satisfaction: >95%
+
+## לוח זמנים ואספקה
+
+### Phase 1 (שבועות 1-2)
+- הזמנת 20 תחנות ראשונות
+- הכנת תשתיות רשת
+- הכנת תמונת מערכת סטנדרטית
+
+### Phase 2 (שבועות 3-4)  
+- אספקה והתקנת 20 תחנות ראשונות
+- בדיקות ואימות ביצועים
+- הדרכת משתמשים ראשונים
+
+### Phase 3 (שבועות 5-6)
+- הזמנת 30 תחנות נוספות
+- התקנה במקביל לעבודה רגילה
+- העברת נתונים מתחנות ישנות
+
+### Phase 4 (שבועות 7-8)
+- השלמת התקנות
+- בדיקות סופיות
+- הדרכה מקיפה לכל הצוות
+- מסירה רשמית של הפרויקט
+
+## תקציב ועלויות
+
+### עלות ליחידה
+- חומרה: ₪15,000-18,000
+- תוכנות ורישיונות: ₪3,000-4,000
+- התקנה והדרכה: ₪1,000-1,500
+- סה"כ ליחידה: ₪19,000-23,500
+
+### עלות כוללת (50 יחידות)
+- חומרה: ₪750,000-900,000
+- תוכנות: ₪150,000-200,000
+- שירותים: ₪50,000-75,000
+- **סה"כ פרויקט: ₪950,000-1,175,000**
+
+### תנאי תשלום
+- 30% במועד הזמנה
+- 40% במועד אספקה
+- 30% לאחר התקנה ובדיקות
+            """
+        }
+    ],
+    "REQ-2024-015": [
+        {
+            "id": "DOC-004",
+            "name": "מפרט רכש רכבי צי",
+            "type": "technical_spec",
+            "size": "2.7 MB", 
+            "format": "PDF",
+            "content": """
+# מפרט רכש רכבי צי - 10 יחידות
+
+## דרישות כלליות
+- כמות: 10 רכבים
+- סוג: רכבי סדאן בגודל בינוני
+- יעד: צוות מכירות ושירות לקוחות
+- תקופת ליסינג: 3 שנים
+- קילומטראז' שנתי: 25,000 ק"מ לרכב
+
+## מפרט טכני מפורט
+
+### מנוע ותיבת הילוכים
+- נפח מנוע: 1.6-2.0 ליטר
+- סוג דלק: בנזין או היברידי
+- הספק: 120-150 כ"ס מינימום
+- תיבת הילוכים: אוטומטית CVT או 8 הילוכים
+- צריכת דלק: מקסימום 6.5 ליטר/100 ק"מ (עירוני)
+
+### מידות ומשקל
+- אורך: 4.5-4.8 מטר
+- רוחב: 1.7-1.8 מטר  
+- גובה: 1.4-1.5 מטר
+- בסיס גלגלים: 2.6-2.8 מטר
+- משקל: 1,300-1,600 ק"ג
+- נפח תא מטען: מינימום 450 ליטר
+
+### ביטחון ובטיחות
+- דירוג בטיחות: 5 כוכבים (Euro NCAP)
+- כריות אוויר: מינימום 6 (נהג, נוסע, צד, וילון)
+- ABS + EBD (מערכת בלמים אנטי נעילה)
+- ESP (בקרת יציבות אלקטרונית)
+- מערכת עזר לעצירה חירום
+- התראת יציאה מנתיב
+- בקרת מהירות אדפטיבית (ACC)
+
+### נוחות וציוד
+- מיזוג אוויר אוטומטי דו-אזורי
+- חלונות חשמליים (4)
+- מראות חשמליות מתקפלות
+- מושבים מתכווננים חשמלית (נהג)
+- הגה מתכוונן בגובה ובעומק
+- מערכת מולטימדיה עם מסך מגע 8"
+- חיבור Bluetooth ו-USB
+- מצלמת רוורס
+- חיישני חניה אחוריים
+
+### טכנולוגיה וקישוריות
+- Apple CarPlay ו-Android Auto
+- מערכת ניווט GPS מובנית
+- חיבור Wi-Fi hotspot
+- טעינה אלחוטית לטלפון
+- יציאות USB (מינימום 4)
+- יציאת 12V
+- מערכת שמע איכותית (8 רמקולים)
+
+## דרישות ספציפיות לצי
+
+### צביעה ומיתוג
+- צבע: לבן פנינה או כסף מטאלי
+- מיתוג חברה על דלתות (מדבקות מגנטיות)
+- לוחיות זיהוי פנימיות
+- ערכת עזרה ראשונה מותאמת
+
+### ציוד נוסף
+- מערכת מעקב GPS (Fleet Management)
+- מצלמת דרך (Dash Cam) קדמית ואחורית
+- מטען רכב לטלפונים ניידים
+- ארגונית תא מטען
+- שטיחי גומי לכל עונות השנה
+- כיסוי מושבים מותאם
+
+### תחזוקה ושירות
+- תחזוקה מונעת כל 10,000 ק"מ
+- שירות 24/7 בכל רחבי הארץ
+- רכב חלופי בזמן תיקונים
+- ביטוח מקיף כולל צד ג'
+- רישוי ובדיקות שנתיות
+
+## מודלים מועדפים
+
+### אופציה 1: Toyota Corolla
+- מנוע: 1.8L היברידי (122 כ"ס)
+- צריכת דלק: 4.5 ליטר/100 ק"מ
+- אחריות: 5 שנים/100,000 ק"מ
+- עלות ליסינג חודשית: ₪2,200
+
+### אופציה 2: Hyundai Elantra  
+- מנוע: 2.0L בנזין (159 כ"ס)
+- צריכת דלק: 6.2 ליטר/100 ק"מ
+- אחריות: 5 שנים/100,000 ק"מ
+- עלות ליסינג חודשית: ₪2,000
+
+### אופציה 3: Nissan Sentra
+- מנוע: 1.6L בנזין (122 כ"ס)
+- צריכת דלק: 6.0 ליטר/100 ק"מ
+- אחריות: 3 שנים/100,000 ק"מ
+- עלות ליסינג חודשית: ₪1,900
+
+### אופציה 4: Mazda 6
+- מנוע: 2.0L בנזין (165 כ"ס)
+- צריכת דלק: 6.4 ליטר/100 ק"מ
+- אחריות: 3 שנים/100,000 ק"מ
+- עלות ליסינג חודשית: ₪2,300
+
+## תנאי ליסינג
+
+### מבנה עלויות
+- תשלום ראשון: 10% מערך הרכב
+- תשלומים חודשיים: 36 תשלומים
+- ערך שיורי: 45% מערך הרכב
+- ביטוח מקיף: כלול במחיר
+- תחזוקה מונעת: כלולה במחיר
+
+### שירותים כלולים
+- רישוי שנתי
+- בדיקות שנתיות
+- החלפת צמיגים (2 פעמים בתקופה)
+- שירות דרכים 24/7
+- רכב חלופי (עד 7 ימים בשנה)
+
+### תנאים מיוחדים
+- אפשרות רכישה בתום התקופה
+- אפשרות הארכה לשנתיים נוספות
+- קילומטראז' נוסף: ₪0.30 לק"מ
+- נזקים: ניכוי מערך שיורי
+- החזרה מוקדמת: ללא קנסות (לאחר 24 חודשים)
+
+## לוח זמנים
+
+### שלב 1 (שבוע 1-2)
+- בחירת מודל וספק
+- חתימה על הסכם ליסינג
+- הזמנת 10 רכבים
+
+### שלב 2 (שבוע 3-6)  
+- ייצור והכנת הרכבים
+- התקנת ציוד נוסף
+- הכנת מיתוג חברה
+
+### שלב 3 (שבוע 7-8)
+- אספקת הרכבים
+- בדיקות קבלה
+- הדרכת נהגים
+- מסירה רשמית
+
+## תקציב כולל
+
+### עלויות חודשיות (10 רכבים)
+- ליסינג: ₪20,000-23,000
+- ביטוח: כלול
+- תחזוקה: כלולה  
+- דלק: ₪8,000-10,000 (משוער)
+- **סה"כ חודשי: ₪28,000-33,000**
+
+### עלויות שנתיות
+- ליסינג ותחזוקה: ₪240,000-276,000
+- דלק: ₪96,000-120,000
+- **סה"כ שנתי: ₪336,000-396,000**
+
+### עלות כוללת לתקופת הליסינג (3 שנים)
+- ליסינג ותחזוקה: ₪720,000-828,000
+- דלק: ₪288,000-360,000
+- תשלום ראשון: ₪150,000-200,000
+- **סה"כ לתקופה: ₪1,158,000-1,388,000**
+
+## קריטריונים לבחירת ספק
+
+### ניסיון ואמינות
+- ניסיון של 5+ שנים בליסינג צי
+- מינימום 1,000 רכבים בניהול
+- המלצות מלקוחות קיימים
+- יציבות פיננסית
+
+### שירות ותמיכה
+- מוקד שירות 24/7
+- זמן תגובה: מקסימום 2 שעות
+- כיסוי ארצי
+- אפליקציה לניהול הצי
+
+### גמישות תנאים
+- אפשרות שינוי מודלים
+- תנאי יציאה גמישים
+- הנחות לצי גדול
+- אפשרויות שדרוג
+
+### דיווח וניטור
+- דוחות שימוש חודשיים
+- מעקב GPS בזמן אמת
+- ניתוח עלויות מפורט
+- התראות תחזוקה
+            """
+        }
+    ],
+    "REQ-2024-016": [
+        {
+            "id": "DOC-005",
+            "name": "SOW - שדרוג מערכת מחשוב",
+            "type": "sow",
+            "size": "4.2 MB",
+            "format": "PDF", 
+            "content": """
+# Statement of Work (SOW) - שדרוג מערכת מחשוב
+
+## 1. סקירה כללית של הפרויקט
+
+### 1.1 רקע
+החברה זקוקה לשדרוג מקיף של תשתית המחשוב הקיימת על מנת לענות על הצרכים הגדלים של הארגון ולשפר את הביצועים, האבטחה והאמינות של המערכות. המערכת הנוכחית מתבססת על טכנולוגיות מיושנות שאינן עונות על הדרישות המודרניות.
+
+### 1.2 מטרות הפרויקט
+- שדרוג תשתית השרתים והאחסון
+- שיפור ביצועי הרשת והקישוריות
+- הגברת רמת האבטחה והגנה על המידע
+- שיפור זמינות המערכות ויכולות הגיבוי
+- הכנה לצמיחה עתידית של הארגון
+
+### 1.3 היקף הפרויקט
+הפרויקט כולל שדרוג מלא של:
+- תשתית שרתים (3 שרתים פיזיים + וירטואליזציה)
+- מערכת אחסון (SAN עם 50TB)
+- תשתית רשת (switches, routers, firewalls)
+- מערכות גיבוי ושחזור
+- מערכות ניטור ובקרה
+
+## 2. דרישות טכניות מפורטות
+
+### 2.1 תשתית שרתים
+
+#### שרת ראשי (Primary Server)
+- **מעבד**: Intel Xeon Gold 6248R (24 cores, 48 threads)
+- **זיכרון**: 128GB DDR4-2933 ECC (ניתן להרחבה עד 1TB)
+- **אחסון מקומי**: 2x 960GB SSD NVMe (RAID 1)
+- **רשת**: 4x 10GbE ports
+- **מערכת הפעלה**: Windows Server 2022 Datacenter
+- **תפקיד**: Domain Controller, DNS, DHCP, File Server
+
+#### שרת שני (Secondary Server)  
+- **מעבד**: Intel Xeon Gold 6248R (24 cores, 48 threads)
+- **זיכרון**: 128GB DDR4-2933 ECC
+- **אחסון מקומי**: 2x 960GB SSD NVMe (RAID 1)
+- **רשת**: 4x 10GbE ports
+- **מערכת הפעלה**: Windows Server 2022 Datacenter
+- **תפקיד**: Backup Domain Controller, Application Server
+
+#### שרת וירטואליזציה (Virtualization Host)
+- **מעבד**: Intel Xeon Gold 6258R (28 cores, 56 threads)
+- **זיכרון**: 256GB DDR4-2933 ECC
+- **אחסון מקומי**: 4x 1.92TB SSD NVMe (RAID 10)
+- **רשת**: 4x 10GbE ports + 2x 25GbE ports
+- **מערכת הפעלה**: VMware vSphere 8.0
+- **תפקיד**: Host למכונות וירטואליות
+
+### 2.2 מערכת אחסון (SAN)
+
+#### מפרט SAN
+- **קיבולת**: 50TB raw capacity (35TB usable)
+- **סוג דיסקים**: All-Flash Array (SSD)
+- **ביצועים**: 100,000+ IOPS, 2GB/s throughput
+- **יתירות**: RAID 6 + hot spare
+- **קישוריות**: 16Gb Fibre Channel
+- **תכונות**: Snapshots, Replication, Thin Provisioning
+
+#### רשת SAN
+- **Fibre Channel Switches**: 2x 24-port 16Gb switches
+- **HBA Cards**: 16Gb FC HBAs לכל שרת
+- **כבלים**: Single-mode fiber optic cables
+- **יתירות**: Dual fabric למניעת single point of failure
+
+### 2.3 תשתית רשת
+
+#### Core Switch
+- **מודל**: Cisco Catalyst 9500-48Y4C
+- **פורטים**: 48x 25GbE + 4x 100GbE uplinks
+- **תכונות**: Layer 3 routing, VLAN support, QoS
+- **יתירות**: Stacking עם switch נוסף זהה
+
+#### Access Switches
+- **כמות**: 4 יחידות
+- **מודל**: Cisco Catalyst 9300-48P
+- **פורטים**: 48x 1GbE + 4x 10GbE uplinks
+- **PoE**: 740W PoE+ לכל switch
+
+#### Firewall
+- **מודל**: Fortinet FortiGate 600F
+- **Throughput**: 10Gbps firewall, 2.8Gbps IPS
+- **VPN**: 2,000 SSL-VPN users, 1,000 IPSec tunnels
+- **תכונות**: IPS, Anti-malware, Web filtering, Application control
+
+#### Wireless Infrastructure
+- **Controller**: Cisco Catalyst 9800-CL (virtual)
+- **Access Points**: 20x Cisco Catalyst 9130AXI (Wi-Fi 6E)
+- **כיסוי**: 100% כיסוי במשרדים
+- **קיבולת**: 500+ concurrent users
+
+### 2.4 מערכות גיבוי ושחזור
+
+#### Backup Server
+- **מעבד**: Intel Xeon Silver 4314 (16 cores)
+- **זיכרון**: 64GB DDR4 ECC
+- **אחסון**: 100TB LTO-9 tape library
+- **תוכנה**: Veeam Backup & Replication v12
+
+#### Backup Strategy
+- **יומי**: Incremental backups של כל השרתים
+- **שבועי**: Full backup של נתונים קריטיים
+- **חודשי**: Archive לטייפים לאחסון ארוך טווח
+- **Cloud**: Replication לענן (Azure/AWS)
+
+### 2.5 מערכות ניטור ובקרה
+
+#### Network Monitoring
+- **תוכנה**: SolarWinds NPM + NCM
+- **ניטור**: Bandwidth, latency, packet loss
+- **התראות**: Email, SMS, SNMP traps
+
+#### Server Monitoring  
+- **תוכנה**: Microsoft System Center Operations Manager
+- **ניטור**: CPU, Memory, Disk, Services
+- **דשבורד**: Real-time performance dashboard
+
+#### Security Monitoring
+- **SIEM**: Splunk Enterprise Security
+- **Log Collection**: מכל המערכות והמכשירים
+- **Threat Detection**: Machine learning based analytics
+
+## 3. שלבי הפרויקט ולוח זמנים
+
+### Phase 1: תכנון והכנה (שבועות 1-2)
+- **שבוע 1**:
+  - סקר תשתיות קיימות
+  - תכנון מפורט של הארכיטקטורה החדשה
+  - הזמנת ציוד וחומרה
+  - הכנת תוכניות migration
+
+- **שבוע 2**:
+  - הכנת חדר שרתים (קירור, חשמל, UPS)
+  - הגדרת סביבת בדיקות
+  - הכנת תוכניות גיבוי ושחזור
+  - הכשרת צוות IT
+
+### Phase 2: התקנת תשתיות (שבועות 3-4)
+- **שבוע 3**:
+  - התקנת racks וחיווט מובנה
+  - התקנת core switches ו-firewalls
+  - הקמת רשת SAN
+  - בדיקות קישוריות ראשוניות
+
+- **שבוע 4**:
+  - התקנת שרתים חדשים
+  - התקנת מערכת אחסון SAN
+  - הגדרת VLAN-ים ו-subnets
+  - בדיקות ביצועים ראשוניות
+
+### Phase 3: הגדרת מערכות (שבועות 5-6)
+- **שבוע 5**:
+  - התקנת Windows Server 2022
+  - הגדרת Active Directory
+  - הגדרת DNS ו-DHCP
+  - יצירת Group Policies
+
+- **שבוע 6**:
+  - הגדרת VMware vSphere
+  - יצירת מכונות וירטואליות
+  - הגדרת file shares ו-permissions
+  - הגדרת מערכות גיבוי
+
+### Phase 4: Migration ובדיקות (שבועות 7-8)
+- **שבוע 7**:
+  - העברת נתונים ממערכות ישנות
+  - העברת משתמשים ל-domain חדש
+  - בדיקות פונקציונליות מקיפות
+  - בדיקות ביצועים ועומסים
+
+- **שבוע 8**:
+  - בדיקות disaster recovery
+  - בדיקות אבטחה ו-penetration testing
+  - הדרכת משתמשים קצה
+  - מסירה רשמית של המערכת
+
+## 4. דרישות אבטחה
+
+### 4.1 אבטחת רשת
+- **Firewall Rules**: הגדרת חוקים מחמירים
+- **Network Segmentation**: הפרדת רשתות לפי תפקיד
+- **VPN Access**: גישה מאובטחת מרחוק
+- **Intrusion Detection**: זיהוי חדירות בזמן אמת
+
+### 4.2 אבטחת שרתים
+- **Antivirus**: פתרון enterprise על כל השרתים
+- **Patch Management**: עדכוני אבטחה אוטומטיים
+- **Access Control**: הרשאות מינימליות נדרשות
+- **Audit Logging**: רישום כל הפעילויות
+
+### 4.3 אבטחת נתונים
+- **Encryption**: הצפנת נתונים במנוחה ובתנועה
+- **Backup Encryption**: הצפנת כל הגיבויים
+- **Data Classification**: סיווג נתונים לפי רגישות
+- **DLP**: מניעת דליפת מידע
+
+## 5. הדרכה ותמיכה
+
+### 5.1 הדרכת צוות IT
+- **מערכות Windows Server**: 16 שעות הדרכה
+- **VMware vSphere**: 24 שעות הדרכה
+- **SAN Management**: 8 שעות הדרכה
+- **Backup & Recovery**: 8 שעות הדרכה
+
+### 5.2 הדרכת משתמשים
+- **שימוש במערכות חדשות**: 4 שעות לכל מחלקה
+- **אבטחת מידע**: 2 שעות לכל עובד
+- **חירום ושחזור**: הדרכה למנהלים
+
+### 5.3 תמיכה שוטפת
+- **תקופת אחריות**: 3 שנים לכל הציוד
+- **תמיכה טכנית**: 24/7 לרכיבים קריטיים
+- **SLA**: זמן תגובה 4 שעות, זמן תיקון 24 שעות
+- **Remote Support**: גישה מרחוק לתמיכה
+
+## 6. תקציב ועלויות
+
+### 6.1 חומרה
+- **שרתים (3 יחידות)**: ₪450,000
+- **מערכת אחסון SAN**: ₪280,000
+- **ציוד רשת**: ₪180,000
+- **מערכת גיבוי**: ₪120,000
+- **UPS ותשתיות**: ₪80,000
+- **סה"כ חומרה**: ₪1,110,000
+
+### 6.2 תוכנות ורישיונות
+- **Windows Server licenses**: ₪150,000
+- **VMware vSphere**: ₪200,000
+- **Backup software**: ₪80,000
+- **Security software**: ₪100,000
+- **Monitoring tools**: ₪60,000
+- **סה"כ תוכנות**: ₪590,000
+
+### 6.3 שירותים
+- **התקנה והטמעה**: ₪200,000
+- **הדרכה**: ₪50,000
+- **ניהול פרויקט**: ₪80,000
+- **בדיקות ואימות**: ₪40,000
+- **סה"כ שירותים**: ₪370,000
+
+### 6.4 סיכום תקציב
+- **חומרה**: ₪1,110,000
+- **תוכנות**: ₪590,000  
+- **שירותים**: ₪370,000
+- **מע"מ (17%)**: ₪351,020
+- **סה"כ כולל מע"מ**: ₪2,421,020
+
+## 7. סיכונים וניהולם
+
+### 7.1 סיכונים טכניים
+- **עיכובים באספקת ציוד**: מעקב צמוד עם ספקים
+- **בעיות תאימות**: בדיקות מקדימות מקיפות
+- **כשלי migration**: תוכניות גיבוי מפורטות
+
+### 7.2 סיכונים עסקיים
+- **הפרעה לפעילות**: עבודה בשעות לא פעילות
+- **אובדן נתונים**: גיבויים מרובים ובדיקות
+- **עלויות נוספות**: מעקב תקציב צמוד
+
+### 7.3 תוכניות חירום
+- **Rollback Plan**: חזרה למערכת ישנה במקרה הצורך
+- **Business Continuity**: המשכיות עסקית במהלך המעבר
+- **Disaster Recovery**: תוכנית שחזור מלאה
+
+## 8. קריטריונים להצלחה
+
+### 8.1 מדדי ביצועים
+- **זמן תגובה**: שיפור של 50% לפחות
+- **זמינות**: 99.9% uptime
+- **קיבולת**: תמיכה ב-200% מהעומס הנוכחי
+- **אבטחה**: אפס אירועי אבטחה חמורים
+
+### 8.2 שביעות רצון משתמשים
+- **סקר שביעות רצון**: מעל 90% שביעות רצון
+- **זמני תגובה**: שיפור משמעותי בביצועים
+- **יציבות**: פחות תקלות ונפילות מערכת
+
+### 8.3 יעדים עסקיים
+- **פרודוקטיביות**: שיפור של 25% ביעילות העבודה
+- **עלויות תחזוקה**: הפחתה של 30% בעלויות שוטפות
+- **מוכנות לעתיד**: תמיכה בצמיחה של 5 שנים
+
+## 9. תנאים חוזיים
+
+### 9.1 לוח זמנים
+- **תחילת פרויקט**: תוך 14 ימים מחתימה
+- **משך פרויקט**: 8 שבועות
+- **מסירה סופית**: תוך 60 ימי עבודה
+
+### 9.2 תנאי תשלום
+- **20%** במועד חתימת החוזה
+- **30%** במועד אספקת הציוד
+- **30%** במועד השלמת ההתקנה
+- **20%** במועד מסירה סופית ואישור
+
+### 9.3 אחריות ותמיכה
+- **אחריות חומרה**: 3 שנים
+- **אחריות עבודה**: 12 חודשים
+- **תמיכה טכנית**: 24/7 לשנה הראשונה
+- **עדכונים**: כלולים לשנתיים
+
+---
+
+**מסמך זה מהווה בסיס לביצוע הפרויקט ויכול להתעדכן בהתאם לצרכים המתפתחים ולשינויים טכנולוגיים.**
+            """
+        }
+    ]
+}
+
+# API endpoint לקבלת מסמכים
+@procurement_bp.route('/api/procurement-requests/<request_id>/documents', methods=['GET'])
+def get_request_documents(request_id):
+    documents = mock_documents.get(request_id, [])
+    return jsonify(documents)
+
+# API endpoint לקבלת תוכן מסמך
+@procurement_bp.route('/api/documents/<document_id>', methods=['GET'])
+def get_document_content(document_id):
+    # חפש את המסמך בכל הדרישות
+    for request_id, docs in mock_documents.items():
+        for doc in docs:
+            if doc['id'] == document_id:
+                return jsonify({
+                    'id': doc['id'],
+                    'name': doc['name'],
+                    'content': doc['content'],
+                    'type': doc['type'],
+                    'format': doc['format']
+                })
+    
+    return jsonify({'error': 'Document not found'}), 404
+```
+
+### עדכון ממשק המשתמש - הצגת מסמכים
+
+הוסף סעיף מסמכים במסך פרטי דרישת רכש:
+
+```jsx
+// בקומפוננט פרטי דרישת רכש
+const [documents, setDocuments] = useState([]);
+const [selectedDocument, setSelectedDocument] = useState(null);
+const [showDocumentModal, setShowDocumentModal] = useState(false);
+
+// טעינת מסמכים
+useEffect(() => {
+    if (requestId) {
+        fetch(`/api/procurement-requests/${requestId}/documents`)
+            .then(res => res.json())
+            .then(data => setDocuments(data))
+            .catch(err => console.error('Error loading documents:', err));
+    }
+}, [requestId]);
+
+// פונקציה לפתיחת מסמך
+const openDocument = async (documentId) => {
+    try {
+        const response = await fetch(`/api/documents/${documentId}`);
+        const document = await response.json();
+        setSelectedDocument(document);
+        setShowDocumentModal(true);
+    } catch (error) {
+        console.error('Error loading document:', error);
+    }
+};
+
+// רכיב הצגת מסמכים
+<div className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+        <DocumentIcon className="w-5 h-5 ml-2" />
+        מסמכים קשורים
+    </h3>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        {documents.map((doc) => (
+            <div 
+                key={doc.id}
+                className="bg-gray-700 border border-gray-600 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors"
+                onClick={() => openDocument(doc.id)}
+            >
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-400">{doc.type}</span>
+                    <span className="text-xs text-gray-500">{doc.format}</span>
+                </div>
+                <h4 className="text-white font-medium mb-1">{doc.name}</h4>
+                <p className="text-sm text-gray-400">{doc.size}</p>
+            </div>
+        ))}
+    </div>
+    
+    {/* כפתור העלאת מסמכים קיים */}
+    <div className="border-t border-gray-700 pt-4">
+        <div className="flex items-center justify-center w-full">
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <UploadIcon className="w-8 h-8 mb-4 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-400">
+                        <span className="font-semibold">לחץ להעלאה</span> או גרור ושחרר קבצים כאן
+                    </p>
+                    <p className="text-xs text-gray-400">PDF, DOC, XLS עד 10MB</p>
+                </div>
+                <input type="file" className="hidden" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" />
+            </label>
+        </div>
+    </div>
+</div>
+
+{/* Modal להצגת תוכן מסמך */}
+{showDocumentModal && selectedDocument && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">{selectedDocument.name}</h3>
+                <button 
+                    onClick={() => setShowDocumentModal(false)}
+                    className="text-gray-400 hover:text-white"
+                >
+                    <XIcon className="w-6 h-6" />
+                </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <div className="prose prose-invert max-w-none">
+                    <ReactMarkdown>{selectedDocument.content}</ReactMarkdown>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+```
+
+## הנחיות יישום
+
+### סדר ביצוע
+1. **עדכון מסד הנתונים** - הוסף שדות EMF ו-estimated_cost
+2. **עדכון API endpoints** - הוסף תמיכה בשדות החדשים ובמסמכים
+3. **עדכון ממשק משתמש** - הצג EMF ואומדן עלות בנפרד
+4. **הוסף מסמכים** - יצור מסמכים מדומים והוסף יכולת צפייה
+5. **בדיקות** - ודא שהכל עובד כצפוי
+
+### בדיקות נדרשות
+1. **בדיקת הצגת EMF** - ודא שהשדה מוצג נכון בכל המסכים
+2. **בדיקת הפרדת נתונים** - ודא שאומדן עלות מוצג רק כשקיים
+3. **בדיקת מסמכים** - ודא שהמסמכים נטענים ונפתחים נכון
+4. **בדיקת העלאה** - ודא שהעלאת מסמכים חדשים עובדת
+5. **בדיקת responsive** - ודא שהכל עובד במובייל
+
+### הערות חשובות
+- **אל תשנה דבר אחר** - בצע רק את השינויים המפורטים
+- **שמור על העיצוב הקיים** - השתמש באותם סגנונות ו-components
+- **בדוק תאימות** - ודא שהשינויים לא שוברים פונקציונליות קיימת
+- **הוסף הערות בקוד** - תעד את השינויים שביצעת
+
+זהו מדריך מפורט לביצוע השינויים הנדרשים. בצע את השינויים בסדר המוצע ובדוק כל שלב לפני המעבר לשלב הבא.
+
+

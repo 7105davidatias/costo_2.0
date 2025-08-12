@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
@@ -15,6 +17,8 @@ export default function ProcurementRequest() {
   const { id } = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
 
   const { data: request, isLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
@@ -50,6 +54,259 @@ export default function ProcurementRequest() {
       });
     },
   });
+
+  const handleViewDocument = (doc: any) => {
+    setSelectedDocument(doc);
+    setDocumentDialogOpen(true);
+  };
+
+  const getDocumentContent = (doc: any) => {
+    // Sample document content based on the document from the requirements
+    const documentContents: { [key: string]: string } = {
+      "מפרט טכני - Dell Latitude 5520.pdf": `
+# מפרט טכני - מחשבים ניידים Dell Latitude 5520
+
+## דרישות כלליות
+- כמות: 25 יחידות
+- יעד: עובדי משרד
+- תקופת אחריות: 3 שנים
+
+## מפרט טכני מפורט
+
+### מעבד
+- Intel Core i7-1165G7 (דור 11)
+- 4 ליבות, 8 threads
+- תדירות בסיס: 2.8GHz
+- תדירות מקסימלית: 4.7GHz
+
+### זיכרון
+- 16GB DDR4-3200
+- 2 חריצי זיכרון
+- ניתן להרחבה עד 64GB
+
+### אחסון
+- SSD NVMe 512GB
+- מהירות קריאה: עד 3,500 MB/s
+- מהירות כתיבה: עד 2,900 MB/s
+
+### מסך
+- 15.6 אינץ' Full HD (1920x1080)
+- טכנולוגיה IPS
+- בהירות: 250 nits
+- כיסוי צבע: 45% NTSC
+
+### כרטיס מסך
+- Intel Iris Xe Graphics
+- זיכרון משותף עם זיכרון המערכת
+- תמיכה ב-4K external display
+
+### קישוריות
+- 2x USB 3.2 Gen 1
+- 1x USB-C עם Thunderbolt 4
+- 1x HDMI 1.4
+- 1x RJ45 Ethernet
+- 1x כניסת אוזניות/מיקרופון
+- Wi-Fi 6 (802.11ax)
+- Bluetooth 5.1
+
+### סוללה
+- 4-cell 54Wh
+- חיי סוללה: עד 8 שעות
+- טעינה מהירה: 80% תוך שעה
+
+### מערכת הפעלה
+- Windows 11 Pro
+- רישיון מקורי
+- תמיכה בעדכונים אוטומטיים
+
+### אבטחה
+- TPM 2.0
+- קורא טביעות אצבע
+- מצלמה עם תריס פרטיות
+- הצפנת דיסק BitLocker
+
+## דרישות נוספות
+- מקלדת בעברית ואנגלית
+- עכבר אופטי אלחוטי
+- תיק נשיאה מקורי
+- הדרכה למשתמשים
+
+## תנאי אחריות
+- אחריות יצרן: 3 שנים
+- תמיכה טכנית: 24/7
+- שירות באתר הלקוח
+- החלפת חלקים מקוריים
+      `,
+      "תרשים רשת ותשתיות.pdf": `
+# תרשים רשת ותשתיות - פריסת מחשבים ניידים
+
+## סקירה כללית
+תרשים זה מציג את התכנון לפריסת 25 מחשבים ניידים חדשים ברחבי המשרד, כולל חיבור לרשת הארגונית ותשתיות התמיכה הנדרשות.
+
+## מבנה הרשת הקיים
+
+### שרת מרכזי
+- Windows Server 2019
+- Active Directory Domain Services
+- DNS ו-DHCP Services
+- File Server עם 10TB אחסון
+
+### תשתית רשת
+- Switch מרכזי: Cisco Catalyst 2960-X
+- 48 פורטים Gigabit Ethernet
+- 4 פורטים SFP+ 10Gb
+- Wi-Fi: Cisco Meraki MR46
+
+### אבטחת רשת
+- Firewall: Fortinet FortiGate 100F
+- Antivirus: Symantec Endpoint Protection
+- VPN: SSL-VPN לגישה מרחוק
+
+## פריסת המחשבים החדשים
+
+### קומה 1 - מחלקת הנהלה
+- 5 מחשבים ניידים
+- חיבור אלחוטי Wi-Fi 6
+- גישה ליישומי ERP
+- הדפסה ברשת
+
+### קומה 2 - מחלקת פיתוח
+- 15 מחשבים ניידים
+- חיבור Ethernet + Wi-Fi
+- גישה לשרתי פיתוח
+- כלי פיתוח וגיט
+
+### קומה 3 - מחלקת שיווק
+- 5 מחשבים ניידים
+- חיבור אלחוטי בלבד
+- גישה לכלי עיצוב
+- שיתוף קבצים גדולים
+
+## דרישות אבטחה
+- הצפנת כונן קשיח מלאה
+- הזדהות דו-שלבית
+- ניטור פעילות משתמשים
+- גיבוי אוטומטי יומי
+
+## לוח זמנים ליישום
+- שבוע 1: הגדרת תשתיות
+- שבוע 2: התקנת מחשבים
+- שבוע 3: הדרכת משתמשים
+- שבוע 4: מעבר מלא למערכת
+      `,
+      "מפרט שרתי Dell PowerEdge R750.pdf": `
+# מפרט שרתי Dell PowerEdge R750
+
+## סקירה כללית
+שרתי Dell PowerEdge R750 לדרישת רכש מס' REQ-2024-003
+כמות: 3 יחידות עבור מרכז הנתונים
+
+## מפרט טכני מפורט
+
+### מעבדים
+- Intel Xeon Silver 4314 (16 cores, 32 threads)
+- תדירות בסיס: 2.4GHz
+- תדירות מקסימלית: 3.4GHz
+- זיכרון מטמון: 24MB
+- TDP: 135W
+
+### זיכרון
+- 64GB DDR4-3200 ECC RDIMM
+- 8 חריצי זיכרון (8x 8GB)
+- תמיכה עד 4TB זיכרון
+- הגנת ECC מתקדמת
+
+### אחסון
+- 2x NVMe SSD 1TB Dell EMC
+- מהירות קריאה: 6,000 MB/s
+- מהירות כתיבה: 4,200 MB/s
+- עמידות: 3 DWPD (Drive Writes Per Day)
+- Hot-Swap support
+
+### רשת
+- 4x Gigabit Ethernet onboard
+- 2x 10GbE SFP+ (PCIe card)
+- Intel i350 Network Controller
+- Wake-on-LAN support
+
+### ניהול
+- iDRAC9 Enterprise
+- IPMI 2.0 support
+- Redfish API
+- ניטור מרחוק מלא
+- Virtual Console
+
+### ספק כוח
+- 750W Redundant Power Supply
+- 80+ Platinum efficiency
+- Hot-Plug capability
+- Power redundancy N+1
+
+### מבנה פיזי
+- Form Factor: 2U Rack Mount
+- ממדים: 482 x 87 x 660 mm
+- משקל: 28.5 ק"ג (בקירוב)
+- 19" standard rack mount
+
+### קישוריות
+- 8x USB 3.0 (4 קדמי, 4 אחורי)
+- 2x USB 2.0 (פנימי)
+- 1x VGA (אחורי)
+- 1x Serial port
+- 1x PCIe x16 Gen4
+- 2x PCIe x8 Gen4
+
+### מערכת הפעלה נתמכות
+- Windows Server 2019/2022
+- Red Hat Enterprise Linux 8/9
+- VMware vSphere 7/8
+- Ubuntu Server LTS
+
+### אחריות ותמיכה
+- אחריות יצרן: 3 שנים
+- ProSupport Plus 24/7
+- Next Business Day onsite
+- Mission Critical 4-hour response
+
+## דרישות סביבה
+
+### חשמל
+- מתח כניסה: 100-240V AC
+- תדירות: 50/60 Hz
+- צריכת חשמל מקסימלית: 750W
+- BTU/hr מקסימלי: 2,559
+
+### טמפרטורה
+- טמפרטורת הפעלה: 10-35°C
+- טמפרטורת אחסון: -40-70°C
+- לחות יחסית: 20-80% (לא מתעבה)
+
+### רעש
+- רמת רעש: 6.8 Bels (כ-68 dB)
+- במצב Idle: 6.1 Bels (כ-61 dB)
+
+## תכנון התקנה
+
+### מיקום במרכז הנתונים
+- Rack 1: שרת ראשי (Production)
+- Rack 2: שרת גיבוי (Backup)
+- Rack 3: שרת פיתוח (Development)
+
+### רשת ותקשורת
+- חיבור לרשת ייצור: 10Gb
+- רשת ניהול נפרדת: 1Gb
+- רשת גיבוי: 10Gb על Fiber
+
+### גיבוי ו-DR
+- גיבוי יומי מלא
+- גיבוי מצטבר שבועי
+- DR site במרכז הנתונים השני
+- RTO: 4 שעות, RPO: 1 שעה
+      `
+    };
+
+    return documentContents[doc.fileName] || "תוכן המסמך לא זמין להצגה";
+  };
 
   if (isLoading) {
     return (
@@ -202,7 +459,12 @@ export default function ProcurementRequest() {
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                       <div className="flex items-center space-x-reverse space-x-3">
                         <FileText className="text-destructive w-5 h-5" />
-                        <span className="text-foreground">{doc.fileName}</span>
+                        <div className="flex flex-col">
+                          <span className="text-foreground">{doc.fileName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {doc.fileSize ? `${(doc.fileSize / 1024 / 1024).toFixed(1)} MB` : ''} • {doc.fileType?.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-reverse space-x-2">
                         {doc.isAnalyzed ? (
@@ -210,6 +472,13 @@ export default function ProcurementRequest() {
                         ) : (
                           <Badge variant="outline">ממתין לניתוח</Badge>
                         )}
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDocument(doc)}
+                        >
+                          צפה
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -224,6 +493,39 @@ export default function ProcurementRequest() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* EMF and Cost Cards */}
+          <div className="grid grid-cols-1 gap-4">
+            {/* EMF Card */}
+            <Card className="bg-card border-info/20">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">EMF (תקציב מוקצה)</h3>
+                  <p className="text-muted-foreground text-sm mb-3">התקציב המוקצה למימוש הדרישה</p>
+                  <span className="text-2xl font-bold text-info">
+                    {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Estimated Cost Card */}
+            <Card className="bg-card border-success/20">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">אומדן עלות</h3>
+                  <p className="text-muted-foreground text-sm mb-3">אומדן שנוצר במערכת</p>
+                  {request.estimatedCost ? (
+                    <span className="text-2xl font-bold text-success">
+                      ₪{parseFloat(request.estimatedCost).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-xl text-muted-foreground">טרם נוצר</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Quick Actions */}
           <Card className="bg-card border-primary/20">
             <CardHeader>
@@ -339,6 +641,34 @@ export default function ProcurementRequest() {
           </Card>
         </div>
       </div>
+
+      {/* Document Viewing Dialog */}
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-right">
+              {selectedDocument?.fileName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center text-sm text-muted-foreground">
+              <div className="flex items-center space-x-reverse space-x-2">
+                <span>גודל: {selectedDocument?.fileSize ? `${(selectedDocument.fileSize / 1024 / 1024).toFixed(1)} MB` : 'לא ידוע'}</span>
+                <span>•</span>
+                <span>סוג: {selectedDocument?.fileType?.toUpperCase()}</span>
+              </div>
+              {selectedDocument?.isAnalyzed && (
+                <Badge className="bg-success/20 text-success">נותח</Badge>
+              )}
+            </div>
+            <div className="bg-muted/20 rounded-lg p-4 max-h-96 overflow-auto">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-right">
+                {selectedDocument ? getDocumentContent(selectedDocument) : ''}
+              </pre>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

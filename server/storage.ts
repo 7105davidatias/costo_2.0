@@ -139,7 +139,8 @@ export class MemStorage implements IStorage {
         requestedBy: "שרה לוי",
         department: "IT",
         status: "completed",
-        estimatedCost: "125000",
+        emf: "130000", // EMF - התקציב המוקצה
+        estimatedCost: "125000", // אומדן עלות שנוצר במערכת
         specifications: {
           processor: "Intel Core i5",
           memory: "16GB DDR4",
@@ -162,7 +163,8 @@ export class MemStorage implements IStorage {
         requestedBy: "מיכל כהן",
         department: "משאבי אנוש",
         status: "processing",
-        estimatedCost: "75000",
+        emf: "80000", // EMF - התקציב המוקצה
+        estimatedCost: "75000", // אומדן עלות שנוצר במערכת
         specifications: {
           type: "ארגונומי",
           material: "בד נושם",
@@ -185,7 +187,8 @@ export class MemStorage implements IStorage {
         requestedBy: "דוד לוי",
         department: "IT",
         status: "new",
-        estimatedCost: "180000",
+        emf: "200000", // EMF - התקציב המוקצה
+        estimatedCost: null, // אומדן עלות - עדיין לא נוצר
         specifications: {
           processor: "Intel Xeon Silver 4314 (16 cores)",
           memory: "64GB DDR4 ECC",
@@ -209,7 +212,8 @@ export class MemStorage implements IStorage {
         requestedBy: "דני כהן",
         department: "משאבי אנוש",
         status: "new",
-        estimatedCost: "960000",
+        emf: "1000000", // EMF - התקציב המוקצה
+        estimatedCost: null, // אומדן עלות - עדיין לא נוצר
         specifications: {
           estimatedHours: 2400,
           teamSize: 6,
@@ -233,8 +237,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-08-15"),
         requestedBy: "מיכל לוי",
         department: "הנהלה",
-        status: "new",
-        estimatedCost: "630000",
+        status: "processing",
+        emf: "650000", // EMF - התקציב המוקצה
+        estimatedCost: "630000", // אומדן עלות שנוצר במערכת
         specifications: {
           deliverables: [
             "מיפוי תהליכים נוכחיים",
@@ -261,8 +266,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-12-31"),
         requestedBy: "אבי רוזן",
         department: "IT",
-        status: "new",
-        estimatedCost: "2400000",
+        status: "processing",
+        emf: "2500000", // EMF - התקציב המוקצה
+        estimatedCost: "2400000", // אומדן עלות שנוצר במערכת
         specifications: {
           serviceLevel: "24/7",
           coverage: "מלא",
@@ -286,7 +292,8 @@ export class MemStorage implements IStorage {
         requestedBy: "רונית ברק",
         department: "IT",
         status: "new",
-        estimatedCost: "650000",
+        emf: "700000", // EMF - התקציב המוקצה
+        estimatedCost: null, // אומדן עלות - עדיין לא נוצר
         specifications: {
           uncertainty: "גבוהה",
           variableFactors: ["כמות תקלות", "זמינות טכנאים", "מורכבות תיקונים"],
@@ -313,8 +320,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-06-15"),
         requestedBy: "יוסי אברהם",
         department: "משאבי אנוש",
-        status: "new",
-        estimatedCost: "225000",
+        status: "processing",
+        emf: "250000", // EMF - התקציב המוקצה
+        estimatedCost: "225000", // אומדן עלות שנוצר במערכת
         specifications: {
           processor: "Intel i7 או AMD Ryzen 7",
           ram: "16GB",
@@ -338,7 +346,8 @@ export class MemStorage implements IStorage {
         requestedBy: "עמית שמעון",
         department: "לוגיסטיקה",
         status: "new",
-        estimatedCost: "890000",
+        emf: "950000", // EMF - התקציב המוקצה
+        estimatedCost: null, // אומדן עלות - עדיין לא נוצר
         specifications: {
           vehicleType: "מסחרי קל",
           engineSize: 1600,
@@ -362,8 +371,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-12-15"),
         requestedBy: "שלמה כהן",
         department: "תפעול",
-        status: "new",
-        estimatedCost: "1336000",
+        status: "processing",
+        emf: "1400000", // EMF - התקציב המוקצה
+        estimatedCost: "1336000", // אומדן עלות שנוצר במערכת
         specifications: {
           area: 1000,
           height: 8,
@@ -385,8 +395,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-07-15"),
         requestedBy: "נועה גולד",
         department: "ייצור",
-        status: "new",
-        estimatedCost: "330000",
+        status: "processing",
+        emf: "350000", // EMF - התקציב המוקצה
+        estimatedCost: "330000", // אומדן עלות שנוצר במערכת
         specifications: {
           materials: [
             { name: "פלדה", quantity: 50, unit: "טון", grade: "ST37" },
@@ -462,7 +473,89 @@ export class MemStorage implements IStorage {
 
     this.costEstimations.set(costEstimation.id, costEstimation);
 
-    // Add more cost estimations for all requests
+    // Create sample documents
+    const sampleDocuments: Document[] = [
+      {
+        id: this.currentId++,
+        procurementRequestId: 5, // REQ-2024-001 - מחשבים ניידים
+        fileName: "מפרט טכני - Dell Latitude 5520.pdf",
+        fileType: "pdf",
+        fileSize: 2457600, // 2.4 MB
+        filePath: "/documents/tech_spec_dell_5520.pdf",
+        isAnalyzed: true,
+        analysisResults: {
+          confidence: 95,
+          extractedSpecs: {
+            processor: "Intel Core i7-1165G7 (דור 11)",
+            memory: "16GB DDR4-3200",
+            storage: "SSD NVMe 512GB",
+            display: "15.6 אינץ' Full HD (1920x1080)",
+            graphics: "Intel Iris Xe Graphics",
+            operatingSystem: "Windows 11 Pro",
+            warranty: "3 שנים"
+          }
+        },
+        extractedSpecs: {
+          processor: "Intel Core i7-1165G7",
+          memory: "16GB DDR4",
+          storage: "512GB SSD",
+          display: "15.6 FHD"
+        },
+        uploadedAt: new Date("2024-01-15"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 5, // REQ-2024-001 - מחשבים ניידים
+        fileName: "תרשים רשת ותשתיות.pdf", 
+        fileType: "pdf",
+        fileSize: 1887436, // 1.8 MB
+        filePath: "/documents/network_diagram.pdf",
+        isAnalyzed: true,
+        analysisResults: {
+          confidence: 88,
+          networkRequirements: {
+            connections: 25,
+            bandwidth: "1Gbps",
+            security: "WPA3",
+            infrastructure: "existing"
+          }
+        },
+        extractedSpecs: {
+          networkType: "Ethernet + Wi-Fi",
+          securityLevel: "Enterprise",
+          supportLevel: "24/7"
+        },
+        uploadedAt: new Date("2024-01-15"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 7, // שרתי Dell PowerEdge
+        fileName: "מפרט שרתי Dell PowerEdge R750.pdf",
+        fileType: "pdf", 
+        fileSize: 3145728, // 3 MB
+        filePath: "/documents/dell_r750_spec.pdf",
+        isAnalyzed: true,
+        analysisResults: {
+          confidence: 97,
+          extractedSpecs: {
+            processor: "Intel Xeon Silver 4314 (16 cores)",
+            memory: "64GB DDR4 ECC",
+            storage: "2x 1TB NVMe SSD",
+            network: "4x 1GbE + 2x 10GbE",
+            powerSupply: "750W Redundant",
+            rackSize: "2U"
+          }
+        },
+        extractedSpecs: {
+          serverType: "Rack Mount",
+          redundancy: "High",
+          managementInterface: "iDRAC9"
+        },
+        uploadedAt: new Date("2024-01-20"),
+      }
+    ];
+
+    sampleDocuments.forEach(doc => this.documents.set(doc.id, doc));
     const moreEstimations: CostEstimation[] = [
       // For REQ-2024-001 (Dell Laptops)
       {
