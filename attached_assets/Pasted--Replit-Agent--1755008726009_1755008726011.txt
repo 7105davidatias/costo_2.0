@@ -1,0 +1,732 @@
+# הנחיה ל-Replit Agent: תיקון בעיית אובדן נתונים שחולצו מתוך מסמכי דרישת רכש
+
+## תיאור הבעיה
+
+**⚠️ בעיה קריטית זוהתה במערכת:**
+
+בגרסה הנוכחית, לאחר שהמשתמש מבצע חילוץ נתונים מתוך מסמכי דרישת הרכש (באמצעות לחיצה על "התחל ניתוח AI") ולאחר מכן לוחץ על "סקר שוק", הנתונים שחולצו נעלמים ולא מופיעים במסך פרטי דרישת הרכש בעת חזרה ממסך סקר השוק.
+
+**התוצאה הבעייתית:**
+המשתמש נאלץ לבצע את תהליך חילוץ הנתונים בשנית, מה שיוצר חוויית משתמש גרועה ובזבוז זמן.
+
+**התוצאה הרצויה:**
+הנתונים שחולצו צריכים להישמר ולהיטען אוטומטיט למסך דרישת הרכש בעת חזרה ממסך סקר השוק, כך שהמשתמש יוכל להמשיך את תהליך יצירת האומדן מהשלב שאליו הגיע.
+
+## הנחיות כלליות חשובות
+
+**🎯 מטרת התיקון:**
+תיקון בעיית אובדן נתונים שחולצו בלבד - ללא שינוי כל תכולה אחרת במערכת.
+
+**⚠️ הגבלות חשובות:**
+- בצע רק את התיקון המתואר להלן
+- אל תשנה דבר אחר בגרסה הקיימת
+- שמור על כל הפונקציונליות הקיימת
+- שמור על כל העיצוב והסטיילינג הקיים
+- שמור על כל הנתונים המדומים הקיימים
+
+## ניתוח טכני של הבעיה
+
+### זיהוי מקור הבעיה
+
+הבעיה נובעת מכך שהנתונים שחולצו מתוך המסמכים נשמרים רק ב-state המקומי של הקומפוננט React ולא נשמרים באופן קבוע. כאשר המשתמש עובר למסך אחר (סקר שוק) וחוזר, הקומפוננט נטען מחדש והנתונים שחולצו נעלמים.
+
+### רכיבי המערכת המעורבים
+
+1. **קומפוננט פרטי דרישת רכש** - מכיל את הנתונים שחולצו
+2. **קומפוננט סקר שוק** - המסך שאליו עוברים
+3. **מערכת ניתוב** - React Router שמנהל את המעבר בין מסכים
+4. **מסד נתונים** - צריך לשמור את הנתונים שחולצו
+
+## פתרון מפורט
+
+### שלב 1: הוספת שמירה למסד נתונים
+
+#### עדכון מודל הנתונים
+
+```python
+# בקובץ models/procurement.py
+from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+
+class ProcurementRequest(db.Model):
+    __tablename__ = 'procurement_requests'
+    
+    # שדות קיימים...
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    # ... שאר השדות הקיימים
+    
+    # הוספת שדות חדשים לשמירת נתונים שחולצו
+    extracted_data = db.Column(db.Text, nullable=True, comment="נתונים שחולצו מתוך המסמכים בפורמט JSON")
+    extraction_date = db.Column(db.DateTime, nullable=True, comment="תאריך חילוץ הנתונים")
+    extraction_status = db.Column(db.String(50), nullable=True, default='not_extracted', comment="סטטוס חילוץ הנתונים")
+    
+    def set_extracted_data(self, data):
+        """שמירת נתונים שחולצו"""
+        import json
+        self.extracted_data = json.dumps(data, ensure_ascii=False)
+        self.extraction_date = datetime.utcnow()
+        self.extraction_status = 'extracted'
+    
+    def get_extracted_data(self):
+        """קבלת נתונים שחולצו"""
+        if self.extracted_data:
+            import json
+            return json.loads(self.extracted_data)
+        return None
+    
+    def has_extracted_data(self):
+        """בדיקה האם יש נתונים שחולצו"""
+        return self.extraction_status == 'extracted' and self.extracted_data is not None
+```
+
+#### יצירת migration למסד נתונים
+
+```python
+# בקובץ migrations/add_extracted_data_fields.py
+from flask_migrate import upgrade, downgrade
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    """הוספת שדות לשמירת נתונים שחולצו"""
+    op.add_column('procurement_requests', 
+                  sa.Column('extracted_data', sa.Text(), nullable=True, 
+                           comment='נתונים שחולצו מתוך המסמכים בפורמט JSON'))
+    op.add_column('procurement_requests', 
+                  sa.Column('extraction_date', sa.DateTime(), nullable=True, 
+                           comment='תאריך חילוץ הנתונים'))
+    op.add_column('procurement_requests', 
+                  sa.Column('extraction_status', sa.String(50), nullable=True, 
+                           comment='סטטוס חילוץ הנתונים'))
+
+def downgrade():
+    """הסרת השדות שנוספו"""
+    op.drop_column('procurement_requests', 'extraction_status')
+    op.drop_column('procurement_requests', 'extraction_date')
+    op.drop_column('procurement_requests', 'extracted_data')
+```
+
+### שלב 2: עדכון API endpoints
+
+#### הוספת endpoint לשמירת נתונים שחולצו
+
+```python
+# בקובץ routes/procurement.py
+from flask import Blueprint, request, jsonify
+from models.procurement import ProcurementRequest
+from database import db
+import json
+
+@procurement_bp.route('/api/procurement-requests/<int:request_id>/extracted-data', methods=['POST'])
+def save_extracted_data(request_id):
+    """שמירת נתונים שחולצו מתוך מסמכי הדרישה"""
+    try:
+        data = request.get_json()
+        
+        # קבלת דרישת הרכש
+        procurement_request = ProcurementRequest.query.get_or_404(request_id)
+        
+        # שמירת הנתונים שחולצו
+        extracted_data = {
+            'specifications': data.get('specifications', {}),
+            'requirements': data.get('requirements', {}),
+            'technical_details': data.get('technical_details', {}),
+            'budget_info': data.get('budget_info', {}),
+            'timeline': data.get('timeline', {}),
+            'extracted_at': datetime.utcnow().isoformat()
+        }
+        
+        procurement_request.set_extracted_data(extracted_data)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'נתונים שחולצו נשמרו בהצלחה',
+            'extraction_date': procurement_request.extraction_date.isoformat()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/procurement-requests/<int:request_id>/extracted-data', methods=['GET'])
+def get_extracted_data(request_id):
+    """קבלת נתונים שחולצו עבור דרישת רכש"""
+    try:
+        procurement_request = ProcurementRequest.query.get_or_404(request_id)
+        
+        if procurement_request.has_extracted_data():
+            return jsonify({
+                'success': True,
+                'has_data': True,
+                'data': procurement_request.get_extracted_data(),
+                'extraction_date': procurement_request.extraction_date.isoformat(),
+                'status': procurement_request.extraction_status
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'has_data': False,
+                'data': None
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@procurement_bp.route('/api/procurement-requests/<int:request_id>/extracted-data', methods=['DELETE'])
+def clear_extracted_data(request_id):
+    """מחיקת נתונים שחולצו (לצורך בדיקות או איפוס)"""
+    try:
+        procurement_request = ProcurementRequest.query.get_or_404(request_id)
+        
+        procurement_request.extracted_data = None
+        procurement_request.extraction_date = None
+        procurement_request.extraction_status = 'not_extracted'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'נתונים שחולצו נמחקו בהצלחה'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+```
+
+### שלב 3: עדכון קומפוננט React
+
+#### עדכון קומפוננט פרטי דרישת רכש
+
+```jsx
+// בקובץ components/ProcurementRequestDetails.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const ProcurementRequestDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  // state קיים
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // state חדש לנתונים שחולצו
+  const [extractedData, setExtractedData] = useState(null);
+  const [hasExtractedData, setHasExtractedData] = useState(false);
+  const [extractionLoading, setExtractionLoading] = useState(false);
+
+  // טעינת נתונים בסיסיים ונתונים שחולצו
+  useEffect(() => {
+    loadRequestData();
+    loadExtractedData();
+  }, [id]);
+
+  const loadRequestData = async () => {
+    try {
+      // הקוד הקיים לטעינת נתוני הדרישה
+      const response = await fetch(`/api/procurement-requests/${id}`);
+      const data = await response.json();
+      setRequest(data);
+    } catch (error) {
+      console.error('שגיאה בטעינת נתוני הדרישה:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadExtractedData = async () => {
+    try {
+      const response = await fetch(`/api/procurement-requests/${id}/extracted-data`);
+      const result = await response.json();
+      
+      if (result.success && result.has_data) {
+        setExtractedData(result.data);
+        setHasExtractedData(true);
+        console.log('נתונים שחולצו נטענו בהצלחה:', result.data);
+      } else {
+        setExtractedData(null);
+        setHasExtractedData(false);
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת נתונים שחולצו:', error);
+      setExtractedData(null);
+      setHasExtractedData(false);
+    }
+  };
+
+  const handleAIAnalysis = async () => {
+    setExtractionLoading(true);
+    
+    try {
+      // הקוד הקיים לחילוץ נתונים
+      const analysisResult = await performAIAnalysis(request);
+      
+      // שמירת הנתונים שחולצו למסד הנתונים
+      await saveExtractedData(analysisResult);
+      
+      // עדכון ה-state המקומי
+      setExtractedData(analysisResult);
+      setHasExtractedData(true);
+      
+    } catch (error) {
+      console.error('שגיאה בניתוח AI:', error);
+    } finally {
+      setExtractionLoading(false);
+    }
+  };
+
+  const saveExtractedData = async (data) => {
+    try {
+      const response = await fetch(`/api/procurement-requests/${id}/extracted-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'שגיאה בשמירת נתונים');
+      }
+      
+      console.log('נתונים שחולצו נשמרו בהצלחה');
+      
+    } catch (error) {
+      console.error('שגיאה בשמירת נתונים שחולצו:', error);
+      // אל תעצור את התהליך - המשתמש עדיין יכול לראות את הנתונים
+    }
+  };
+
+  const handleMarketResearch = () => {
+    // מעבר למסך סקר שוק - הנתונים כבר שמורים במסד הנתונים
+    navigate(`/market-research/${id}`);
+  };
+
+  // פונקציה לבדיקה האם יש נתונים שחולצו (קיימים או חדשים)
+  const hasAnyExtractedData = () => {
+    return hasExtractedData || extractedData !== null;
+  };
+
+  // רינדור הקומפוננט
+  return (
+    <div className="procurement-request-details">
+      {/* תוכן קיים של הקומפוננט */}
+      
+      {/* סעיף ניתוח AI - עם הצגת נתונים שחולצו אם קיימים */}
+      <div className="ai-analysis-section">
+        <h3>ניתוח AI</h3>
+        
+        {hasAnyExtractedData() ? (
+          <div className="extracted-data-display">
+            <div className="data-status">
+              <span className="status-indicator success">✓</span>
+              <span>נתונים חולצו בהצלחה</span>
+              {hasExtractedData && (
+                <small>נטענו מהמערכת</small>
+              )}
+            </div>
+            
+            {/* הצגת הנתונים שחולצו */}
+            <div className="extracted-data-content">
+              {extractedData && (
+                <>
+                  {extractedData.specifications && (
+                    <div className="data-section">
+                      <h4>מפרטים טכניים</h4>
+                      <pre>{JSON.stringify(extractedData.specifications, null, 2)}</pre>
+                    </div>
+                  )}
+                  
+                  {extractedData.requirements && (
+                    <div className="data-section">
+                      <h4>דרישות</h4>
+                      <pre>{JSON.stringify(extractedData.requirements, null, 2)}</pre>
+                    </div>
+                  )}
+                  
+                  {extractedData.budget_info && (
+                    <div className="data-section">
+                      <h4>מידע תקציבי</h4>
+                      <pre>{JSON.stringify(extractedData.budget_info, null, 2)}</pre>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            
+            <div className="action-buttons">
+              <button 
+                onClick={handleAIAnalysis}
+                disabled={extractionLoading}
+                className="btn-secondary"
+              >
+                {extractionLoading ? 'מחלץ נתונים...' : 'חלץ נתונים מחדש'}
+              </button>
+              
+              <button 
+                onClick={handleMarketResearch}
+                className="btn-primary"
+              >
+                מחקר שוק
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="no-extracted-data">
+            <p>לא בוצע חילוץ נתונים עדיין</p>
+            <button 
+              onClick={handleAIAnalysis}
+              disabled={extractionLoading}
+              className="btn-primary"
+            >
+              {extractionLoading ? 'מחלץ נתונים...' : 'התחל ניתוח AI'}
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* שאר התוכן הקיים של הקומפוננט */}
+    </div>
+  );
+};
+
+// פונקציה לביצוע ניתוח AI (הקוד הקיים)
+const performAIAnalysis = async (request) => {
+  // הקוד הקיים לחילוץ נתונים
+  // החזר את הנתונים שחולצו
+  return {
+    specifications: {
+      // נתונים שחולצו...
+    },
+    requirements: {
+      // דרישות שחולצו...
+    },
+    technical_details: {
+      // פרטים טכניים...
+    },
+    budget_info: {
+      // מידע תקציבי...
+    }
+  };
+};
+
+export default ProcurementRequestDetails;
+```
+
+### שלב 4: עדכון קומפוננט סקר שוק
+
+```jsx
+// בקובץ components/MarketResearch.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const MarketResearch = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const [request, setRequest] = useState(null);
+  const [extractedData, setExtractedData] = useState(null);
+  
+  useEffect(() => {
+    loadRequestData();
+    loadExtractedData();
+  }, [id]);
+
+  const loadRequestData = async () => {
+    // הקוד הקיים לטעינת נתוני הדרישה
+  };
+
+  const loadExtractedData = async () => {
+    try {
+      const response = await fetch(`/api/procurement-requests/${id}/extracted-data`);
+      const result = await response.json();
+      
+      if (result.success && result.has_data) {
+        setExtractedData(result.data);
+        console.log('נתונים שחולצו זמינים במסך סקר שוק:', result.data);
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת נתונים שחולצו:', error);
+    }
+  };
+
+  const handleBackToRequest = () => {
+    // חזרה למסך פרטי דרישת רכש - הנתונים יטענו אוטומטית
+    navigate(`/procurement-request/${id}`);
+  };
+
+  return (
+    <div className="market-research">
+      {/* תוכן קיים של מסך סקר שוק */}
+      
+      {/* כפתור חזרה */}
+      <div className="navigation-buttons">
+        <button onClick={handleBackToRequest} className="btn-secondary">
+          חזרה לפרטי הדרישה
+        </button>
+      </div>
+      
+      {/* אם יש נתונים שחולצו, ניתן להשתמש בהם לשיפור סקר השוק */}
+      {extractedData && (
+        <div className="extracted-data-context">
+          <h4>נתונים רלוונטיים מהדרישה</h4>
+          {/* הצגת נתונים רלוונטיים לסקר שוק */}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MarketResearch;
+```
+
+### שלב 5: CSS נוסף נדרש
+
+```css
+/* עיצוב לסעיף נתונים שחולצו */
+.extracted-data-display {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  background: #f9f9f9;
+}
+
+.data-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.status-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-indicator.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.extracted-data-content {
+  margin: 20px 0;
+}
+
+.data-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e5e5;
+}
+
+.data-section h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.data-section pre {
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  direction: ltr;
+  text-align: left;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.no-extracted-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.no-extracted-data p {
+  margin-bottom: 20px;
+  font-size: 1.1em;
+}
+
+/* כפתורים */
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-secondary:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+```
+
+## בדיקות נדרשות לאחר היישום
+
+### בדיקות פונקציונליות
+
+1. **בדיקת חילוץ נתונים ושמירה:**
+   - בצע חילוץ נתונים מתוך מסמכי דרישה
+   - וודא שהנתונים מוצגים במסך
+   - וודא שהנתונים נשמרים למסד הנתונים
+
+2. **בדיקת מעבר למסך סקר שוק:**
+   - לחץ על "מחקר שוק" לאחר חילוץ נתונים
+   - וודא שהמעבר למסך סקר שוק עובד כרגיל
+
+3. **בדיקת חזרה למסך פרטי דרישה:**
+   - חזור למסך פרטי דרישת רכש ממסך סקר שוק
+   - וודא שהנתונים שחולצו מוצגים אוטומטית
+   - וודא שלא נדרש לבצע חילוץ נתונים מחדש
+
+4. **בדיקת רענון דף:**
+   - לאחר חילוץ נתונים, רענן את הדף
+   - וודא שהנתונים עדיין מוצגים
+
+### בדיקות טכניות
+
+1. **בדיקת API endpoints:**
+   ```bash
+   # בדיקת שמירת נתונים
+   curl -X POST http://localhost:5000/api/procurement-requests/1/extracted-data \
+     -H "Content-Type: application/json" \
+     -d '{"specifications": {"cpu": "Intel i7"}, "requirements": {"memory": "16GB"}}'
+   
+   # בדיקת קבלת נתונים
+   curl http://localhost:5000/api/procurement-requests/1/extracted-data
+   ```
+
+2. **בדיקת מסד נתונים:**
+   ```sql
+   -- וודא שהשדות החדשים נוצרו
+   DESCRIBE procurement_requests;
+   
+   -- בדוק נתונים שנשמרו
+   SELECT id, title, extraction_status, extraction_date 
+   FROM procurement_requests 
+   WHERE extracted_data IS NOT NULL;
+   ```
+
+### בדיקות חוויית משתמש
+
+1. **זרימת עבודה מלאה:**
+   - התחל מרשימת דרישות רכש
+   - היכנס לפרטי דרישה
+   - בצע חילוץ נתונים
+   - עבור למחקר שוק
+   - חזור לפרטי דרישה
+   - וודא שהנתונים עדיין שם
+
+2. **בדיקת ביצועים:**
+   - וודא שטעינת הנתונים מהירה
+   - וודא שאין עיכובים במעבר בין מסכים
+
+## הנחיות יישום
+
+### סדר ביצוע מומלץ
+
+1. **שלב 1: עדכון מסד נתונים (20 דקות)**
+   - הוסף שדות חדשים למודל ProcurementRequest
+   - צור migration script
+   - הרץ את ה-migration
+
+2. **שלב 2: עדכון בקאנד (30 דקות)**
+   - הוסף API endpoints חדשים
+   - עדכן מודל הנתונים
+   - בדוק שה-endpoints עובדים
+
+3. **שלב 3: עדכון פרונטאנד (45 דקות)**
+   - עדכן קומפוננט פרטי דרישת רכש
+   - הוסף לוגיקה לשמירה וטעינה של נתונים
+   - עדכן קומפוננט סקר שוק
+
+4. **שלב 4: עיצוב ו-CSS (15 דקות)**
+   - הוסף סטיילינג לאלמנטים החדשים
+   - וודא תאימות עם העיצוב הקיים
+
+5. **שלב 5: בדיקות (30 דקות)**
+   - בצע בדיקות פונקציונליות מקיפות
+   - וודא שכל הפונקציונליות הקיימת עובדת
+
+### נקודות חשובות לזכור
+
+1. **שמירה על תאימות לאחור:**
+   - דרישות רכש קיימות ללא נתונים שחולצו צריכות להמשיך לעבוד
+   - הפונקציונליות הקיימת לא צריכה להיפגע
+
+2. **טיפול בשגיאות:**
+   - אם שמירת הנתונים נכשלת, המשתמש עדיין יכול לראות את הנתונים במסך הנוכחי
+   - הצג הודעות שגיאה ברורות למשתמש
+
+3. **ביצועים:**
+   - טען נתונים שחולצו רק כאשר נדרש
+   - השתמש ב-caching כדי למנוע טעינות מיותרות
+
+## סיכום
+
+תיקון זה פותר את בעיית אובדן הנתונים שחולצו מתוך מסמכי דרישת הרכש בעת מעבר למסך סקר שוק וחזרה. הפתרון כולל:
+
+1. **שמירה קבועה** של נתונים שחולצו במסד הנתונים
+2. **טעינה אוטומטית** של נתונים שחולצו בעת חזרה למסך
+3. **שמירה מלאה** על כל הפונקציונליות הקיימת
+4. **חוויית משתמש משופרת** ללא צורך בחילוץ נתונים חוזר
+
+**זכור: בצע רק את התיקון המתואר כאן ואל תשנה דבר אחר במערכת!**
+

@@ -44,6 +44,11 @@ export interface IStorage {
   getMarketInsights(): Promise<MarketInsight[]>;
   getMarketInsightByCategory(category: string): Promise<MarketInsight | undefined>;
   createMarketInsight(insight: InsertMarketInsight): Promise<MarketInsight>;
+
+  // Extracted Data Management
+  saveExtractedData(requestId: number, data: any): Promise<void>;
+  getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null>;
+  clearExtractedData(requestId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1296,6 +1301,54 @@ export class MemStorage implements IStorage {
     const insight: MarketInsight = { ...insertInsight, id, updatedAt: new Date() };
     this.marketInsights.set(id, insight);
     return insight;
+  }
+
+  // Extracted Data Management
+  async saveExtractedData(requestId: number, data: any): Promise<void> {
+    const request = this.procurementRequests.get(requestId);
+    if (!request) {
+      throw new Error('דרישת רכש לא נמצאה');
+    }
+
+    const updatedRequest: ProcurementRequest = {
+      ...request,
+      extractedData: data,
+      extractionDate: new Date(),
+      extractionStatus: "extracted",
+      updatedAt: new Date()
+    };
+
+    this.procurementRequests.set(requestId, updatedRequest);
+  }
+
+  async getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null> {
+    const request = this.procurementRequests.get(requestId);
+    if (!request || !request.extractedData || request.extractionStatus !== "extracted") {
+      return null;
+    }
+
+    return {
+      data: request.extractedData,
+      extractionDate: request.extractionDate!,
+      status: request.extractionStatus
+    };
+  }
+
+  async clearExtractedData(requestId: number): Promise<void> {
+    const request = this.procurementRequests.get(requestId);
+    if (!request) {
+      throw new Error('דרישת רכש לא נמצאה');
+    }
+
+    const updatedRequest: ProcurementRequest = {
+      ...request,
+      extractedData: null,
+      extractionDate: null,
+      extractionStatus: "not_extracted",
+      updatedAt: new Date()
+    };
+
+    this.procurementRequests.set(requestId, updatedRequest);
   }
 }
 

@@ -14,6 +14,14 @@ interface AIAnalysisProps {
   specifications?: any;
 }
 
+interface ExtractedDataResponse {
+  success: boolean;
+  hasData: boolean;
+  data?: any;
+  extractionDate?: string;
+  status?: string;
+}
+
 interface AnalysisStep {
   id: string;
   title: string;
@@ -30,11 +38,29 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
   const [extractedSpecs, setExtractedSpecs] = useState<any>(null);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
 
+  // Fetch extracted data from database
+  const { data: extractedData } = useQuery<ExtractedDataResponse>({
+    queryKey: ['/api/procurement-requests', requestId, 'extracted-data'],
+    enabled: !!requestId,
+  });
+
   // Fetch estimation methods when analysis is completed
   const { data: estimationMethods } = useQuery({
     queryKey: ['/api/estimation-methods', requestId],
-    enabled: analysisCompleted,
+    enabled: analysisCompleted || (extractedData?.hasData === true),
   });
+
+  // Initialize state based on extracted data
+  useEffect(() => {
+    if (extractedData?.hasData && extractedData?.data) {
+      setAnalysisCompleted(true);
+      setAnalysisProgress(100);
+      setExtractedSpecs(extractedData.data);
+      setSteps(prevSteps => 
+        prevSteps.map(step => ({ ...step, status: 'completed' as const }))
+      );
+    }
+  }, [extractedData]);
 
   const [steps, setSteps] = useState<AnalysisStep[]>([
     {

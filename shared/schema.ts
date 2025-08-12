@@ -26,6 +26,9 @@ export const procurementRequests = pgTable("procurement_requests", {
   emf: decimal("emf", { precision: 12, scale: 2 }), // Estimated Maximum Funding - התקציב המוקצה
   estimatedCost: decimal("estimated_cost", { precision: 12, scale: 2 }), // אומדן עלות שנוצר במערכת
   specifications: jsonb("specifications"),
+  extractedData: jsonb("extracted_data"), // נתונים שחולצו מתוך מסמכים
+  extractionDate: timestamp("extraction_date"), // תאריך חילוץ הנתונים
+  extractionStatus: text("extraction_status").default("not_extracted"), // סטטוס חילוץ הנתונים
   userId: integer("user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

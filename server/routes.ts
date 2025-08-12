@@ -520,12 +520,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         riskAssessment: contextualAnalysis.riskAssessment
       };
 
+      // Save extracted data to database
+      try {
+        await storage.saveExtractedData(requestId, analysisResults);
+        console.log('Extracted data saved to database for request:', requestId);
+      } catch (saveError) {
+        console.error('Failed to save extracted data:', saveError);
+        // Continue even if saving fails - user still gets the results
+      }
+
       // Update the request status to processing
       await storage.updateProcurementRequest(requestId, { status: 'processing' });
 
       res.json(analysisResults);
     } catch (error) {
       res.status(500).json({ message: "Failed to process AI analysis" });
+    }
+  });
+
+  // Get extracted data for a procurement request
+  app.get("/api/procurement-requests/:id/extracted-data", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const extractedData = await storage.getExtractedData(id);
+      
+      if (extractedData) {
+        res.json({
+          success: true,
+          hasData: true,
+          data: extractedData.data,
+          extractionDate: extractedData.extractionDate,
+          status: extractedData.status
+        });
+      } else {
+        res.json({
+          success: true,
+          hasData: false,
+          data: null
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch extracted data"
+      });
+    }
+  });
+
+  // Clear extracted data for a procurement request
+  app.delete("/api/procurement-requests/:id/extracted-data", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.clearExtractedData(id);
+      
+      res.json({
+        success: true,
+        message: "נתונים שחולצו נמחקו בהצלחה"
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Failed to clear extracted data"
+      });
     }
   });
 

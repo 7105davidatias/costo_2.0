@@ -30,6 +30,11 @@ export default function ProcurementRequest() {
     enabled: !!id,
   });
 
+  const { data: extractedData, refetch: refetchExtractedData } = useQuery({
+    queryKey: ["/api/procurement-requests", id, "extracted-data"],
+    enabled: !!id,
+  });
+
   const aiAnalysisMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/ai-analysis/${id}`, {
@@ -45,6 +50,7 @@ export default function ProcurementRequest() {
         description: "תוצאות הניתוח זמינות לצפייה",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents/request", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests", id, "extracted-data"] });
     },
     onError: () => {
       toast({
