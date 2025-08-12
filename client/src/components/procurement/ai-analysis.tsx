@@ -137,7 +137,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
       if (response.ok) {
         const result = await response.json();
         console.log('AI Analysis result:', result);
-        setExtractedSpecs(result.extractedSpecs);
+        setExtractedSpecs(result);
       }
     } catch (error) {
       console.error('AI analysis failed:', error);
@@ -200,7 +200,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                   <div>
                     <h5 className="font-medium text-foreground mb-2">מפרטים שחולצו:</h5>
                     <div className="space-y-2">
-                      {extractedSpecs && Object.entries(extractedSpecs).map(([key, value]) => (
+                      {extractedSpecs?.extractedSpecs && Object.entries(extractedSpecs.extractedSpecs).map(([key, value]) => (
                         <div key={key} className="bg-muted/20 p-3 rounded-lg">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">
                             {key === 'processor' && 'מעבד'}
@@ -269,7 +269,12 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                             {key === 'supplier' && 'ספק'}
                             {key === 'technicalRequirements' && 'דרישות טכניות'}
                           </label>
-                          <p className="text-foreground text-sm">{value as string}</p>
+                          <p className="text-foreground text-sm">
+                            {typeof value === 'object' && value !== null 
+                              ? JSON.stringify(value) 
+                              : String(value || 'לא זמין')
+                            }
+                          </p>
                         </div>
                       ))}
                     </div>
