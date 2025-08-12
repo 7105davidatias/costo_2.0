@@ -1,0 +1,696 @@
+# הנחיה ל-Replit Agent: תיקון ספציפי לבעיית אי-טעינת נתונים שחולצו
+
+## תיאור הבעיה הספציפית
+
+**🚨 בעיה קריטית זוהתה במערכת:**
+
+לאחר יישום התיקון הקודם, הנתונים שחולצו מתוך מסמכי דרישת הרכש (כפי שניתן לראות בצילום המסך המצורף) מוצגים כראוי במסך פרטי דרישת הרכש, אך **עדיין לא נטענים מחדש בעת חזרה ממסך מחקר שוק**.
+
+**נתונים שמוצגים בצילום המסך:**
+- כמות: 25 יחידות
+- מעבד: Intel Core i7-13700 (16 cores)
+- זיכרון: 32GB DDR4
+- אחסון: 1TB NVMe SSD
+- כרטיס גרפי: Intel UHD Graphics
+- כרטיס רשת: Gigabit Ethernet
+- אחריות: 3 שנות אחריות
+- מערכת הפעלה: Windows 11 Pro
+- גורם צורה: Desktop Tower
+- ספק כוח: 650W 80+ Gold
+
+**הבעיה המדויקת:**
+הנתונים הללו נעלמים בעת מעבר למסך מחקר שוק וחזרה, מה שמחייב את המשתמש לבצע חילוץ נתונים מחדש.
+
+## הנחיות כלליות חשובות
+
+**🎯 מטרת התיקון:**
+תיקון ספציפי לבעיית שמירה וטעינה של נתונים שחולצו - ללא שינוי כל תכולה אחרת במערכת.
+
+**⚠️ הגבלות חשובות:**
+- בצע רק את התיקון המתואר להלן
+- אל תשנה דבר אחר בגרסה הקיימת
+- שמור על כל הפונקציונליות הקיימת
+- שמור על כל העיצוב והסטיילינג הקיים
+
+## ניתוח טכני מעמיק של הבעיה
+
+### זיהוי מקור הבעיה
+
+הבעיה נובעת מכך שהתיקון הקודם לא יושם במלואו או שיש בעיות ספציפיות באחד מהרכיבים הבאים:
+
+1. **שמירה למסד נתונים לא עובדת** - הנתונים לא נשמרים בפועל
+2. **טעינה מהמסד נתונים לא עובדת** - הנתונים לא נטענים בחזרה
+3. **API endpoints לא מוגדרים נכון** - הקריאות נכשלות
+4. **State management לא עובד** - הנתונים לא מתעדכנים ב-React
+
+### בדיקה ראשונית נדרשת
+
+לפני התיקון, יש לבדוק את הנקודות הבאות:
+
+```javascript
+// בדיקה 1: האם ה-API endpoints קיימים?
+console.log('בדיקת API endpoints...');
+fetch('/api/procurement-requests/1/extracted-data')
+  .then(response => response.json())
+  .then(data => console.log('תגובת API:', data))
+  .catch(error => console.error('שגיאה ב-API:', error));
+
+// בדיקה 2: האם הנתונים נשמרים למסד נתונים?
+// בדוק בקונסול הבקאנד או במסד הנתונים ישירות
+
+// בדיקה 3: האם הקומפוננט קורא לפונקציית הטעינה?
+console.log('בדיקת טעינת נתונים בקומפוננט...');
+```
+
+## פתרון מפורט ומדויק
+
+### שלב 1: וידוא שהשדות נוספו למסד הנתונים
+
+```python
+# בקובץ models/procurement.py - וודא שהשדות קיימים
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import json
+
+class ProcurementRequest(db.Model):
+    __tablename__ = 'procurement_requests'
+    
+    # שדות קיימים...
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    
+    # שדות חדשים שצריכים להיות קיימים:
+    extracted_data = db.Column(db.Text, nullable=True, comment="נתונים שחולצו מתוך המסמכים בפורמט JSON")
+    extraction_date = db.Column(db.DateTime, nullable=True, comment="תאריך חילוץ הנתונים")
+    extraction_status = db.Column(db.String(50), nullable=True, default='not_extracted', comment="סטטוס חילוץ הנתונים")
+    
+    def set_extracted_data(self, data):
+        """שמירת נתונים שחולצו"""
+        self.extracted_data = json.dumps(data, ensure_ascii=False)
+        self.extraction_date = datetime.utcnow()
+        self.extraction_status = 'extracted'
+        print(f"שמירת נתונים לדרישה {self.id}: {self.extracted_data}")
+    
+    def get_extracted_data(self):
+        """קבלת נתונים שחולצו"""
+        if self.extracted_data:
+            try:
+                return json.loads(self.extracted_data)
+            except json.JSONDecodeError:
+                print(f"שגיאה בפענוח JSON לדרישה {self.id}")
+                return None
+        return None
+    
+    def has_extracted_data(self):
+        """בדיקה האם יש נתונים שחולצו"""
+        return self.extraction_status == 'extracted' and self.extracted_data is not None
+
+# אם השדות לא קיימים, הוסף migration:
+def upgrade():
+    """הוספת שדות לשמירת נתונים שחולצו"""
+    try:
+        op.add_column('procurement_requests', 
+                      sa.Column('extracted_data', sa.Text(), nullable=True))
+        op.add_column('procurement_requests', 
+                      sa.Column('extraction_date', sa.DateTime(), nullable=True))
+        op.add_column('procurement_requests', 
+                      sa.Column('extraction_status', sa.String(50), nullable=True))
+        print("שדות נוספו בהצלחה למסד הנתונים")
+    except Exception as e:
+        print(f"שגיאה בהוספת שדות: {e}")
+```
+
+### שלב 2: יצירת/עדכון API endpoints
+
+```python
+# בקובץ routes/procurement.py
+from flask import Blueprint, request, jsonify
+from models.procurement import ProcurementRequest
+from database import db
+import json
+from datetime import datetime
+
+procurement_bp = Blueprint('procurement', __name__)
+
+@procurement_bp.route('/api/procurement-requests/<int:request_id>/extracted-data', methods=['POST'])
+def save_extracted_data(request_id):
+    """שמירת נתונים שחולצו מתוך מסמכי הדרישה"""
+    try:
+        print(f"קבלת בקשה לשמירת נתונים לדרישה {request_id}")
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'לא התקבלו נתונים'}), 400
+        
+        # קבלת דרישת הרכש
+        procurement_request = ProcurementRequest.query.get(request_id)
+        if not procurement_request:
+            return jsonify({'success': False, 'error': 'דרישת רכש לא נמצאה'}), 404
+        
+        # שמירת הנתונים שחולצו
+        procurement_request.set_extracted_data(data)
+        db.session.commit()
+        
+        print(f"נתונים נשמרו בהצלחה לדרישה {request_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'נתונים שחולצו נשמרו בהצלחה',
+            'extraction_date': procurement_request.extraction_date.isoformat() if procurement_request.extraction_date else None,
+            'data_preview': str(data)[:100] + '...' if len(str(data)) > 100 else str(data)
+        })
+        
+    except Exception as e:
+        print(f"שגיאה בשמירת נתונים: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'שגיאה בשמירת נתונים: {str(e)}'
+        }), 500
+
+@procurement_bp.route('/api/procurement-requests/<int:request_id>/extracted-data', methods=['GET'])
+def get_extracted_data(request_id):
+    """קבלת נתונים שחולצו עבור דרישת רכש"""
+    try:
+        print(f"קבלת בקשה לטעינת נתונים לדרישה {request_id}")
+        
+        procurement_request = ProcurementRequest.query.get(request_id)
+        if not procurement_request:
+            return jsonify({'success': False, 'error': 'דרישת רכש לא נמצאה'}), 404
+        
+        if procurement_request.has_extracted_data():
+            extracted_data = procurement_request.get_extracted_data()
+            print(f"נתונים נטענו בהצלחה לדרישה {request_id}: {extracted_data}")
+            
+            return jsonify({
+                'success': True,
+                'has_data': True,
+                'data': extracted_data,
+                'extraction_date': procurement_request.extraction_date.isoformat() if procurement_request.extraction_date else None,
+                'status': procurement_request.extraction_status
+            })
+        else:
+            print(f"אין נתונים שמורים לדרישה {request_id}")
+            return jsonify({
+                'success': True,
+                'has_data': False,
+                'data': None,
+                'message': 'אין נתונים שחולצו עבור דרישה זו'
+            })
+            
+    except Exception as e:
+        print(f"שגיאה בטעינת נתונים: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'שגיאה בטעינת נתונים: {str(e)}'
+        }), 500
+
+# בדיקת חיבור API
+@procurement_bp.route('/api/test-connection', methods=['GET'])
+def test_connection():
+    """בדיקת חיבור API"""
+    return jsonify({
+        'success': True,
+        'message': 'API פועל תקין',
+        'timestamp': datetime.utcnow().isoformat()
+    })
+```
+
+### שלב 3: עדכון קומפוננט React עם לוגיקה מחוזקת
+
+```jsx
+// בקובץ components/ProcurementRequestDetails.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const ProcurementRequestDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  // state קיים
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // state לנתונים שחולצו
+  const [extractedData, setExtractedData] = useState(null);
+  const [hasExtractedData, setHasExtractedData] = useState(false);
+  const [extractionLoading, setExtractionLoading] = useState(false);
+  const [lastExtractionDate, setLastExtractionDate] = useState(null);
+
+  // טעינת נתונים בכל פעם שהקומפוננט נטען
+  useEffect(() => {
+    console.log('קומפוננט נטען, מתחיל טעינת נתונים...');
+    loadRequestData();
+    loadExtractedData();
+  }, [id]);
+
+  // טעינה נוספת כאשר חוזרים מדף אחר
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('חזרה לדף, טוען נתונים מחדש...');
+      loadExtractedData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [id]);
+
+  const loadRequestData = async () => {
+    try {
+      console.log(`טוען נתוני דרישה ${id}...`);
+      const response = await fetch(`/api/procurement-requests/${id}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setRequest(data);
+      console.log('נתוני דרישה נטענו בהצלחה:', data);
+    } catch (error) {
+      console.error('שגיאה בטעינת נתוני הדרישה:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadExtractedData = async () => {
+    try {
+      console.log(`טוען נתונים שחולצו לדרישה ${id}...`);
+      
+      // בדיקת חיבור API קודם
+      const testResponse = await fetch('/api/test-connection');
+      if (!testResponse.ok) {
+        throw new Error('API לא זמין');
+      }
+      
+      const response = await fetch(`/api/procurement-requests/${id}/extracted-data`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('תגובת API לנתונים שחולצו:', result);
+      
+      if (result.success && result.has_data) {
+        setExtractedData(result.data);
+        setHasExtractedData(true);
+        setLastExtractionDate(result.extraction_date);
+        console.log('נתונים שחולצו נטענו בהצלחה:', result.data);
+      } else {
+        setExtractedData(null);
+        setHasExtractedData(false);
+        setLastExtractionDate(null);
+        console.log('אין נתונים שחולצו עבור דרישה זו');
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת נתונים שחולצו:', error);
+      setExtractedData(null);
+      setHasExtractedData(false);
+      setLastExtractionDate(null);
+    }
+  };
+
+  const handleAIAnalysis = async () => {
+    setExtractionLoading(true);
+    
+    try {
+      console.log('מתחיל ניתוח AI...');
+      
+      // הקוד הקיים לחילוץ נתונים (סימולציה)
+      const analysisResult = await performAIAnalysis(request);
+      console.log('תוצאות ניתוח AI:', analysisResult);
+      
+      // שמירת הנתונים שחולצו למסד הנתונים
+      await saveExtractedData(analysisResult);
+      
+      // עדכון ה-state המקומי
+      setExtractedData(analysisResult);
+      setHasExtractedData(true);
+      setLastExtractionDate(new Date().toISOString());
+      
+      console.log('ניתוח AI הושלם בהצלחה');
+      
+    } catch (error) {
+      console.error('שגיאה בניתוח AI:', error);
+      alert('שגיאה בניתוח AI: ' + error.message);
+    } finally {
+      setExtractionLoading(false);
+    }
+  };
+
+  const saveExtractedData = async (data) => {
+    try {
+      console.log(`שומר נתונים שחולצו לדרישה ${id}:`, data);
+      
+      const response = await fetch(`/api/procurement-requests/${id}/extracted-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('תגובת שמירה:', result);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'שגיאה בשמירת נתונים');
+      }
+      
+      console.log('נתונים שחולצו נשמרו בהצלחה למסד הנתונים');
+      
+    } catch (error) {
+      console.error('שגיאה בשמירת נתונים שחולצו:', error);
+      // אל תעצור את התהליך - המשתמש עדיין יכול לראות את הנתונים
+      alert('אזהרה: הנתונים לא נשמרו למסד הנתונים. הם יעלמו בעת רענון הדף.');
+    }
+  };
+
+  const handleMarketResearch = () => {
+    console.log('עובר למחקר שוק...');
+    // מעבר למסך סקר שוק - הנתונים כבר שמורים במסד הנתונים
+    navigate(`/market-research/${id}`);
+  };
+
+  // פונקציה לבדיקה האם יש נתונים שחולצו (קיימים או חדשים)
+  const hasAnyExtractedData = () => {
+    return hasExtractedData || extractedData !== null;
+  };
+
+  // פונקציה לעיצוב תאריך
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleString('he-IL');
+    } catch {
+      return dateString;
+    }
+  };
+
+  // רינדור הקומפוננט
+  return (
+    <div className="procurement-request-details">
+      {loading ? (
+        <div className="loading">טוען...</div>
+      ) : (
+        <>
+          {/* תוכן קיים של הקומפוננט */}
+          <div className="request-info">
+            <h2>{request?.title}</h2>
+            <p>{request?.description}</p>
+          </div>
+
+          {/* סעיף ניתוח AI - עם הצגת נתונים שחולצו אם קיימים */}
+          <div className="ai-analysis-section">
+            <h3>ניתוח AI</h3>
+            
+            {hasAnyExtractedData() ? (
+              <div className="extracted-data-display">
+                <div className="data-status">
+                  <span className="status-indicator success">✓</span>
+                  <span>נתונים חולצו בהצלחה</span>
+                  {lastExtractionDate && (
+                    <small>נוצר ב-{formatDate(lastExtractionDate)}</small>
+                  )}
+                  {hasExtractedData && (
+                    <small className="loaded-from-db">נטען מהמערכת</small>
+                  )}
+                </div>
+                
+                {/* הצגת הנתונים שחולצו */}
+                <div className="extracted-data-content">
+                  {extractedData && (
+                    <div className="specs-display">
+                      <h4>מפרטים שחולצו:</h4>
+                      <div className="specs-grid">
+                        {Object.entries(extractedData).map(([key, value]) => (
+                          <div key={key} className="spec-item">
+                            <span className="spec-label">{getSpecLabel(key)}:</span>
+                            <span className="spec-value">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="action-buttons">
+                  <button 
+                    onClick={handleAIAnalysis}
+                    disabled={extractionLoading}
+                    className="btn-secondary"
+                  >
+                    {extractionLoading ? 'מחלץ נתונים...' : 'חלץ נתונים מחדש'}
+                  </button>
+                  
+                  <button 
+                    onClick={handleMarketResearch}
+                    className="btn-primary"
+                  >
+                    מחקר שוק
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="no-extracted-data">
+                <p>לא בוצע חילוץ נתונים עדיין</p>
+                <button 
+                  onClick={handleAIAnalysis}
+                  disabled={extractionLoading}
+                  className="btn-primary"
+                >
+                  {extractionLoading ? 'מחלץ נתונים...' : 'התחל ניתוח AI'}
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// פונקציה לתרגום מפתחות לעברית
+const getSpecLabel = (key) => {
+  const labels = {
+    quantity: 'כמות',
+    processor: 'מעבד',
+    memory: 'זיכרון',
+    storage: 'אחסון',
+    graphics: 'כרטיס גרפי',
+    networkCard: 'כרטיס רשת',
+    warranty: 'אחריות',
+    operatingSystem: 'מערכת הפעלה',
+    formFactor: 'גורם צורה',
+    powerSupply: 'ספק כוח'
+  };
+  return labels[key] || key;
+};
+
+// פונקציה לביצוע ניתוח AI (סימולציה של הקוד הקיים)
+const performAIAnalysis = async (request) => {
+  // סימולציה של חילוץ נתונים
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // החזר נתונים דומים לאלה שבצילום המסך
+  return {
+    quantity: 25,
+    processor: "Intel Core i7-13700 (16 cores)",
+    memory: "32GB DDR4",
+    storage: "1TB NVMe SSD",
+    graphics: "Intel UHD Graphics",
+    networkCard: "Gigabit Ethernet",
+    warranty: "3 שנות אחריות",
+    operatingSystem: "Windows 11 Pro",
+    formFactor: "Desktop Tower",
+    powerSupply: "650W 80+ Gold"
+  };
+};
+
+export default ProcurementRequestDetails;
+```
+
+### שלב 4: CSS נוסף לאינדיקטורים
+
+```css
+/* הוסף לקובץ הסטיילים הקיים */
+
+.loaded-from-db {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  margin-right: 8px;
+}
+
+.data-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.data-status small {
+  color: #666;
+  font-size: 0.85em;
+}
+
+.specs-display {
+  margin: 20px 0;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.spec-label {
+  font-weight: 500;
+  color: #495057;
+  margin-left: 8px;
+}
+
+.spec-value {
+  color: #212529;
+  font-weight: 400;
+  text-align: left;
+  direction: ltr;
+}
+
+/* אנימציה לטעינה */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2em;
+  color: #666;
+}
+```
+
+## בדיקות מפורטות לאחר התיקון
+
+### בדיקות API
+
+```bash
+# בדיקה 1: בדיקת חיבור API
+curl http://localhost:5000/api/test-connection
+
+# בדיקה 2: שמירת נתונים
+curl -X POST http://localhost:5000/api/procurement-requests/1/extracted-data \
+  -H "Content-Type: application/json" \
+  -d '{"processor": "Intel i7", "memory": "32GB"}'
+
+# בדיקה 3: קבלת נתונים
+curl http://localhost:5000/api/procurement-requests/1/extracted-data
+```
+
+### בדיקות מסד נתונים
+
+```sql
+-- בדיקה 1: וודא שהטבלה קיימת עם השדות החדשים
+DESCRIBE procurement_requests;
+
+-- בדיקה 2: בדוק נתונים שנשמרו
+SELECT id, title, extraction_status, extraction_date, 
+       SUBSTRING(extracted_data, 1, 100) as data_preview
+FROM procurement_requests 
+WHERE extracted_data IS NOT NULL;
+
+-- בדיקה 3: בדוק ספציפית את הדרישה מהצילום המסך
+SELECT * FROM procurement_requests WHERE id = 1;
+```
+
+### בדיקות פונקציונליות
+
+1. **זרימת עבודה מלאה:**
+   - היכנס לפרטי דרישת רכש
+   - בצע חילוץ נתונים (ניתוח AI)
+   - וודא שהנתונים מוצגים
+   - עבור למחקר שוק
+   - חזור לפרטי דרישת רכש
+   - **וודא שהנתונים עדיין מוצגים**
+
+2. **בדיקת רענון דף:**
+   - לאחר חילוץ נתונים, רענן את הדף
+   - וודא שהנתונים נטענים מהמסד
+
+3. **בדיקת קונסול דפדפן:**
+   - פתח את קונסול הדפדפן
+   - בדוק שאין שגיאות
+   - בדוק שההודעות מוצגות כראוי
+
+## הנחיות יישום מדויקות
+
+### סדר ביצוע חובה
+
+1. **שלב 1: בדיקת מסד נתונים (10 דקות)**
+   - וודא שהשדות החדשים קיימים
+   - אם לא, הוסף אותם עם migration
+
+2. **שלב 2: יצירת/עדכון API endpoints (20 דקות)**
+   - וודא שה-routes קיימים ועובדים
+   - בדוק עם curl או Postman
+
+3. **שלב 3: עדכון קומפוננט React (25 דקות)**
+   - החלף את הקוד בקובץ הקיים
+   - הוסף console.log לדיבוג
+   - וודא שהפונקציות נקראות
+
+4. **שלב 4: בדיקות מקיפות (15 דקות)**
+   - בצע זרימת עבודה מלאה
+   - בדוק קונסול לשגיאות
+   - וודא שהנתונים נשמרים ונטענים
+
+### נקודות קריטיות לבדיקה
+
+1. **וודא שה-API endpoints מוגדרים נכון:**
+   ```python
+   # בקובץ app.py או main.py
+   from routes.procurement import procurement_bp
+   app.register_blueprint(procurement_bp)
+   ```
+
+2. **וודא שמסד הנתונים מעודכן:**
+   ```bash
+   flask db upgrade
+   # או
+   python -c "from app import db; db.create_all()"
+   ```
+
+3. **וודא שהקומפוננט נטען מחדש:**
+   - השתמש ב-useEffect עם dependency array נכון
+   - הוסף event listener ל-window focus
+
+## סיכום
+
+תיקון זה מתמקד בפתרון הבעיה הספציפית של אי-טעינת נתונים שחולצו בעת חזרה ממסך מחקר שוק. הפתרון כולל:
+
+1. **וידוא שמירה נכונה** למסד הנתונים
+2. **וידוא טעינה נכונה** מהמסד בכל פעם שהקומפוננט נטען
+3. **הוספת לוגיקת דיבוג** לזיהוי בעיות
+4. **בדיקות מקיפות** לוידוא שהתיקון עובד
+
+**זכור: בצע את כל השלבים בסדר ובדוק כל שלב לפני המעבר לבא!**
+

@@ -51,6 +51,7 @@ export default function ProcurementRequest() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents/request", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests", id, "extracted-data"] });
+      refetchExtractedData(); // רענון מיידי של הנתונים שחולצו
     },
     onError: () => {
       toast({
@@ -388,7 +389,7 @@ export default function ProcurementRequest() {
               מחקר שוק
             </Button>
           </Link>
-          <Link href={`/cost-estimation/${request.id}`}>
+          <Link href={`/cost-estimation/${request?.id || id}`}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Bot className="w-4 h-4 ml-2" />
               צור אומדן עלות
@@ -455,13 +456,13 @@ export default function ProcurementRequest() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <FileUpload requestId={request.id} />
+              <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && documents.length > 0 && (
+              {documents && Array.isArray(documents) && documents.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
-                  {documents.map((doc: any) => (
+                  {(documents as any[]).map((doc: any) => (
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                       <div className="flex items-center space-x-reverse space-x-3">
                         <FileText className="text-destructive w-5 h-5" />
@@ -588,7 +589,7 @@ export default function ProcurementRequest() {
                   </div>
                 </div>
                 
-                {documents && documents.length > 0 && (
+                {documents && Array.isArray(documents) && documents.length > 0 && (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
                     <div>

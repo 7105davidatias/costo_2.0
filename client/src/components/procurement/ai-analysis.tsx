@@ -39,9 +39,12 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
 
   // Fetch extracted data from database
-  const { data: extractedData } = useQuery<ExtractedDataResponse>({
+  const { data: extractedData, refetch: refetchExtractedData } = useQuery<ExtractedDataResponse>({
     queryKey: ['/api/procurement-requests', requestId, 'extracted-data'],
     enabled: !!requestId,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // תמיד טען נתונים טריים
   });
 
   // Fetch estimation methods when analysis is completed
@@ -52,13 +55,18 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
 
   // Initialize state based on extracted data
   useEffect(() => {
+    console.log('AIAnalysis - extractedData changed:', extractedData);
     if (extractedData?.hasData && extractedData?.data) {
+      console.log('AIAnalysis - Setting up extracted data:', extractedData.data);
       setAnalysisCompleted(true);
       setAnalysisProgress(100);
+      setAnalysisStarted(true); // חשוב! צריך לסמן שהניתוח התחיל
       setExtractedSpecs(extractedData.data);
       setSteps(prevSteps => 
         prevSteps.map(step => ({ ...step, status: 'completed' as const }))
       );
+    } else {
+      console.log('AIAnalysis - No extracted data available');
     }
   }, [extractedData]);
 
@@ -174,6 +182,15 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-muted-foreground p-2 bg-muted/10 rounded">
+                Debug: hasData={extractedData?.hasData ? 'true' : 'false'}, 
+                analysisStarted={analysisStarted ? 'true' : 'false'}, 
+                analysisCompleted={analysisCompleted ? 'true' : 'false'}
+              </div>
+            )}
+            
             {/* Overall Progress */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -328,7 +345,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                   </div>
 
                   {/* Estimation Methods Section */}
-                  {estimationMethods && estimationMethods.recommendedMethods && (
+                  {estimationMethods && (estimationMethods as any)?.recommendedMethods && (
                     <div className="mt-8 pt-6 border-t border-muted/20">
                       <div className="mb-6">
                         <h5 className="font-medium text-foreground mb-2 flex items-center space-x-reverse space-x-2">
