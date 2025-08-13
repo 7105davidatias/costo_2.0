@@ -715,6 +715,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints for demo purposes
+  app.post("/api/admin/reset-all-requests-status", async (req, res) => {
+    try {
+      console.log('Admin reset endpoint called');
+      const result = await storage.resetAllRequestsStatus();
+      console.log('Reset result:', result);
+      
+      res.json({
+        success: true,
+        message: 'סטטוס דרישות אופס בהצלחה לצורך הדגמה',
+        totalRequests: result.totalRequests,
+        updatedRequests: result.updatedRequests,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error resetting requests status:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה באיפוס סטטוס דרישות'
+      });
+    }
+  });
+
+  app.get("/api/admin/requests-status-summary", async (req, res) => {
+    try {
+      const requests = await storage.getProcurementRequests();
+      const statusSummary: { [key: string]: number } = {};
+      
+      requests.forEach(request => {
+        statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
+      });
+
+      res.json({
+        success: true,
+        statusSummary,
+        totalRequests: requests.length
+      });
+    } catch (error) {
+      console.error('Error getting status summary:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה בקבלת סיכום סטטוסים'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

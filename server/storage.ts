@@ -49,6 +49,9 @@ export interface IStorage {
   saveExtractedData(requestId: number, data: any): Promise<void>;
   getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null>;
   clearExtractedData(requestId: number): Promise<void>;
+
+  // Admin functions for demo reset
+  resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }>;
 }
 
 export class MemStorage implements IStorage {
@@ -1349,6 +1352,37 @@ export class MemStorage implements IStorage {
     };
 
     this.procurementRequests.set(requestId, updatedRequest);
+  }
+
+  // Reset all requests status for demo purposes
+  async resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }> {
+    const totalRequests = this.procurementRequests.size;
+    let updatedRequests = 0;
+
+    // Manually update each request status to "new"
+    const allRequests = Array.from(this.procurementRequests.values());
+    console.log(`Starting reset of ${totalRequests} requests...`);
+    
+    for (const request of allRequests) {
+      if (request.status !== "new") {
+        console.log(`Updating request ${request.id} from ${request.status} to new`);
+        request.status = "new";
+        request.updatedAt = new Date();
+        this.procurementRequests.set(request.id, request);
+        updatedRequests++;
+      }
+    }
+
+    console.log(`Demo reset completed: ${updatedRequests} requests updated out of ${totalRequests} total`);
+    
+    // Verify the changes
+    const statusSummary: { [key: string]: number } = {};
+    for (const request of this.procurementRequests.values()) {
+      statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
+    }
+    console.log('Status summary after reset:', statusSummary);
+    
+    return { totalRequests, updatedRequests };
   }
 }
 

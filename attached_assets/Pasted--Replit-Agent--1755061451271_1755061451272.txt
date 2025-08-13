@@ -1,0 +1,436 @@
+# הנחיה ל-Replit Agent: איפוס סטטוס דרישות רכש לצורך הדגמה
+
+## תיאור המשימה
+
+**🎯 מטרה:**
+איפוס סטטוס כל דרישות הרכש בתור העבודה לסטטוס "טרם טופל" כדי לאפשר הדגמה של התהליך מההתחלה.
+
+**📋 דרישה:**
+כל הדרישות במערכת צריכות לחזור לסטטוס ראשוני של "טרם טופל" (או "pending") כך שניתן יהיה להדגים את כל תהליך הטיפול בדרישות מההתחלה.
+
+## הנחיות כלליות חשובות
+
+**⚠️ הגבלות חשובות:**
+- בצע רק את האיפוס המתואר להלן
+- אל תשנה דבר אחר בגרסה הקיימת
+- שמור על כל הנתונים הקיימים (רק שנה סטטוס)
+- שמור על כל הפונקציונליות הקיימת
+- שמור על כל העיצוב והסטיילינג הקיים
+
+**🔒 זהירות:**
+- צור גיבוי של מסד הנתונים לפני הביצוע
+- וודא שהאיפוס לא ישפיע על נתונים חיוניים אחרים
+
+## פתרון מפורט
+
+### שלב 1: איפוס סטטוס במסד הנתונים
+
+#### אופציה 1: עדכון ישיר במסד הנתונים (מומלץ)
+
+```sql
+-- גיבוי לפני השינוי
+CREATE TABLE procurement_requests_backup AS 
+SELECT * FROM procurement_requests;
+
+-- איפוס סטטוס כל הדרישות
+UPDATE procurement_requests 
+SET status = 'pending'
+WHERE status != 'pending';
+
+-- בדיקה שהעדכון בוצע
+SELECT status, COUNT(*) as count 
+FROM procurement_requests 
+GROUP BY status;
+```
+
+#### אופציה 2: עדכון דרך API endpoint
+
+```python
+# בקובץ routes/procurement.py
+from flask import Blueprint, jsonify
+from models.procurement import ProcurementRequest
+from database import db
+
+@procurement_bp.route('/api/admin/reset-all-requests-status', methods=['POST'])
+def reset_all_requests_status():
+    """איפוס סטטוס כל דרישות הרכש לצורך הדגמה"""
+    try:
+        # ספירת דרישות לפני העדכון
+        total_requests = ProcurementRequest.query.count()
+        requests_to_update = ProcurementRequest.query.filter(
+            ProcurementRequest.status != 'pending'
+        ).count()
+        
+        # ביצוע האיפוס
+        updated_count = ProcurementRequest.query.filter(
+            ProcurementRequest.status != 'pending'
+        ).update({'status': 'pending'})
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'סטטוס דרישות אופס בהצלחה',
+            'total_requests': total_requests,
+            'updated_requests': updated_count,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'שגיאה באיפוס סטטוס: {str(e)}'
+        }), 500
+
+@procurement_bp.route('/api/admin/requests-status-summary', methods=['GET'])
+def get_requests_status_summary():
+    """קבלת סיכום סטטוסים של דרישות"""
+    try:
+        from sqlalchemy import func
+        
+        status_summary = db.session.query(
+            ProcurementRequest.status,
+            func.count(ProcurementRequest.id).label('count')
+        ).group_by(ProcurementRequest.status).all()
+        
+        summary = {status: count for status, count in status_summary}
+        
+        return jsonify({
+            'success': True,
+            'status_summary': summary,
+            'total_requests': sum(summary.values())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'שגיאה בקבלת סיכום: {str(e)}'
+        }), 500
+```
+
+### שלב 2: איפוס נתונים נוספים (אופציונלי)
+
+אם יש צורך לאפס גם נתונים נוספים שקשורים לטיפול בדרישות:
+
+```sql
+-- איפוס נתונים שחולצו (אם רוצים להתחיל מאפס)
+UPDATE procurement_requests 
+SET 
+    extracted_data = NULL,
+    extraction_date = NULL,
+    extraction_status = 'not_extracted'
+WHERE extraction_status = 'extracted';
+
+-- איפוס תאריכי עדכון אחרונים (אופציונלי)
+UPDATE procurement_requests 
+SET last_updated = created_date;
+```
+
+### שלב 3: יצירת כפתור איפוס בממשק (אופציונלי)
+
+אם רוצים להוסיף כפתור איפוס בממשק המנהל:
+
+```jsx
+// קומפוננט לאיפוס סטטוס דרישות
+import React, { useState } from 'react';
+
+const AdminResetPanel = () => {
+  const [loading, setLoading] = useState(false);
+  const [statusSummary, setStatusSummary] = useState(null);
+
+  const loadStatusSummary = async () => {
+    try {
+      const response = await fetch('/api/admin/requests-status-summary');
+      const data = await response.json();
+      if (data.success) {
+        setStatusSummary(data.status_summary);
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת סיכום סטטוסים:', error);
+    }
+  };
+
+  const resetAllRequestsStatus = async () => {
+    if (!confirm('האם אתה בטוח שברצונך לאפס את סטטוס כל הדרישות? פעולה זו לא ניתנת לביטול.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/reset-all-requests-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`איפוס הושלם בהצלחה!\nעודכנו ${result.updated_requests} דרישות מתוך ${result.total_requests}`);
+        loadStatusSummary(); // רענון הסיכום
+      } else {
+        alert('שגיאה באיפוס: ' + result.error);
+      }
+    } catch (error) {
+      console.error('שגיאה באיפוס:', error);
+      alert('שגיאה באיפוס הסטטוס');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadStatusSummary();
+  }, []);
+
+  return (
+    <div className="admin-reset-panel">
+      <h3>איפוס סטטוס דרישות לצורך הדגמה</h3>
+      
+      {statusSummary && (
+        <div className="status-summary">
+          <h4>סיכום סטטוסים נוכחי:</h4>
+          <ul>
+            {Object.entries(statusSummary).map(([status, count]) => (
+              <li key={status}>
+                {status}: {count} דרישות
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      <div className="reset-actions">
+        <button 
+          onClick={resetAllRequestsStatus}
+          disabled={loading}
+          className="btn-danger"
+        >
+          {loading ? 'מאפס...' : 'אפס את כל הדרישות לסטטוס "טרם טופל"'}
+        </button>
+        
+        <button 
+          onClick={loadStatusSummary}
+          className="btn-secondary"
+        >
+          רענן סיכום
+        </button>
+      </div>
+      
+      <div className="warning-text">
+        <p>⚠️ פעולת האיפוס תשנה את סטטוס כל הדרישות ל-"טרם טופל"</p>
+        <p>🔄 פעולה זו מיועדת לצורך הדגמה בלבד</p>
+      </div>
+    </div>
+  );
+};
+
+export default AdminResetPanel;
+```
+
+### שלב 4: CSS לכפתור האיפוס
+
+```css
+.admin-reset-panel {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.admin-reset-panel h3 {
+  color: #856404;
+  margin-bottom: 15px;
+}
+
+.status-summary {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+.status-summary ul {
+  list-style: none;
+  padding: 0;
+}
+
+.status-summary li {
+  padding: 5px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.status-summary li:last-child {
+  border-bottom: none;
+}
+
+.reset-actions {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-danger:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.warning-text {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 15px;
+}
+
+.warning-text p {
+  margin: 5px 0;
+  font-size: 0.9em;
+}
+```
+
+## בדיקות נדרשות לאחר האיפוס
+
+### בדיקות מסד נתונים
+
+```sql
+-- בדיקה 1: וודא שכל הדרישות בסטטוס "pending"
+SELECT status, COUNT(*) as count 
+FROM procurement_requests 
+GROUP BY status;
+
+-- בדיקה 2: וודא שהנתונים האחרים לא נפגעו
+SELECT id, title, status, created_date 
+FROM procurement_requests 
+LIMIT 5;
+
+-- בדיקה 3: בדוק שהגיבוי נוצר (אם השתמשת בגיבוי)
+SELECT COUNT(*) FROM procurement_requests_backup;
+```
+
+### בדיקות ממשק משתמש
+
+1. **בדיקת רשימת דרישות:**
+   - היכנס למסך דרישות רכש
+   - וודא שכל הדרישות מוצגות בסטטוס "טרם טופל"
+
+2. **בדיקת לוח בקרה:**
+   - בדוק שהסטטיסטיקות מעודכנות
+   - וודא שמספר הדרישות הממתינות עלה
+
+3. **בדיקת פונקציונליות:**
+   - נסה לטפל בדרישה
+   - וודא שהתהליך עובד כרגיל
+
+## הנחיות יישום
+
+### סדר ביצוע מומלץ
+
+1. **שלב 1: גיבוי (5 דקות)**
+   - צור גיבוי של מסד הנתונים
+   - שמור את הגיבוי במקום בטוח
+
+2. **שלב 2: איפוס סטטוס (10 דקות)**
+   - בחר באופציה המתאימה (SQL ישיר או API)
+   - בצע את האיפוס
+   - בדוק שהעדכון בוצע
+
+3. **שלב 3: בדיקות (10 דקות)**
+   - בדוק במסד הנתונים
+   - בדוק בממשק המשתמש
+   - וודא שהכל עובד כרגיל
+
+4. **שלב 4: הוספת כפתור איפוס (אופציונלי - 20 דקות)**
+   - הוסף את הקומפוננט החדש
+   - הוסף את ה-API endpoints
+   - בדוק שהכפתור עובד
+
+### נקודות חשובות לזכור
+
+1. **גיבוי חובה:**
+   - תמיד צור גיבוי לפני שינויים במסד נתונים
+   - שמור את הגיבוי במקום נגיש
+
+2. **בדיקה לפני ואחרי:**
+   - ספור כמה דרישות יש לפני האיפוס
+   - וודא שהמספר נשמר אחרי האיפוס
+
+3. **תיעוד השינוי:**
+   - רשום מתי בוצע האיפוס
+   - שמור פרטים על השינויים שבוצעו
+
+## דוגמאות לשימוש
+
+### דוגמה 1: איפוס פשוט עם SQL
+
+```sql
+-- בדיקה לפני
+SELECT 'לפני איפוס' as timing, status, COUNT(*) as count 
+FROM procurement_requests 
+GROUP BY status;
+
+-- ביצוע האיפוס
+UPDATE procurement_requests SET status = 'pending';
+
+-- בדיקה אחרי
+SELECT 'אחרי איפוס' as timing, status, COUNT(*) as count 
+FROM procurement_requests 
+GROUP BY status;
+```
+
+### דוגמה 2: איפוס עם API
+
+```bash
+# בדיקת סטטוס נוכחי
+curl http://localhost:5000/api/admin/requests-status-summary
+
+# ביצוע איפוס
+curl -X POST http://localhost:5000/api/admin/reset-all-requests-status
+
+# בדיקת סטטוס אחרי איפוס
+curl http://localhost:5000/api/admin/requests-status-summary
+```
+
+## סיכום
+
+איפוס זה מאפשר הדגמה מלאה של תהליך הטיפול בדרישות רכש מההתחלה על ידי:
+
+1. **החזרת כל הדרישות לסטטוס ראשוני** - "טרם טופל"
+2. **שמירה על כל הנתונים האחרים** - רק הסטטוס משתנה
+3. **אפשרות לאיפוס חוזר** - לצורך הדגמות נוספות
+4. **כלי ניהול נוח** - כפתור איפוס בממשק המנהל
+
+**זכור: פעולה זו מיועדת לצורך הדגמה בלבד ולא לשימוש בסביבת ייצור!**
