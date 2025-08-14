@@ -761,6 +761,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/reset-cost-estimations", async (req, res) => {
+    try {
+      console.log('Admin reset cost estimations endpoint called');
+      const result = await storage.resetAllCostEstimations();
+      console.log('Reset cost estimations result:', result);
+      
+      res.json({
+        success: true,
+        message: 'אומדני עלויות אופסו בהצלחה לצורך הדגמה',
+        totalEstimations: result.totalEstimations,
+        clearedEstimations: result.clearedEstimations,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error resetting cost estimations:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה באיפוס אומדני עלויות'
+      });
+    }
+  });
+
+  app.post("/api/admin/reset-all-demo-data", async (req, res) => {
+    try {
+      console.log('Admin reset all demo data endpoint called');
+      
+      // Reset both requests status and cost estimations
+      const requestsResult = await storage.resetAllRequestsStatus();
+      const estimationsResult = await storage.resetAllCostEstimations();
+      
+      res.json({
+        success: true,
+        message: 'כל נתוני ההדגמה אופסו בהצלחה',
+        requestsReset: {
+          totalRequests: requestsResult.totalRequests,
+          updatedRequests: requestsResult.updatedRequests
+        },
+        estimationsReset: {
+          totalEstimations: estimationsResult.totalEstimations,
+          clearedEstimations: estimationsResult.clearedEstimations
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error resetting all demo data:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה באיפוס נתוני הדגמה'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

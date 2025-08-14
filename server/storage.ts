@@ -1384,6 +1384,29 @@ export class MemStorage implements IStorage {
     
     return { totalRequests, updatedRequests };
   }
+
+  // Reset all cost estimates for demo purposes
+  async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
+    const totalEstimations = this.costEstimations.size;
+    console.log(`Starting reset of ${totalEstimations} cost estimations...`);
+    
+    // Clear all cost estimations
+    this.costEstimations.clear();
+    
+    // Also clear estimated costs from procurement requests
+    let updatedRequests = 0;
+    for (const [id, request] of this.procurementRequests.entries()) {
+      if (request.estimatedCost) {
+        request.estimatedCost = null;
+        request.updatedAt = new Date();
+        this.procurementRequests.set(id, request);
+        updatedRequests++;
+      }
+    }
+
+    console.log(`Cost estimations reset completed: ${totalEstimations} estimations cleared, ${updatedRequests} requests updated`);
+    return { totalEstimations, clearedEstimations: totalEstimations };
+  }
 }
 
 export const storage = new MemStorage();
