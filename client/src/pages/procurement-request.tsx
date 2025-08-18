@@ -14,6 +14,7 @@ import AIAnalysis from "@/components/procurement/ai-analysis";
 import WorkflowProgress from "@/components/ui/workflow-progress";
 import SpecsDisplay from "@/components/procurement/specs-display";
 import EstimationMethods from "@/components/procurement/estimation-methods";
+import { useMobile } from "@/hooks/use-mobile";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
@@ -24,6 +25,7 @@ export default function ProcurementRequest() {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useMobile();
 
   const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
@@ -416,7 +418,10 @@ export default function ProcurementRequest() {
       <div className="space-y-8">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className={cn(
+          "grid gap-4 md:gap-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
+        )}>
             <div className="lg:col-span-2 space-y-6">
               <div className="h-64 bg-muted rounded"></div>
               <div className="h-48 bg-muted rounded"></div>
@@ -461,9 +466,13 @@ export default function ProcurementRequest() {
   const statusConfig = getStatusBadge(request.status);
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+        {/* Page Header */}
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile ? "flex-col space-y-2" : "flex-row"
+        )}>
         <div>
           <div className="flex items-center gap-4 mb-2">
             <Link href="/dashboard">
@@ -472,7 +481,7 @@ export default function ProcurementRequest() {
                 חזרה
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center md:text-right">
               פרטי דרישת רכש - {request.requestNumber}
             </h1>
           </div>
@@ -500,9 +509,12 @@ export default function ProcurementRequest() {
         currentProgress={workflowProgress}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={cn(
+          "grid gap-4 md:gap-8",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
+        )}>
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Basic Information */}
           <Card className="bg-card border-primary/20">
             <CardHeader>
@@ -793,6 +805,7 @@ export default function ProcurementRequest() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

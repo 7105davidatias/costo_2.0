@@ -1,0 +1,421 @@
+מימוש מדורג - שלב ג': שיפורים מתקדמים 
+
+משימה 6: שיפור קומפוננט העלאת מסמכים
+
+הקשר והמטרה:
+נשפר את קומפוננט העלאת המסמכים הקיים להיות יותר אינטראקטיבי ונגיש, עם תמיכה ב-drag & drop ופידבק חזותי משופר.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 6.1: עדכון קומפוננט FileUpload
+אתר את הקובץ client/src/components/ui/file-upload.tsx ועדכן אותו:
+
+TypeScript
+
+
+// client/src/components/ui/file-upload.tsx - עדכון קיים
+import React, { useState, useCallback, useRef } from 'react';
+import { Upload, FileText, X, Eye, Download, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  status: 'uploading' | 'completed' | 'error';
+  progress?: number;
+  analyzed?: boolean;
+}
+
+interface FileUploadProps {
+  files: UploadedFile[];
+  onFileUpload: (files: FileList) => void;
+  onFileRemove: (fileId: string) => void;
+  onFileView: (fileId: string) => void;
+  maxFiles?: number;
+  maxSize?: number; // in MB
+  acceptedTypes?: string[];
+  className?: string;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  files,
+  onFileUpload,
+  onFileRemove,
+  onFileView,
+  maxFiles = 10,
+  maxSize = 10,
+  acceptedTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'],
+  className
+}) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+      onFileUpload(droppedFiles);
+    }
+  }, [onFileUpload]);
+
+  const handleFileSelect = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      onFileUpload(selectedFiles);
+    }
+    // Reset input
+    e.target.value = '';
+  }, [onFileUpload]);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('doc')) return '📝';
+    if (type.includes('xls') || type.includes('sheet')) return '📊';
+    return '📎';
+  };
+
+  return (
+    <Card className={cn('procurement-card', className)}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="procurement-text-heading text-procurement-lg">
+            מסמכים
+          </CardTitle>
+          <Badge variant="outline" className="text-procurement-text-muted">
+            {files.length} קבצים
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* אזור העלאה */}
+        <div
+          className={cn(
+            'border-2 border-dashed rounded-procurement-lg p-6 text-center transition-all duration-300 cursor-pointer',
+            isDragOver 
+              ? 'border-procurement-primary-blue bg-procurement-primary-blue/10' 
+              : 'border-procurement-text-muted/50 hover:border-procurement-primary-blue/50 hover:bg-procurement-primary-blue/5'
+          )}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleFileSelect}
+          role="button"
+          tabIndex={0}
+          aria-label="העלה קבצים"
+        >
+          <Upload className={cn(
+            'w-8 h-8 mx-auto mb-2 transition-colors',
+            isDragOver ? 'text-procurement-primary-blue' : 'text-procurement-text-muted'
+          )} />
+          <p className="procurement-text-body mb-2">
+            {isDragOver ? 'שחרר כדי להעלות' : 'גרור ושחרר קבצים כאן או'}
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-procurement-primary-blue border-procurement-primary-blue hover:bg-procurement-primary-blue/10"
+          >
+            בחר קבצים
+          </Button>
+          <p className="text-procurement-xs procurement-text-muted mt-2">
+            {acceptedTypes.join(', ')} עד {maxSize}MB
+          </p>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={acceptedTypes.join(',')}
+            onChange={handleFileChange}
+            className="hidden"
+            aria-hidden="true"
+          />
+        </div>
+        
+        {/* קבצים שהועלו */}
+        {files.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="procurement-text-heading text-procurement-sm">
+              קבצים שהועלו
+            </h4>
+            
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="bg-procurement-background-hover rounded-procurement-lg p-4 transition-all duration-200 hover:bg-procurement-background-card"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="text-2xl">
+                      {getFileIcon(file.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="procurement-text-body font-medium truncate">
+                        {file.name}
+                      </h4>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-procurement-xs procurement-text-muted">
+                          {formatFileSize(file.size)} • {file.type.split('/')[1]?.toUpperCase()}
+                        </span>
+                        {file.analyzed && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-procurement-success-green border-procurement-success-green"
+                          >
+                            נותח
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {/* פס התקדמות העלאה */}
+                      {file.status === 'uploading' && file.progress !== undefined && (
+                        <Progress 
+                          value={file.progress} 
+                          className="mt-2 h-1"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {file.status === 'completed' && (
+                      <CheckCircle className="w-4 h-4 text-procurement-success-green" />
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onFileView(file.id)}
+                      className="text-procurement-primary-blue hover:text-procurement-primary-blue-hover hover:bg-procurement-primary-blue/10"
+                      aria-label={`צפה בקובץ ${file.name}`}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onFileRemove(file.id)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      aria-label={`הסר קובץ ${file.name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default FileUpload;
+
+
+משימה 7: אופטימיזציה למובייל ורספונסיביות
+
+הקשר והמטרה:
+נוודא שכל הקומפוננטים שיצרנו עובדים מצוין במכשירים ניידים ונוסיף שיפורים ספציפיים למובייל.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 7.1: עדכון תצורת Tailwind למובייל
+עדכן את tailwind.config.ts:
+
+TypeScript
+
+
+// הוסף לחלק theme.extend
+screens: {
+  'xs': '475px',
+  'sm': '640px',
+  'md': '768px',
+  'lg': '1024px',
+  'xl': '1280px',
+  '2xl': '1536px',
+},
+
+
+שלב 7.2: יצירת hook למובייל
+עדכן את client/src/hooks/use-mobile.tsx:
+
+TypeScript
+
+
+// client/src/hooks/use-mobile.tsx
+import { useState, useEffect } from 'react';
+
+const MOBILE_BREAKPOINT = 768;
+
+export function useMobile() {
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    
+    mql.addEventListener('change', onChange);
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
+}
+
+
+שלב 7.3: עדכון הדף הראשי לרספונסיביות
+עדכן את client/src/pages/procurement-request.tsx:
+
+TypeScript
+
+
+// הוסף import
+import { useMobile } from '@/hooks/use-mobile';
+
+// בתוך הקומפוננט
+const isMobile = useMobile();
+
+// עדכן את ה-JSX
+return (
+  <div className="min-h-screen bg-procurement-background-primary p-procurement-sm md:p-procurement-md">
+    <div className="max-w-7xl mx-auto space-y-procurement-md md:space-y-procurement-lg">
+      
+      {/* כותרת הדף - רספונסיבית */}
+      <div className={cn(
+        "flex items-center justify-between",
+        isMobile ? "flex-col space-y-2" : "flex-row"
+      )}>
+        <h1 className="procurement-text-heading text-procurement-2xl md:text-procurement-3xl text-center md:text-right">
+          פרטי דרישת רכש REQ-2024-001
+        </h1>
+        <Badge variant="outline" className="text-procurement-success-green border-procurement-success-green">
+          פעיל
+        </Badge>
+      </div>
+      
+      {/* פס התקדמות */}
+      <WorkflowProgress 
+        steps={workflowSteps}
+        currentProgress={workflowProgress}
+        className={isMobile ? "px-2" : ""}
+      />
+      
+      {/* תוכן ראשי - grid רספונסיבי */}
+      <div className={cn(
+        "grid gap-procurement-md md:gap-procurement-lg",
+        isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+      )}>
+        
+        {/* עמודה שמאלית */}
+        <div className="space-y-procurement-md md:space-y-procurement-lg">
+          <SpecsDisplay 
+            specs={procurementSpecs}
+          />
+          
+          {!isMobile && (
+            <FileUpload
+              files={uploadedFiles}
+              onFileUpload={handleFileUpload}
+              onFileRemove={handleFileRemove}
+              onFileView={handleFileView}
+            />
+          )}
+        </div>
+        
+        {/* עמודה ימנית */}
+        <div className="space-y-procurement-md md:space-y-procurement-lg">
+          <EstimationMethods
+            methods={estimationMethodsWithSelection}
+            onMethodToggle={handleMethodToggle}
+            onCreateEstimate={handleCreateEstimate}
+            isLoading={isLoading}
+          />
+          
+          {isMobile && (
+            <FileUpload
+              files={uploadedFiles}
+              onFileUpload={handleFileUpload}
+              onFileRemove={handleFileRemove}
+              onFileView={handleFileView}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+
+הנחיות לבדיקות איכות ב-Replit (מעודכן למבנה הפרויקט)
+
+בדיקות פיתוח
+
+שלב 1: בדיקת TypeScript
+
+Bash
+
+
+# ב-terminal של Replit
+cd client
+npm run type-check
+# או
+npx tsc --noEmit
+
+
+שלב 2: בדיקת Linting
+
+Bash
+
+
+npm run lint
+# או
+npx eslint src/
+
+
+שלב 3: בדיקת Build
+
+Bash
+
+
+npm run build
+
+
+
+
