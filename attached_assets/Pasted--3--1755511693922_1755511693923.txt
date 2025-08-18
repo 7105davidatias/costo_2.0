@@ -1,0 +1,185 @@
+משימה 3: יצירת קומפוננט פס התקדמות
+
+הקשר והמטרה:
+ניצור קומפוננט נפרד לפס התקדמות שיהיה ניתן לשימוש חוזר ויכלול אנימציות עדינות.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 3.1: יצירת קומפוננט WorkflowProgress
+צור קובץ חדש client/src/components/ui/workflow-progress.tsx:
+
+TypeScript
+
+
+// client/src/components/ui/workflow-progress.tsx
+import React from 'react';
+import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface WorkflowStep {
+  id: number;
+  title: string;
+  status: 'completed' | 'active' | 'pending';
+  description?: string;
+}
+
+interface WorkflowProgressProps {
+  steps: WorkflowStep[];
+  currentProgress: number; // אחוז התקדמות (0-100)
+  className?: string;
+}
+
+const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ 
+  steps, 
+  currentProgress, 
+  className 
+}) => {
+  const getStepIcon = (status: WorkflowStep['status']) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-5 h-5" />;
+      case 'active':
+        return <Clock className="w-5 h-5 animate-pulse" />;
+      case 'pending':
+        return <AlertCircle className="w-5 h-5" />;
+      default:
+        return <Clock className="w-5 h-5" />;
+    }
+  };
+
+  const getStepStyles = (status: WorkflowStep['status']) => {
+    switch (status) {
+      case 'completed':
+        return {
+          circle: 'bg-procurement-success-green text-white border-procurement-success-green',
+          text: 'text-procurement-success-green',
+          line: 'bg-procurement-success-green'
+        };
+      case 'active':
+        return {
+          circle: 'bg-procurement-primary-blue text-white border-procurement-primary-blue shadow-lg shadow-procurement-primary-blue/30',
+          text: 'text-procurement-primary-blue font-medium',
+          line: 'bg-procurement-primary-blue'
+        };
+      case 'pending':
+        return {
+          circle: 'bg-procurement-background-hover text-procurement-text-muted border-procurement-text-muted',
+          text: 'text-procurement-text-muted',
+          line: 'bg-procurement-text-muted'
+        };
+      default:
+        return {
+          circle: 'bg-procurement-background-hover text-procurement-text-muted border-procurement-text-muted',
+          text: 'text-procurement-text-muted',
+          line: 'bg-procurement-text-muted'
+        };
+    }
+  };
+
+  return (
+    <div className={cn('procurement-card', className)}>
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="procurement-text-heading text-procurement-lg">התקדמות התהליך</h4>
+        <span className="procurement-text-muted text-procurement-sm">
+          {Math.round(currentProgress)}% הושלם
+        </span>
+      </div>
+      
+      {/* פס התקדמות */}
+      <div className="w-full bg-procurement-background-hover rounded-full h-2 mb-6">
+        <div 
+          className="bg-procurement-primary-blue h-2 rounded-full transition-all duration-1000 ease-out"
+          style={{ width: `${currentProgress}%` }}
+        />
+      </div>
+      
+      {/* שלבי התהליך */}
+      <div className="relative">
+        {/* קו חיבור */}
+        <div className="absolute top-6 left-0 right-0 h-0.5 bg-procurement-text-muted/30 -z-10" />
+        <div 
+          className="absolute top-6 left-0 h-0.5 bg-procurement-primary-blue transition-all duration-1000 ease-out -z-10"
+          style={{ width: `${currentProgress}%` }}
+        />
+        
+        <div className="flex items-start justify-between">
+          {steps.map((step, index) => {
+            const styles = getStepStyles(step.status);
+            
+            return (
+              <div key={step.id} className="flex flex-col items-center text-center max-w-24">
+                {/* אייקון השלב */}
+                <div className={cn(
+                  'w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all duration-300 relative z-10',
+                  styles.circle
+                )}>
+                  {getStepIcon(step.status)}
+                </div>
+                
+                {/* כותרת השלב */}
+                <span className={cn(
+                  'text-procurement-xs font-medium mb-1 leading-tight',
+                  styles.text
+                )}>
+                  {step.title}
+                </span>
+                
+                {/* תיאור השלב */}
+                {step.description && (
+                  <span className="text-procurement-xs procurement-text-muted leading-tight">
+                    {step.description}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WorkflowProgress;
+
+
+שלב 3.2: שימוש בקומפוננט החדש
+עדכן את client/src/pages/procurement-request.tsx להשתמש בקומפוננט החדש:
+
+TypeScript
+
+
+// בתוך procurement-request.tsx
+import WorkflowProgress from '@/components/ui/workflow-progress';
+
+// בתוך ה-JSX של הקומפוננט
+return (
+  <div className="min-h-screen bg-procurement-background-primary p-procurement-md">
+    <div className="max-w-7xl mx-auto space-y-procurement-lg">
+      
+      {/* כותרת הדף */}
+      <div className="flex items-center justify-between">
+        <h1 className="procurement-text-heading text-procurement-3xl">
+          פרטי דרישת רכש REQ-2024-001
+        </h1>
+        <Badge variant="outline" className="text-procurement-success-green border-procurement-success-green">
+          פעיל
+        </Badge>
+      </div>
+      
+      {/* פס התקדמות */}
+      <WorkflowProgress 
+        steps={workflowSteps}
+        currentProgress={workflowProgress}
+      />
+      
+      {/* שאר התוכן... */}
+    </div>
+  </div>
+);
+
+
+בדיקה ב-Replit:
+שמור את הקבצים ובדוק שפס התקדמות מופיע כראוי עם אנימציות חלקות. הפס צריך להציג 50% התקדמות עם שני שלבים מושלמים ושלב אחד פעיל.
+
+
+

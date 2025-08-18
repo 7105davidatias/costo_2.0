@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
+import WorkflowProgress from "@/components/ui/workflow-progress";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
@@ -66,6 +67,19 @@ export default function ProcurementRequest() {
     setSelectedDocument(doc);
     setDocumentDialogOpen(true);
   };
+
+  // נתוני שלבי התהליך
+  const workflowSteps = [
+    { id: 1, title: 'בקשה נוצרה', status: 'completed' as const, description: request?.createdAt ? new Date(request.createdAt).toLocaleDateString('he-IL') : '' },
+    { id: 2, title: 'מסמכים הועלו', status: (documents && Array.isArray(documents) && (documents as any[]).length > 0) ? 'completed' as const : 'pending' as const, description: documents && Array.isArray(documents) ? `${(documents as any[]).length} קבצים` : 'ממתין' },
+    { id: 3, title: 'ניתוח AI', status: (request?.status === 'processing' ? 'active' : (request?.status === 'completed' ? 'completed' : 'pending')) as const, description: request?.status === 'processing' ? 'בתהליך' : (request?.status === 'completed' ? 'הושלם' : 'ממתין') },
+    { id: 4, title: 'הערכת עלות', status: (request?.status === 'completed' ? 'completed' : 'pending') as const, description: request?.status === 'completed' ? 'הושלם' : 'ממתין' }
+  ];
+
+  // חישוב אחוז התקדמות
+  const completedSteps = workflowSteps.filter(step => step.status === 'completed').length;
+  const activeSteps = workflowSteps.filter(step => step.status === 'active').length;
+  const workflowProgress = ((completedSteps + (activeSteps * 0.5)) / workflowSteps.length) * 100;
 
   const getDocumentContent = (doc: any) => {
     // Sample document content based on the document from the requirements
@@ -398,6 +412,12 @@ export default function ProcurementRequest() {
         </div>
       </div>
 
+      {/* Workflow Progress */}
+      <WorkflowProgress 
+        steps={workflowSteps}
+        currentProgress={workflowProgress}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -459,7 +479,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && (documents as any[]).length > 0 && (
+              {documents && Array.isArray(documents) && documents.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -589,13 +609,13 @@ export default function ProcurementRequest() {
                   </div>
                 </div>
                 
-                {documents && Array.isArray(documents) && (documents as any[]).length > 0 && (
+                {documents && Array.isArray(documents) && documents.length > 0 && (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
                     <div>
                       <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
                       <p className="text-xs text-muted-foreground">
-                        {(documents as any[]).length} קבצים
+                        {documents.length} קבצים
                       </p>
                     </div>
                   </div>
