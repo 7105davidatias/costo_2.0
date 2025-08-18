@@ -1,0 +1,172 @@
+משימה 1: הוספת משתני CSS לעקביות עיצובית
+
+הקשר והמטרה:
+הפרויקט משתמש ב-Tailwind CSS ו-TypeScript. המטרה היא ליצור מערכת עקבית של משתנים ב-tailwind.config.ts ובקבצי CSS מותאמים.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 1.1: עדכון תצורת Tailwind
+פתח את הקובץ tailwind.config.ts והוסף את המשתנים הבאים לחלק theme.extend:
+
+TypeScript
+
+
+// tailwind.config.ts
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  // ... תצורה קיימת
+  theme: {
+    extend: {
+      // צבעים מותאמים למערכת רכש
+      colors: {
+        procurement: {
+          background: {
+            primary: '#1e293b',    // slate-800
+            card: '#334155',       // slate-700
+            hover: '#475569',      // slate-600
+          },
+          primary: {
+            blue: '#3b82f6',       // blue-500
+            'blue-hover': '#2563eb', // blue-600
+            'blue-light': '#60a5fa', // blue-400
+          },
+          secondary: {
+            pink: '#ec4899',       // pink-500
+            'pink-hover': '#db2777', // pink-600
+            'pink-light': '#f472b6', // pink-400
+          },
+          success: {
+            green: '#10b981',      // emerald-500
+            'green-hover': '#059669', // emerald-600
+            'green-light': '#34d399', // emerald-400
+          },
+          warning: {
+            amber: '#f59e0b',      // amber-500
+            'amber-hover': '#d97706', // amber-600
+            'amber-light': '#fbbf24', // amber-400
+          },
+          text: {
+            primary: '#ffffff',    // white
+            secondary: '#cbd5e1',  // slate-300
+            muted: '#94a3b8',      // slate-400
+            'muted-improved': '#cbd5e1', // slate-300 - שיפור נגישות
+          }
+        }
+      },
+      // גדלי טקסט עקביים
+      fontSize: {
+        'procurement-xs': ['0.75rem', { lineHeight: '1rem' }],
+        'procurement-sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'procurement-base': ['1rem', { lineHeight: '1.5rem' }],
+        'procurement-lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'procurement-xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        'procurement-2xl': ['1.5rem', { lineHeight: '2rem' }],
+        'procurement-3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+      },
+      // מרווחים עקביים
+      spacing: {
+        'procurement-xs': '0.25rem',
+        'procurement-sm': '0.5rem',
+        'procurement-md': '1rem',
+        'procurement-lg': '1.5rem',
+        'procurement-xl': '2rem',
+        'procurement-2xl': '3rem',
+      },
+      // רדיוסים
+      borderRadius: {
+        'procurement-sm': '0.375rem',
+        'procurement-md': '0.5rem',
+        'procurement-lg': '0.75rem',
+      }
+    },
+  },
+  // ... שאר התצורה
+};
+
+export default config;
+
+
+שלב 1.2: יצירת קובץ CSS מותאם
+צור קובץ חדש client/src/styles/procurement.css:
+
+CSS
+
+
+/* client/src/styles/procurement.css */
+
+/* משתני CSS נוספים לעקביות */
+:root {
+  /* צללים עקביים */
+  --procurement-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --procurement-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --procurement-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --procurement-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* מעברים עקביים */
+  --procurement-transition-fast: 150ms ease-in-out;
+  --procurement-transition-normal: 300ms ease-in-out;
+  --procurement-transition-slow: 500ms ease-in-out;
+  
+  /* z-index עקבי */
+  --procurement-z-dropdown: 1000;
+  --procurement-z-modal: 1050;
+  --procurement-z-tooltip: 1100;
+}
+
+/* כיתות עזר לעקביות */
+.procurement-card {
+  @apply bg-procurement-background-card rounded-procurement-lg p-procurement-lg border border-procurement-primary-blue/20;
+  box-shadow: var(--procurement-shadow-md);
+  transition: var(--procurement-transition-normal);
+}
+
+.procurement-card:hover {
+  @apply border-procurement-primary-blue/40;
+  box-shadow: var(--procurement-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.procurement-button-primary {
+  @apply bg-procurement-primary-blue text-procurement-text-primary px-procurement-md py-procurement-sm rounded-procurement-md font-medium;
+  transition: var(--procurement-transition-fast);
+  min-height: 44px; /* נגישות */
+}
+
+.procurement-button-primary:hover {
+  @apply bg-procurement-primary-blue-hover;
+  transform: translateY(-1px);
+  box-shadow: var(--procurement-shadow-md);
+}
+
+.procurement-button-primary:focus-visible {
+  @apply outline-none ring-2 ring-procurement-primary-blue ring-offset-2 ring-offset-procurement-background-primary;
+}
+
+.procurement-text-heading {
+  @apply text-procurement-text-primary font-semibold;
+}
+
+.procurement-text-body {
+  @apply text-procurement-text-secondary;
+}
+
+.procurement-text-muted {
+  @apply text-procurement-text-muted-improved; /* שיפור נגישות */
+}
+
+
+שלב 1.3: ייבוא הסגנונות החדשים
+הוסף את הייבוא לקובץ client/src/main.tsx או client/src/App.tsx:
+
+TypeScript
+
+
+// client/src/main.tsx או App.tsx
+import './styles/procurement.css';
+// ... שאר הייבואים
+
+
+בדיקה ב-Replit:
+לחץ על Run ובדוק שהפרויקט עדיין רץ תקין. אם יש שגיאות, בדוק את ה-console ותקן בהתאם.
+
