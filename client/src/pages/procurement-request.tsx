@@ -459,7 +459,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && documents.length > 0 && (
+              {documents && Array.isArray(documents) && (documents as any[]).length > 0 && (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -553,9 +553,9 @@ export default function ProcurementRequest() {
                 onClick={() => {
                   console.log('Market Research button clicked with ID:', id);
                   // Store the request ID in localStorage for context
-                  localStorage.setItem('currentRequestId', id.toString());
+                  localStorage.setItem('currentRequestId', (id || '').toString());
                   // Navigate directly with the ID in the URL
-                  window.location.href = `/market-research/${id}`;
+                  window.location.href = `/market-research/${id || ''}`;
                 }}
               >
                 <Bot className="w-4 h-4 ml-2" />
@@ -589,13 +589,13 @@ export default function ProcurementRequest() {
                   </div>
                 </div>
                 
-                {documents && Array.isArray(documents) && documents.length > 0 && (
+                {documents && Array.isArray(documents) && (documents as any[]).length > 0 && (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
                     <div>
                       <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
                       <p className="text-xs text-muted-foreground">
-                        {documents.length} קבצים
+                        {(documents as any[]).length} קבצים
                       </p>
                     </div>
                   </div>
