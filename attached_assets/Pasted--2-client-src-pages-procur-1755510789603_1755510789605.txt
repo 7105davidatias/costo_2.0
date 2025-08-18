@@ -1,0 +1,134 @@
+משימה 2: עדכון קומפוננט דף פרטי דרישת רכש
+
+הקשר והמטרה:
+עכשיו נעדכן את הקובץ client/src/pages/procurement-request.tsx כדי להשתמש במשתנים החדשים ולשפר את הנגישות.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 2.1: עדכון imports וtypes
+פתח את client/src/pages/procurement-request.tsx ועדכן את החלק העליון:
+
+TypeScript
+
+
+// client/src/pages/procurement-request.tsx
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { 
+  FileText, 
+  Download, 
+  Eye, 
+  ChevronDown, 
+  ChevronUp,
+  CheckCircle,
+  Clock,
+  AlertCircle 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Types מעודכנים
+interface ProcurementSpec {
+  id: string;
+  label: string;
+  value: string;
+  type: 'essential' | 'advanced';
+  category: 'quantity' | 'processor' | 'memory' | 'storage' | 'graphics' | 'network' | 'warranty' | 'os' | 'form-factor' | 'power';
+  confidence?: number;
+}
+
+interface WorkflowStep {
+  id: number;
+  title: string;
+  status: 'completed' | 'active' | 'pending';
+  description?: string;
+}
+
+interface EstimationMethod {
+  id: string;
+  title: string;
+  description: string;
+  compatibility: number;
+  selected: boolean;
+  type: 'analogical' | 'parametric' | 'bottom-up' | 'expert-judgment';
+}
+
+
+שלב 2.2: הוספת state management משופר
+הוסף את ה-state הבא לקומפוננט:
+
+TypeScript
+
+
+// בתוך הקומפוננט ProcurementRequest
+const [specsExpanded, setSpecsExpanded] = useState(false);
+const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+const [workflowProgress, setWorkflowProgress] = useState(50); // 50% התקדמות
+const [isLoading, setIsLoading] = useState(false);
+
+// נתוני דמה מעודכנים
+const workflowSteps: WorkflowStep[] = [
+  { id: 1, title: 'סקירת מידע', status: 'completed', description: 'בדיקת מסמכים ונתונים בסיסיים' },
+  { id: 2, title: 'ניתוח AI', status: 'completed', description: 'עיבוד אוטומטי של מפרטים' },
+  { id: 3, title: 'בחירת שיטה', status: 'active', description: 'בחירת שיטות אומדן מתאימות' },
+  { id: 4, title: 'יצירת אומדן', status: 'pending', description: 'חישוב עלויות סופי' },
+];
+
+const procurementSpecs: ProcurementSpec[] = [
+  // מפרטים בסיסיים
+  { id: '1', label: 'כמות', value: '25 יחידות', type: 'essential', category: 'quantity', confidence: 95 },
+  { id: '2', label: 'מעבד', value: 'Intel Core i7-13700 (16 cores)', type: 'essential', category: 'processor', confidence: 90 },
+  { id: '3', label: 'זיכרון', value: '32GB DDR4', type: 'essential', category: 'memory', confidence: 85 },
+  { id: '4', label: 'אחסון', value: '1TB NVMe SSD', type: 'essential', category: 'storage', confidence: 88 },
+  // מפרטים מתקדמים
+  { id: '5', label: 'כרטיס גרפי', value: 'Intel UHD Graphics 770', type: 'advanced', category: 'graphics', confidence: 75 },
+  { id: '6', label: 'כרטיס רשת', value: 'Gigabit Ethernet + Wi-Fi 6E', type: 'advanced', category: 'network', confidence: 80 },
+  { id: '7', label: 'אחריות', value: '3 שנים אחריות יצרן', type: 'advanced', category: 'warranty', confidence: 70 },
+  { id: '8', label: 'מערכת הפעלה', value: 'Windows 11 Pro', type: 'advanced', category: 'os', confidence: 85 },
+];
+
+const estimationMethods: EstimationMethod[] = [
+  {
+    id: 'analogical',
+    title: 'אומדן אנלוגי',
+    description: 'מתאים לרכש דומה שבוצע בעבר',
+    compatibility: 85,
+    selected: false,
+    type: 'analogical'
+  },
+  {
+    id: 'parametric',
+    title: 'אומדן פרמטרי',
+    description: 'מבוסס על מודלים מתמטיים וסטטיסטיים',
+    compatibility: 78,
+    selected: false,
+    type: 'parametric'
+  },
+  {
+    id: 'bottom-up',
+    title: 'אומדן מלמטה למעלה',
+    description: 'חישוב מפורט של כל רכיב בנפרד',
+    compatibility: 92,
+    selected: false,
+    type: 'bottom-up'
+  },
+  {
+    id: 'expert-judgment',
+    title: 'הערכת מומחים',
+    description: 'מבוסס על ניסיון וידע של מומחי תחום',
+    compatibility: 65,
+    selected: false,
+    type: 'expert-judgment'
+  }
+];
+
+
+בדיקה ב-Replit:
+שמור את הקובץ ובדוק שאין שגיאות TypeScript ב-console. אם יש שגיאות, תקן את ה-imports או ה-types בהתאם.
+
+
+
