@@ -132,6 +132,16 @@ The application uses a monorepo structure with shared TypeScript definitions, en
 
 ## Recent Changes (January 2024)
 
+### Latest Updates - שלב ב' ו-ג' (Progressive Disclosure + Mobile Optimization)
+✓ הוספת שיטת אומדן "מבוסס מחיר שוק" עם 95% התאמה
+✓ שיפור קומפוננט EstimationMethods עם 5 שיטות אומדן מקיפות
+✓ אופטימיזציה מלאה למובייל עם hook use-mobile ורספונסיביות מתקדמת
+✓ שיפור קומפוננט FileUpload עם אנימציות ופידבק חזותי משופר
+✓ הוספת Progressive Disclosure לקומפוננט SpecsDisplay
+✓ כל הקומפוננטים פועלים ללא שגיאות TypeScript
+
+## Recent Changes (January 2024)
+
 ✓ Complete MVP implementation with all four main modules functional
 ✓ Fixed all critical API endpoints and data loading issues
 ✓ Implemented comprehensive Hebrew RTL support with terminology preferences

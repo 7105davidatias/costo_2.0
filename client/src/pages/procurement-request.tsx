@@ -145,6 +145,13 @@ export default function ProcurementRequest() {
       type: 'parametric' as const
     },
     {
+      id: 'market-based',
+      title: 'אומדן מבוסס מחיר שוק',
+      description: 'ניתוח מחירי שוק נוכחיים מספקים מובילים וממוצעי תעשייה',
+      compatibility: 95,
+      type: 'market-based' as const
+    },
+    {
       id: 'bottom-up',
       title: 'אומדן מלמטה למעלה',
       description: 'פירוק המוצר לרכיבים בסיסיים וחישוב עלות כל רכיב בנפרד',

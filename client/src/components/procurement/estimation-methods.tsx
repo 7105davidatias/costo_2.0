@@ -12,7 +12,7 @@ interface EstimationMethod {
   description: string;
   compatibility: number;
   selected: boolean;
-  type: 'analogical' | 'parametric' | 'bottom-up' | 'expert-judgment';
+  type: 'analogical' | 'parametric' | 'market-based' | 'bottom-up' | 'expert-judgment';
 }
 
 interface EstimationMethodsProps {
@@ -36,6 +36,7 @@ const EstimationMethods: React.FC<EstimationMethodsProps> = ({
     const iconMap = {
       analogical: TrendingUp,
       parametric: Calculator,
+      'market-based': BarChart3,
       'bottom-up': BarChart3,
       'expert-judgment': Users,
     };
