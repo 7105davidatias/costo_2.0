@@ -15,6 +15,7 @@ import WorkflowProgress from "@/components/ui/workflow-progress";
 import SpecsDisplay from "@/components/procurement/specs-display";
 import EstimationMethods from "@/components/procurement/estimation-methods";
 import { useMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
