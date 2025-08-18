@@ -12,6 +12,7 @@ import { useState } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
 import WorkflowProgress from "@/components/ui/workflow-progress";
+import SpecsDisplay from "@/components/procurement/specs-display";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
@@ -72,14 +73,28 @@ export default function ProcurementRequest() {
   const workflowSteps = [
     { id: 1, title: 'בקשה נוצרה', status: 'completed' as const, description: request?.createdAt ? new Date(request.createdAt).toLocaleDateString('he-IL') : '' },
     { id: 2, title: 'מסמכים הועלו', status: (documents && Array.isArray(documents) && (documents as any[]).length > 0) ? 'completed' as const : 'pending' as const, description: documents && Array.isArray(documents) ? `${(documents as any[]).length} קבצים` : 'ממתין' },
-    { id: 3, title: 'ניתוח AI', status: (request?.status === 'processing' ? 'active' : (request?.status === 'completed' ? 'completed' : 'pending')) as const, description: request?.status === 'processing' ? 'בתהליך' : (request?.status === 'completed' ? 'הושלם' : 'ממתין') },
-    { id: 4, title: 'הערכת עלות', status: (request?.status === 'completed' ? 'completed' : 'pending') as const, description: request?.status === 'completed' ? 'הושלם' : 'ממתין' }
+    { id: 3, title: 'ניתוח AI', status: (request?.status === 'processing' ? 'active' as const : (request?.status === 'completed' ? 'completed' as const : 'pending' as const)), description: request?.status === 'processing' ? 'בתהליך' : (request?.status === 'completed' ? 'הושלם' : 'ממתין') },
+    { id: 4, title: 'הערכת עלות', status: (request?.status === 'completed' ? 'completed' as const : 'pending' as const), description: request?.status === 'completed' ? 'הושלם' : 'ממתין' }
   ];
 
   // חישוב אחוז התקדמות
   const completedSteps = workflowSteps.filter(step => step.status === 'completed').length;
   const activeSteps = workflowSteps.filter(step => step.status === 'active').length;
   const workflowProgress = ((completedSteps + (activeSteps * 0.5)) / workflowSteps.length) * 100;
+
+  // נתוני מפרטים לדוגמה
+  const procurementSpecs = [
+    { id: '1', label: 'כמות', value: '25 יחידות', type: 'essential' as const, category: 'quantity' as const, confidence: 100 },
+    { id: '2', label: 'מעבד', value: 'Intel Core i7-13700 (16 cores)', type: 'essential' as const, category: 'processor' as const, confidence: 95 },
+    { id: '3', label: 'זיכרון RAM', value: '32GB DDR4', type: 'essential' as const, category: 'memory' as const, confidence: 90 },
+    { id: '4', label: 'אחסון', value: '1TB NVMe SSD', type: 'essential' as const, category: 'storage' as const, confidence: 92 },
+    { id: '5', label: 'כרטיס גרפי', value: 'Intel UHD Graphics', type: 'advanced' as const, category: 'graphics' as const, confidence: 85 },
+    { id: '6', label: 'כרטיס רשת', value: 'Gigabit Ethernet', type: 'advanced' as const, category: 'network' as const, confidence: 88 },
+    { id: '7', label: 'אחריות', value: '3 שנות אחריות', type: 'advanced' as const, category: 'warranty' as const, confidence: 95 },
+    { id: '8', label: 'מערכת הפעלה', value: 'Windows 11 Pro', type: 'advanced' as const, category: 'os' as const, confidence: 93 },
+    { id: '9', label: 'גורם צורה', value: 'Desktop Tower', type: 'advanced' as const, category: 'form-factor' as const, confidence: 87 },
+    { id: '10', label: 'ספק כוח', value: '650W 80+ Gold', type: 'advanced' as const, category: 'power' as const, confidence: 80 }
+  ];
 
   const getDocumentContent = (doc: any) => {
     // Sample document content based on the document from the requirements
@@ -479,7 +494,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && documents.length > 0 && (
+              {documents && Array.isArray(documents) && documents.length > 0 ? (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -510,9 +525,15 @@ export default function ProcurementRequest() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
+
+          {/* Specifications Display */}
+          <SpecsDisplay 
+            specs={procurementSpecs}
+            className="mb-6"
+          />
 
           {/* AI Analysis Results */}
           <AIAnalysis requestId={request.id} specifications={request.specifications} />
@@ -609,7 +630,7 @@ export default function ProcurementRequest() {
                   </div>
                 </div>
                 
-                {documents && Array.isArray(documents) && documents.length > 0 && (
+                {documents && Array.isArray(documents) && documents.length > 0 ? (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
                     <div>
@@ -619,7 +640,7 @@ export default function ProcurementRequest() {
                       </p>
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 <div className="flex items-center space-x-reverse space-x-3">
                   <div className={`w-3 h-3 rounded-full ${request.status === 'processing' ? 'bg-warning animate-pulse' : 'bg-muted'}`}></div>
