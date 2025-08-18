@@ -8,11 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
 import WorkflowProgress from "@/components/ui/workflow-progress";
 import SpecsDisplay from "@/components/procurement/specs-display";
+import EstimationMethods from "@/components/procurement/estimation-methods";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
@@ -21,8 +22,10 @@ export default function ProcurementRequest() {
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: request, isLoading } = useQuery<ProcurementRequestType>({
+  const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
   });
@@ -69,6 +72,32 @@ export default function ProcurementRequest() {
     setDocumentDialogOpen(true);
   };
 
+  const handleMethodToggle = useCallback((methodId: string) => {
+    setSelectedMethods(prev => 
+      prev.includes(methodId) 
+        ? prev.filter(id => id !== methodId)
+        : [...prev, methodId]
+    );
+  }, []);
+
+  const handleCreateEstimate = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // כאן תהיה הלוגיקה ליצירת אומדן
+      console.log('Creating estimate with methods:', selectedMethods);
+      
+      // סימולציה של תהליך
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // ניווט לדף אומדן עלות
+      window.location.href = `/cost-estimation/${id}`;
+    } catch (error) {
+      console.error('Error creating estimate:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedMethods, id]);
+
   // נתוני שלבי התהליך
   const workflowSteps = [
     { id: 1, title: 'בקשה נוצרה', status: 'completed' as const, description: request?.createdAt ? new Date(request.createdAt).toLocaleDateString('he-IL') : '' },
@@ -95,6 +124,44 @@ export default function ProcurementRequest() {
     { id: '9', label: 'גורם צורה', value: 'Desktop Tower', type: 'advanced' as const, category: 'form-factor' as const, confidence: 87 },
     { id: '10', label: 'ספק כוח', value: '650W 80+ Gold', type: 'advanced' as const, category: 'power' as const, confidence: 80 }
   ];
+
+  // נתוני שיטות אומדן
+  const estimationMethods = [
+    {
+      id: 'analogical',
+      title: 'אומדן אנלוגי',
+      description: 'השוואה לרכישות דומות שבוצעו בעבר עם התאמה למפרטים הנוכחיים',
+      compatibility: 92,
+      type: 'analogical' as const
+    },
+    {
+      id: 'parametric',
+      title: 'אומדן פרמטרי',
+      description: 'חישוב מבוסס נוסחאות מתמטיות ומאגר מחירים עדכני',
+      compatibility: 88,
+      type: 'parametric' as const
+    },
+    {
+      id: 'bottom-up',
+      title: 'אומדן מלמטה למעלה',
+      description: 'פירוק המוצר לרכיבים בסיסיים וחישוב עלות כל רכיב בנפרד',
+      compatibility: 75,
+      type: 'bottom-up' as const
+    },
+    {
+      id: 'expert-judgment',
+      title: 'שיפוט מומחה',
+      description: 'הערכה מבוססת ניסיון של מומחים בתחום ומאגר ידע מקצועי',
+      compatibility: 85,
+      type: 'expert-judgment' as const
+    }
+  ];
+
+  // עדכון השיטות עם סטטוס הבחירה
+  const estimationMethodsWithSelection = estimationMethods.map(method => ({
+    ...method,
+    selected: selectedMethods.includes(method.id)
+  }));
 
   const getDocumentContent = (doc: any) => {
     // Sample document content based on the document from the requirements
@@ -344,7 +411,7 @@ export default function ProcurementRequest() {
     return documentContents[doc.fileName] || "תוכן המסמך לא זמין להצגה";
   };
 
-  if (isLoading) {
+  if (requestLoading) {
     return (
       <div className="space-y-8">
         <div className="animate-pulse">
@@ -532,6 +599,15 @@ export default function ProcurementRequest() {
           {/* Specifications Display */}
           <SpecsDisplay 
             specs={procurementSpecs}
+            className="mb-6"
+          />
+
+          {/* Estimation Methods */}
+          <EstimationMethods
+            methods={estimationMethodsWithSelection}
+            onMethodToggle={handleMethodToggle}
+            onCreateEstimate={handleCreateEstimate}
+            isLoading={isLoading}
             className="mb-6"
           />
 

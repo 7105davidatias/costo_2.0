@@ -1,0 +1,251 @@
+משימה 5: יצירת קומפוננט שיטות אומדן אינטראקטיבי
+
+הקשר והמטרה:
+ניצור קומפוננט מתקדם לבחירת שיטות אומדן עם אינדיקטורים חזותיים ופידבק אינטראקטיבי.
+
+הנחיות לביצוע ב-Replit:
+
+שלב 5.1: יצירת קומפוננט EstimationMethods
+צור קובץ חדש client/src/components/procurement/estimation-methods.tsx:
+
+TypeScript
+
+
+// client/src/components/procurement/estimation-methods.tsx
+import React, { useState, useCallback } from 'react';
+import { CheckCircle, TrendingUp, Calculator, Users, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+interface EstimationMethod {
+  id: string;
+  title: string;
+  description: string;
+  compatibility: number;
+  selected: boolean;
+  type: 'analogical' | 'parametric' | 'bottom-up' | 'expert-judgment';
+}
+
+interface EstimationMethodsProps {
+  methods: EstimationMethod[];
+  onMethodToggle: (methodId: string) => void;
+  onCreateEstimate: () => void;
+  isLoading?: boolean;
+  className?: string;
+}
+
+const EstimationMethods: React.FC<EstimationMethodsProps> = ({
+  methods,
+  onMethodToggle,
+  onCreateEstimate,
+  isLoading = false,
+  className
+}) => {
+  const selectedCount = methods.filter(method => method.selected).length;
+  
+  const getMethodIcon = (type: EstimationMethod['type']) => {
+    const iconMap = {
+      analogical: TrendingUp,
+      parametric: Calculator,
+      'bottom-up': BarChart3,
+      'expert-judgment': Users,
+    };
+    const IconComponent = iconMap[type];
+    return <IconComponent className="w-5 h-5" />;
+  };
+
+  const getCompatibilityColor = (compatibility: number) => {
+    if (compatibility >= 85) return 'text-procurement-success-green bg-procurement-success-green/20';
+    if (compatibility >= 70) return 'text-procurement-warning-amber bg-procurement-warning-amber/20';
+    return 'text-red-400 bg-red-400/20';
+  };
+
+  const handleMethodClick = useCallback((methodId: string) => {
+    onMethodToggle(methodId);
+  }, [onMethodToggle]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent, methodId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleMethodClick(methodId);
+    }
+  }, [handleMethodClick]);
+
+  return (
+    <Card className={cn('procurement-card', className)}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="procurement-text-heading text-procurement-lg">
+            שיטות אומדן מומלצות
+          </CardTitle>
+          <Badge variant="outline" className="text-procurement-text-muted">
+            {selectedCount} נבחרו
+          </Badge>
+        </div>
+        <p className="procurement-text-muted text-procurement-sm">
+          בחר שיטה אחת או יותר לחישוב האומדן בהתאם לסוג הרכש ומאפייני הבקשה
+        </p>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {methods.map((method) => (
+            <div
+              key={method.id}
+              className={cn(
+                'estimation-method relative cursor-pointer border-2 rounded-procurement-lg p-4 transition-all duration-300',
+                'hover:border-procurement-primary-blue hover:shadow-lg hover:-translate-y-1',
+                'focus-within:ring-2 focus-within:ring-procurement-primary-blue focus-within:ring-offset-2',
+                method.selected 
+                  ? 'border-procurement-primary-blue bg-procurement-primary-blue/10 shadow-lg shadow-procurement-primary-blue/20' 
+                  : 'border-procurement-text-muted/30 bg-procurement-background-card'
+              )}
+              onClick={() => handleMethodClick(method.id)}
+              onKeyDown={(e) => handleKeyDown(e, method.id)}
+              tabIndex={0}
+              role="button"
+              aria-pressed={method.selected}
+              aria-label={`${method.title} - ${method.compatibility}% התאמה`}
+            >
+              {/* אינדיקטור בחירה */}
+              {method.selected && (
+                <div className="absolute top-3 right-3 w-6 h-6 bg-procurement-primary-blue rounded-full flex items-center justify-center animate-in zoom-in-50 duration-200">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              )}
+              
+              {/* כותרת ואייקון */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className={cn(
+                    'p-2 rounded-procurement-md',
+                    method.selected 
+                      ? 'bg-procurement-primary-blue text-white' 
+                      : 'bg-procurement-text-muted/20 text-procurement-text-muted'
+                  )}>
+                    {getMethodIcon(method.type)}
+                  </div>
+                  <h4 className="procurement-text-heading font-semibold">
+                    {method.title}
+                  </h4>
+                </div>
+                
+                <Badge 
+                  className={cn(
+                    'px-2 py-1 text-procurement-xs font-semibold',
+                    getCompatibilityColor(method.compatibility)
+                  )}
+                >
+                  {method.compatibility}% התאמה
+                </Badge>
+              </div>
+              
+              {/* תיאור */}
+              <p className="procurement-text-muted text-procurement-sm leading-relaxed">
+                {method.description}
+              </p>
+              
+              {/* אפקט hover */}
+              <div className="absolute inset-0 rounded-procurement-lg bg-gradient-to-r from-procurement-primary-blue/0 to-procurement-primary-blue/5 opacity-0 transition-opacity duration-300 hover:opacity-100 pointer-events-none" />
+            </div>
+          ))}
+        </div>
+        
+        {/* כפתור יצירת אומדן */}
+        <div className="pt-4 border-t border-procurement-text-muted/20">
+          <Button
+            onClick={onCreateEstimate}
+            disabled={selectedCount === 0 || isLoading}
+            className={cn(
+              'w-full procurement-button-primary',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              isLoading && 'relative'
+            )}
+            aria-label={
+              selectedCount === 0 
+                ? 'צור אומדן עלות - יש לבחור לפחות שיטה אחת'
+                : `צור אומדן עלות על פי ${selectedCount} שיטות שנבחרו`
+            }
+          >
+            {isLoading ? (
+              <>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+                <span className="opacity-0">מעבד...</span>
+              </>
+            ) : (
+              'צור אומדן עלות'
+            )}
+          </Button>
+          
+          {selectedCount === 0 && (
+            <p className="text-procurement-text-muted text-procurement-xs text-center mt-2">
+              יש לבחור לפחות שיטת אומדן אחת
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default EstimationMethods;
+
+
+שלב 5.2: עדכון הדף הראשי להשתמש בקומפוננט
+עדכן את client/src/pages/procurement-request.tsx:
+
+TypeScript
+
+
+// הוסף import
+import EstimationMethods from '@/components/procurement/estimation-methods';
+
+// הוסף פונקציות לניהול state
+const handleMethodToggle = useCallback((methodId: string) => {
+  setSelectedMethods(prev => 
+    prev.includes(methodId) 
+      ? prev.filter(id => id !== methodId)
+      : [...prev, methodId]
+  );
+}, []);
+
+const handleCreateEstimate = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    // כאן תהיה הלוגיקה ליצירת אומדן
+    console.log('Creating estimate with methods:', selectedMethods);
+    
+    // סימולציה של תהליך
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // עדכון התקדמות
+    setWorkflowProgress(100);
+  } catch (error) {
+    console.error('Error creating estimate:', error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [selectedMethods]);
+
+// עדכן את נתוני השיטות להיות reactive
+const estimationMethodsWithSelection = estimationMethods.map(method => ({
+  ...method,
+  selected: selectedMethods.includes(method.id)
+}));
+
+// בתוך ה-JSX
+<EstimationMethods
+  methods={estimationMethodsWithSelection}
+  onMethodToggle={handleMethodToggle}
+  onCreateEstimate={handleCreateEstimate}
+  isLoading={isLoading}
+  className="mb-procurement-lg"
+/>
+
+
+
+
