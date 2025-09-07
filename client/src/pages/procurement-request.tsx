@@ -55,43 +55,65 @@ export default function ProcurementRequest() {
     specifications: {} as Record<string, any>
   });
 
-  const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
+  const { data: request, isLoading: requestLoading, error: requestError } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const { data: documents } = useQuery({
+  const { data: documents, error: documentsError } = useQuery({
     queryKey: ["/api/documents/request", id],
     enabled: !!id,
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const { data: extractedData, refetch: refetchExtractedData } = useQuery({
+  const { data: extractedData, refetch: refetchExtractedData, error: extractedDataError } = useQuery({
     queryKey: ["/api/procurement-requests", id, "extracted-data"],
     enabled: !!id,
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
   });
 
   const aiAnalysisMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/ai-analysis/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Failed to start AI analysis');
-      return response.json();
+      try {
+        const response = await fetch(`/api/ai-analysis/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`AI analysis failed: ${response.status} - ${errorText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('AI Analysis error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
         title: "ניתוח AI הושלם",
         description: "תוצאות הניתוח זמינות לצפייה",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/documents/request", id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests", id, "extracted-data"] });
-      refetchExtractedData(); // רענון מיידי של הנתונים שחולצו
+      // רענון עם await כדי להבטיח שהנתונים יטענו
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/documents/request", id] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests", id, "extracted-data"] }),
+        refetchExtractedData()
+      ]).catch(error => {
+        console.error('Error refreshing data after AI analysis:', error);
+      });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('AI Analysis mutation error:', error);
       toast({
-        title: "שגיאה",
-        description: "נכשל בביצוע ניתוח AI",
+        title: "שגיאה בניתוח AI",
+        description: error.message || "נכשל בביצוע ניתוח AI. נסה שוב מאוחר יותר.",
         variant: "destructive",
       });
     },
@@ -111,22 +133,64 @@ export default function ProcurementRequest() {
   }, []);
 
   const handleCreateEstimate = useCallback(async () => {
+    if (!id) {
+      toast({
+        title: "שגיאה",
+        description: "מזהה הבקשה חסר",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedMethods.length === 0) {
+      toast({
+        title: "בחר שיטות אומדן",
+        description: "יש לבחור לפחות שיטת אומדן אחת",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // כאן תהיה הלוגיקה ליצירת אומדן
       console.log('Creating estimate with methods:', selectedMethods);
 
-      // סימולציה של תהליך
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('/api/cost-estimations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          procurementRequestId: parseInt(id),
+          methods: selectedMethods,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create estimate: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Estimate created successfully:', result);
+
+      toast({
+        title: "אומדן נוצר בהצלחה",
+        description: "האומדן נוצר וזמין לצפייה",
+      });
 
       // ניווט לדף אומדן עלות
       window.location.href = `/cost-estimation/${id}`;
     } catch (error) {
       console.error('Error creating estimate:', error);
+      toast({
+        title: "שגיאה ביצירת אומדן",
+        description: "נכשל ביצירת האומדן. נסה שוב מאוחר יותר.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMethods, id]);
+  }, [selectedMethods, id, toast]);
 
   // Template handling functions
   const handleSelectTemplate = useCallback((template: DocumentTemplate) => {
@@ -155,8 +219,17 @@ export default function ProcurementRequest() {
   }, [toast]);
 
   const handleSaveAsTemplate = useCallback(async () => {
+    if (!formData.itemName || !formData.category) {
+      toast({
+        title: "שדות חסרים",
+        description: "יש למלא את שם הפריט והקטגוריה לפחות",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // כאן תהיה הלוגיקה לשמירת תבנית חדשה
+      // יצירת תבנית חדשה
       const newTemplate: DocumentTemplate = {
         id: `TEMP-${Date.now()}`,
         requestNumber: `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
@@ -179,10 +252,15 @@ export default function ProcurementRequest() {
         tags: [formData.category, formData.department, "מותאם אישית"]
       };
 
-      // Add to local storage for demo (in real app would save to server)
-      const existingTemplates = JSON.parse(localStorage.getItem('customTemplates') || '[]');
-      existingTemplates.push(newTemplate);
-      localStorage.setItem('customTemplates', JSON.stringify(existingTemplates));
+      // שמירה ב-localStorage (לדמו - באפליקציה אמיתית נשמור בשרת)
+      try {
+        const existingTemplates = JSON.parse(localStorage.getItem('customTemplates') || '[]');
+        existingTemplates.push(newTemplate);
+        localStorage.setItem('customTemplates', JSON.stringify(existingTemplates));
+      } catch (storageError) {
+        console.error('LocalStorage error:', storageError);
+        throw new Error('שגיאה בשמירה המקומית');
+      }
 
       setSaveTemplateModalOpen(false);
       toast({
@@ -193,7 +271,7 @@ export default function ProcurementRequest() {
       console.error('Error saving template:', error);
       toast({
         title: "שגיאה בשמירת התבנית",
-        description: "אירעה שגיאה בשמירת התבנית. נסה שוב.",
+        description: error instanceof Error ? error.message : "אירעה שגיאה בשמירת התבנית. נסה שוב.",
         variant: "destructive",
       });
     }
@@ -524,6 +602,27 @@ export default function ProcurementRequest() {
 
     return documentContents[doc.fileName] || "תוכן המסמך לא זמין להצגה";
   };
+
+  // Error handling
+  if (requestError || documentsError || extractedDataError) {
+    console.error('API Errors:', { requestError, documentsError, extractedDataError });
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-4 text-destructive">שגיאה בטעינת הנתונים</h2>
+        <p className="text-muted-foreground mb-4">
+          אירעה שגיאה בטעינת פרטי הבקשה. נסה לרענן את הדף.
+        </p>
+        <div className="space-x-reverse space-x-4">
+          <Button onClick={() => window.location.reload()} variant="outline">
+            רענן דף
+          </Button>
+          <Link href="/dashboard">
+            <Button>חזור ללוח הבקרה</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (requestLoading) {
     return (
