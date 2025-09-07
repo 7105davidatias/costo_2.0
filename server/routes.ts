@@ -827,13 +827,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update the procurement request with the approved cost
-      const request = await storage.getProcurementRequest(estimation.procurementRequestId);
-      if (request) {
-        request.estimatedCost = estimation.totalCost;
-        request.status = 'completed';
-        request.updatedAt = new Date();
-        
-        await storage.updateProcurementRequest(estimation.procurementRequestId, request);
+      if (estimation.procurementRequestId) {
+        const request = await storage.getProcurementRequest(estimation.procurementRequestId);
+        if (request) {
+          request.estimatedCost = estimation.totalCost;
+          request.status = 'completed';
+          request.updatedAt = new Date();
+          
+          await storage.updateProcurementRequest(estimation.procurementRequestId, request);
+        }
       }
 
       res.json({

@@ -535,7 +535,7 @@ export default function CostEstimation() {
                 className="bg-success text-white hover:bg-success/90"
                 onClick={async () => {
                   try {
-                    const response = await fetch(`/api/cost-estimations/${apiEstimation.id}/approve`, {
+                    const response = await fetch(`/api/cost-estimations/${estimation.id}/approve`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' }
                     });
