@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, Template, Search, Filter, Star, Save, Sparkles } from "lucide-react";
+import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, FileTemplate, Search, Filter, Star, Save, Sparkles, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback, useEffect } from "react";
 import FileUpload from "@/components/ui/file-upload";
@@ -115,10 +115,10 @@ export default function ProcurementRequest() {
     try {
       // כאן תהיה הלוגיקה ליצירת אומדן
       console.log('Creating estimate with methods:', selectedMethods);
-      
+
       // סימולציה של תהליך
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // ניווט לדף אומדן עלות
       window.location.href = `/cost-estimation/${id}`;
     } catch (error) {
@@ -131,7 +131,7 @@ export default function ProcurementRequest() {
   // Template handling functions
   const handleSelectTemplate = useCallback((template: DocumentTemplate) => {
     setSelectedTemplate(template);
-    
+
     // Auto-fill form data from template
     setFormData({
       itemName: template.title,
@@ -147,7 +147,7 @@ export default function ProcurementRequest() {
 
     setIsFormMode(true);
     setTemplateModalOpen(false);
-    
+
     toast({
       title: "תבנית נטענה בהצלחה",
       description: `התבנית "${template.title}" נטענה. ניתן לערוך ולהתאים את הפרטים.`,
@@ -632,7 +632,7 @@ export default function ProcurementRequest() {
             <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <Template className="text-primary w-5 h-5" />
+                  <FileTemplate className="text-primary w-5 h-5" />
                   <span>התחל עם תבנית או צור חדש</span>
                 </CardTitle>
               </CardHeader>
@@ -640,23 +640,23 @@ export default function ProcurementRequest() {
                 <p className="text-muted-foreground">
                   חסוך זמן והשתמש בתבנית קיימת או התחל עם בקשה חדשה
                 </p>
-                
+
                 <div className="flex gap-3">
                   <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
                     <DialogTrigger asChild>
                       <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <Template className="w-4 h-4 ml-2" />
+                        <FileTemplate className="w-4 h-4 ml-2" />
                         בחר תבנית
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <Template className="h-5 w-5" />
+                          <FileTemplate className="h-5 w-5" />
                           בחירת תבנית דרישת רכש
                         </DialogTitle>
                       </DialogHeader>
-                      
+
                       <div className="space-y-4">
                         {/* Search and Filter */}
                         <div className="flex gap-4">
@@ -852,7 +852,7 @@ export default function ProcurementRequest() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="description">תיאור הדרישה</Label>
                   <Textarea
@@ -954,7 +954,7 @@ export default function ProcurementRequest() {
             </CardHeader>
             <CardContent>
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
-              
+
               {/* Uploaded Files */}
               {documents && Array.isArray(documents) && documents.length > 0 ? (
                 <div className="mt-6 space-y-2">
@@ -1100,7 +1100,7 @@ export default function ProcurementRequest() {
                     </p>
                   </div>
                 </div>
-                
+
                 {documents && Array.isArray(documents) && documents.length > 0 ? (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
@@ -1208,7 +1208,7 @@ export default function ProcurementRequest() {
                 placeholder="הזן שם לתבנית"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="templateDescription">תיאור התבנית</Label>
               <Textarea
