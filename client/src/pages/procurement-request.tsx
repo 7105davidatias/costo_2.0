@@ -5,18 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, Template, Search, Filter, Star, Save, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
 import WorkflowProgress from "@/components/ui/workflow-progress";
 import SpecsDisplay from "@/components/procurement/specs-display";
 import EstimationMethods from "@/components/procurement/estimation-methods";
+import TemplateGallery from "@/components/templates/template-gallery";
 import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
+import { documentTemplates, searchTemplates, getTemplatesByCategory, categories, type DocumentTemplate } from "@/data/document-templates";
 
 export default function ProcurementRequest() {
   const { id } = useParams();
@@ -27,6 +33,27 @@ export default function ProcurementRequest() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useMobile();
+
+  // Template selection states
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [isFormMode, setIsFormMode] = useState(false);
+  const [saveTemplateModalOpen, setSaveTemplateModalOpen] = useState(false);
+
+  // Form states for template creation/editing
+  const [formData, setFormData] = useState({
+    itemName: "",
+    description: "",
+    category: "",
+    quantity: 1,
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
+    department: "",
+    targetDate: "",
+    emf: "",
+    specifications: {} as Record<string, any>
+  });
 
   const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
@@ -100,6 +127,83 @@ export default function ProcurementRequest() {
       setIsLoading(false);
     }
   }, [selectedMethods, id]);
+
+  // Template handling functions
+  const handleSelectTemplate = useCallback((template: DocumentTemplate) => {
+    setSelectedTemplate(template);
+    
+    // Auto-fill form data from template
+    setFormData({
+      itemName: template.title,
+      description: template.description,
+      category: template.category,
+      quantity: template.quantity,
+      priority: template.priority,
+      department: template.department,
+      targetDate: "",
+      emf: template.estimatedCost,
+      specifications: template.specifications
+    });
+
+    setIsFormMode(true);
+    setTemplateModalOpen(false);
+    
+    toast({
+      title: "תבנית נטענה בהצלחה",
+      description: `התבנית "${template.title}" נטענה. ניתן לערוך ולהתאים את הפרטים.`,
+    });
+  }, [toast]);
+
+  const handleSaveAsTemplate = useCallback(async () => {
+    try {
+      // כאן תהיה הלוגיקה לשמירת תבנית חדשה
+      const newTemplate: DocumentTemplate = {
+        id: `TEMP-${Date.now()}`,
+        requestNumber: `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+        title: formData.itemName,
+        category: formData.category,
+        description: formData.description,
+        estimatedCost: formData.emf,
+        quantity: formData.quantity,
+        department: formData.department,
+        priority: formData.priority,
+        specifications: formData.specifications,
+        metadata: {
+          accuracy: 85,
+          complexity: "medium" as const,
+          estimationMethod: "User Generated",
+          lastUpdated: new Date().toISOString().split('T')[0],
+          usageCount: 0,
+          averageSavings: "0%"
+        },
+        tags: [formData.category, formData.department, "מותאם אישית"]
+      };
+
+      // Add to local storage for demo (in real app would save to server)
+      const existingTemplates = JSON.parse(localStorage.getItem('customTemplates') || '[]');
+      existingTemplates.push(newTemplate);
+      localStorage.setItem('customTemplates', JSON.stringify(existingTemplates));
+
+      setSaveTemplateModalOpen(false);
+      toast({
+        title: "תבנית נשמרה בהצלחה",
+        description: "התבנית החדשה נוספה למאגר ותהיה זמינה לשימוש עתידי.",
+      });
+    } catch (error) {
+      console.error('Error saving template:', error);
+      toast({
+        title: "שגיאה בשמירת התבנית",
+        description: "אירעה שגיאה בשמירת התבנית. נסה שוב.",
+        variant: "destructive",
+      });
+    }
+  }, [formData, toast]);
+
+  const filteredTemplates = searchQuery 
+    ? searchTemplates(searchQuery)
+    : selectedCategory !== "all" 
+      ? getTemplatesByCategory(selectedCategory)
+      : documentTemplates;
 
   // נתוני שלבי התהליך
   const workflowSteps = [
@@ -523,51 +627,322 @@ export default function ProcurementRequest() {
         )}>
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
-          {/* Basic Information */}
-          <Card className="bg-card border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-reverse space-x-2">
-                <Info className="text-primary w-5 h-5" />
-                <span>מידע בסיסי</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Template Selection & Form */}
+          {!isFormMode ? (
+            <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <Template className="text-primary w-5 h-5" />
+                  <span>התחל עם תבנית או צור חדש</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  חסוך זמן והשתמש בתבנית קיימת או התחל עם בקשה חדשה
+                </p>
+                
+                <div className="flex gap-3">
+                  <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Template className="w-4 h-4 ml-2" />
+                        בחר תבנית
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Template className="h-5 w-5" />
+                          בחירת תבנית דרישת רכש
+                        </DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4">
+                        {/* Search and Filter */}
+                        <div className="flex gap-4">
+                          <div className="relative flex-1">
+                            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="חפש תבניות..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pr-10"
+                            />
+                          </div>
+                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="קטגוריה" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">כל הקטגוריות</SelectItem>
+                              {categories.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Templates Grid */}
+                        <div className="max-h-96 overflow-y-auto">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredTemplates.map((template) => (
+                              <Card 
+                                key={template.id} 
+                                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                                onClick={() => handleSelectTemplate(template)}
+                              >
+                                <CardHeader className="pb-2">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <CardTitle className="text-sm leading-tight">{template.title}</CardTitle>
+                                    <Badge variant="outline" className="text-xs">
+                                      {template.metadata.accuracy}%
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{template.requestNumber}</p>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {template.description}
+                                  </p>
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="font-medium">
+                                      {new Intl.NumberFormat('he-IL', {
+                                        style: 'currency',
+                                        currency: 'ILS',
+                                        minimumFractionDigits: 0,
+                                      }).format(Number(template.estimatedCost))}
+                                    </span>
+                                    <span className="text-muted-foreground">{template.quantity} יח׳</span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {template.department}
+                                    </Badge>
+                                    <div className="flex items-center gap-1">
+                                      <Star className="h-3 w-3 text-yellow-500" />
+                                      <span className="text-xs">{template.metadata.usageCount}</span>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 border-primary text-primary hover:bg-primary/10"
+                    onClick={() => setIsFormMode(true)}
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    התחל מאפס
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-card border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-reverse space-x-2">
+                    <Info className="text-primary w-5 h-5" />
+                    <span>פרטי דרישת רכש</span>
+                    {selectedTemplate && (
+                      <Badge variant="secondary" className="mr-2">
+                        מבוסס על: {selectedTemplate.title}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSaveTemplateModalOpen(true)}
+                    >
+                      <Save className="w-4 h-4 ml-1" />
+                      שמור כתבנית
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsFormMode(false)}
+                    >
+                      חזור לבחירת תבנית
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="itemName">שם הפריט *</Label>
+                    <Input
+                      id="itemName"
+                      value={formData.itemName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
+                      placeholder="הזן שם הפריט"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="quantity">כמות *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">קטגוריה *</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="בחר קטגוריה" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="department">מחלקה *</Label>
+                    <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="בחר מחלקה" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="IT">IT</SelectItem>
+                        <SelectItem value="משאבי אנוש">משאבי אנוש</SelectItem>
+                        <SelectItem value="הנהלה">הנהלה</SelectItem>
+                        <SelectItem value="כספים">כספים</SelectItem>
+                        <SelectItem value="תפעול">תפעול</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="priority">עדיפות</Label>
+                    <Select value={formData.priority} onValueChange={(value: "low" | "medium" | "high" | "urgent") => setFormData(prev => ({ ...prev, priority: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">נמוכה</SelectItem>
+                        <SelectItem value="medium">בינונית</SelectItem>
+                        <SelectItem value="high">גבוהה</SelectItem>
+                        <SelectItem value="urgent">דחוף</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="emf">תקציב מוקצה (EMF)</Label>
+                    <Input
+                      id="emf"
+                      value={formData.emf}
+                      onChange={(e) => setFormData(prev => ({ ...prev, emf: e.target.value }))}
+                      placeholder="הזן תקציב בש״ח"
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">שם הפריט</label>
-                  <p className="text-foreground font-medium">{request.itemName}</p>
+                  <Label htmlFor="description">תיאור הדרישה</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="פרט את הדרישה ומפרטים נוספים..."
+                    rows={4}
+                  />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">כמות</label>
-                  <p className="text-foreground font-medium">{request.quantity} יחידות</p>
+
+                {/* Specifications Editor */}
+                {Object.keys(formData.specifications).length > 0 && (
+                  <div>
+                    <Label>מפרטים טכניים (מהתבנית)</Label>
+                    <div className="bg-muted/20 p-4 rounded-lg space-y-2">
+                      {Object.entries(formData.specifications).map(([key, value]) => (
+                        <div key={key} className="flex justify-between items-center text-sm">
+                          <span className="font-medium">{key}:</span>
+                          <span>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Save className="w-4 h-4 ml-2" />
+                    שמור דרישת רכש
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <Bot className="w-4 h-4 ml-2" />
+                    בדיקת AI
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">קטגוריה</label>
-                  <p className="text-foreground font-medium">{request.category}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">עדיפות</label>
-                  <Badge className={priorityConfig.className}>{priorityConfig.label}</Badge>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">תאריך יעד</label>
-                  <p className="text-foreground font-medium">
-                    {request.targetDate ? new Date(request.targetDate).toLocaleDateString('he-IL') : 'לא צוין'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">מבקש</label>
-                  <p className="text-foreground font-medium">{request.requestedBy} - {request.department}</p>
-                </div>
-              </div>
-              {request.description && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">תיאור</label>
-                  <p className="text-foreground">{request.description}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Show existing components only if we have a request */}
+          {request && isFormMode && (
+            <>
+              {/* Basic Information */}
+              <Card className="bg-card border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-reverse space-x-2">
+                    <Info className="text-primary w-5 h-5" />
+                    <span>מידע בסיסי</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">שם הפריט</label>
+                      <p className="text-foreground font-medium">{request.itemName}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">כמות</label>
+                      <p className="text-foreground font-medium">{request.quantity} יחידות</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">קטגוריה</label>
+                      <p className="text-foreground font-medium">{request.category}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">עדיפות</label>
+                      <Badge className={priorityConfig.className}>{priorityConfig.label}</Badge>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">תאריך יעד</label>
+                      <p className="text-foreground font-medium">
+                        {request.targetDate ? new Date(request.targetDate).toLocaleDateString('he-IL') : 'לא צוין'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">מבקש</label>
+                      <p className="text-foreground font-medium">{request.requestedBy} - {request.department}</p>
+                    </div>
+                  </div>
+                  {request.description && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">תיאור</label>
+                      <p className="text-foreground">{request.description}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           {/* Document Upload */}
           <Card className="bg-card border-secondary/20">
@@ -809,6 +1184,63 @@ export default function ProcurementRequest() {
               <pre className="whitespace-pre-wrap font-mono text-sm text-right">
                 {selectedDocument ? getDocumentContent(selectedDocument) : ''}
               </pre>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Template Dialog */}
+      <Dialog open={saveTemplateModalOpen} onOpenChange={setSaveTemplateModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="h-5 w-5" />
+              שמירת תבנית חדשה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="templateName">שם התבנית</Label>
+              <Input
+                id="templateName"
+                value={formData.itemName}
+                onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
+                placeholder="הזן שם לתבנית"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="templateDescription">תיאור התבנית</Label>
+              <Textarea
+                id="templateDescription"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="תאר את התבנית והשימושים המומלצים"
+                rows={3}
+              />
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">פרטי התבנית</span>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>קטגוריה: {formData.category}</div>
+                <div>מחלקה: {formData.department}</div>
+                <div>עלות משוערת: {formData.emf ? `₪${Number(formData.emf).toLocaleString()}` : 'לא צוין'}</div>
+                <div>מפרטים: {Object.keys(formData.specifications).length} פריטים</div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button onClick={handleSaveAsTemplate} className="flex-1">
+                <Save className="w-4 h-4 ml-2" />
+                שמור תבנית
+              </Button>
+              <Button variant="outline" onClick={() => setSaveTemplateModalOpen(false)} className="flex-1">
+                ביטול
+              </Button>
             </div>
           </div>
         </DialogContent>
