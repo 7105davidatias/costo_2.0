@@ -224,9 +224,29 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                             {key === 'memory' && 'זיכרון'}
                             {key === 'storage' && 'אחסון'}
                             {key === 'network' && 'רשת'}
+                            {key === 'networkCard' && 'כרטיס רשת'}
                             {key === 'powerSupply' && 'ספק כוח'}
                             {key === 'rackUnit' && 'יחידות רק'}
+                            {key === 'warranty' && 'אחריות'}
                             {key === 'warrantyPeriod' && 'תקופת אחריות'}
+                            {key === 'graphics' && 'כרטיס גרפי'}
+                            {key === 'formFactor' && 'גורם צורה'}
+                            {key === 'vehicleType' && 'סוג רכב'}
+                            {key === 'capacity' && 'קיבולת'}
+                            {key === 'fuelType' && 'סוג דלק'}
+                            {key === 'transmission' && 'תיבת הילוכים'}
+                            {key === 'enginePower' && 'כוח מנוע'}
+                            {key === 'cargoVolume' && 'נפח מטען'}
+                            {key === 'fuelConsumption' && 'צריכת דלק'}
+                            {key === 'maintenance' && 'תחזוקה'}
+                            {key === 'safety' && 'בטיחות'}
+                            {key === 'itemType' && 'סוג פריט'}
+                            {key === 'material' && 'חומר'}
+                            {key === 'adjustability' && 'יכולת התאמה'}
+                            {key === 'certification' && 'הסמכה'}
+                            {key === 'weight' && 'משקל'}
+                            {key === 'dimensions' && 'מידות'}
+                            {key === 'colors' && 'צבעים זמינים'}
                             {key === 'operatingSystem' && 'מערכת הפעלה'}
                             {/* Construction-specific specs */}
                             {key === 'buildingArea' && 'שטח בנייה'}
