@@ -708,43 +708,62 @@ export default function ProcurementRequest() {
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Page Header */}
+        {/* Page Header - Simplified and Unified */}
         <div className={cn(
           "flex items-center justify-between",
-          isMobile ? "flex-col space-y-2" : "flex-row"
+          isMobile ? "flex-col space-y-4" : "flex-row"
         )}>
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
-                חזרה
-              </Button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center md:text-right">
-              פרטי דרישת רכש {requestLoading ? '' : ` - ${request.requestNumber}`}
-            </h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
+                  חזרה
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                  {requestLoading ? (
+                    <span className="inline-block h-8 w-64 bg-muted rounded animate-pulse"></span>
+                  ) : (
+                    `דרישת רכש ${request.requestNumber}`
+                  )}
+                </h1>
+                {!requestLoading && (
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-muted-foreground">{request.itemName}</p>
+                    <Badge className={getPriorityBadge(request.priority).className}>
+                      {getPriorityBadge(request.priority).label}
+                    </Badge>
+                    <Badge className={getStatusBadge(request.status).className}>
+                      {getStatusBadge(request.status).label}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          {requestLoading ? (
-            <p className="h-6 w-1/2 bg-muted rounded animate-pulse"></p>
-          ) : (
-            <p className="text-muted-foreground">{request.itemName}</p>
-          )}
+          
+          {/* Primary Actions - Consolidated */}
+          <div className="flex gap-3">
+            {request && (
+              <>
+                <Link href={`/market-research/${id || ''}`}>
+                  <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
+                    <Search className="w-4 h-4 ml-2" />
+                    מחקר שוק
+                  </Button>
+                </Link>
+                <Link href={`/cost-estimation/${request?.id || id}`}>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Bot className="w-4 h-4 ml-2" />
+                    יצירת אומדן
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex space-x-reverse space-x-4">
-          <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
-            <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
-              <FileText className="w-4 h-4 ml-2" />
-              מחקר שוק
-            </Button>
-          </Link>
-          <Link href={`/cost-estimation/${request?.id || id}`}>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Bot className="w-4 h-4 ml-2" />
-              צור אומדן עלות
-            </Button>
-          </Link>
-        </div>
-      </div>
 
       {/* Workflow Progress */}
       {requestLoading ? (
@@ -1076,55 +1095,91 @@ export default function ProcurementRequest() {
             </Card>
           )}
 
-          {/* Show existing components only if we have a request */}
-          {request && isFormMode && (
-            <>
-              {/* Basic Information */}
-              <Card className="bg-card border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-reverse space-x-2">
+          {/* Unified Request Summary - Only if we have a request and not in form mode */}
+          {request && !isFormMode && (
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-reverse space-x-2">
                     <Info className="text-primary w-5 h-5" />
-                    <span>מידע בסיסי</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <span>סיכום דרישת רכש</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      נוצר ב-{new Date(request.createdAt!).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left Column - Essential Info */}
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">שם הפריט</label>
-                      <p className="text-foreground font-medium">{request.itemName}</p>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">פריט נדרש</label>
+                      <p className="text-lg font-semibold text-foreground">{request.itemName}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">כמות</label>
-                      <p className="text-foreground font-medium">{request.quantity} יחידות</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">כמות</label>
+                        <p className="text-foreground font-medium">{request.quantity} יחידות</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">קטגוריה</label>
+                        <p className="text-foreground font-medium">{request.category}</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">קטגוריה</label>
-                      <p className="text-foreground font-medium">{request.category}</p>
+
+                    {request.description && (
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">תיאור הדרישה</label>
+                        <p className="text-foreground text-sm leading-relaxed bg-muted/20 p-3 rounded-md">
+                          {request.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column - Context & Timing */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">מבקש</label>
+                        <p className="text-foreground font-medium">{request.requestedBy}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">מחלקה</label>
+                        <p className="text-foreground font-medium">{request.department}</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">עדיפות</label>
-                      <Badge className={priorityConfig.className}>{priorityConfig.label}</Badge>
-                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">תאריך יעד</label>
                       <p className="text-foreground font-medium">
                         {request.targetDate ? new Date(request.targetDate).toLocaleDateString('he-IL') : 'לא צוין'}
                       </p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">מבקש</label>
-                      <p className="text-foreground font-medium">{request.requestedBy} - {request.department}</p>
+
+                    {/* Cost Information */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-muted/20">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">תקציב מוקצה</label>
+                        <p className="text-foreground font-semibold">
+                          {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">אומדן מערכת</label>
+                        <p className="text-primary font-semibold">
+                          {request.estimatedCost ? `₪${parseFloat(request.estimatedCost).toLocaleString()}` : 'בהכנה'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  {request.description && (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">תיאור</label>
-                      <p className="text-foreground">{request.description}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Document Upload */}
@@ -1205,169 +1260,125 @@ export default function ProcurementRequest() {
           )}
         </div>
 
-        {/* Sidebar */}
+        {/* Simplified Sidebar - Focused on Actions */}
         <div className="space-y-6">
-          {/* EMF and Cost Cards */}
-          <div className="grid grid-cols-1 gap-4">
-            {/* EMF Card */}
-            <Card className="bg-card border-info/20">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">EMF (תקציב מוקצה)</h3>
-                  <p className="text-muted-foreground text-sm mb-3">התקציב המוקצה למימוש הדרישה</p>
-                  {requestLoading ? (
-                    <span className="text-2xl font-bold text-info h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
-                  ) : (
-                    <span className="text-2xl font-bold text-info">
-                      {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Estimated Cost Card */}
-            <Card className="bg-card border-success/20">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">אומדן עלות</h3>
-                  <p className="text-muted-foreground text-sm mb-3">אומדן שנוצר במערכת</p>
-                  {requestLoading ? (
-                    <span className="text-2xl font-bold text-success h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
-                  ) : (
-                    <span className="text-2xl font-bold text-success">
-                      {request.estimatedCost ? `₪${parseFloat(request.estimatedCost).toLocaleString()}` : 'טרם נוצר'}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
+          {/* Main Actions Card */}
           <Card className="bg-card border-primary/20">
             <CardHeader>
-              <CardTitle>פעולות מהירות</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="w-5 h-5 text-primary" />
+                פעולות ראשיות
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => aiAnalysisMutation.mutate()}
-                disabled={aiAnalysisMutation.isPending || requestLoading}
-              >
-                {requestLoading ? (
-                  <CenteredLoadingSpinner size="sm" color="text-primary-foreground" />
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 ml-2" />
-                    {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full border-secondary text-secondary hover:bg-secondary/10"
-                onClick={() => {
-                  console.log('Market Research button clicked with ID:', id);
-                  // Store the request ID in localStorage for context
-                  localStorage.setItem('currentRequestId', (id || '').toString());
-                  // Navigate directly with the ID in the URL
-                  window.location.href = `/market-research/${id || ''}`;
-                }}
-                disabled={requestLoading}
-              >
-                <Bot className="w-4 h-4 ml-2" />
-                מחקר שוק
-              </Button>
-              <Button variant="outline" className="w-full" disabled={requestLoading}>
-                <Download className="w-4 h-4 ml-2" />
-                ייצא דוח
-              </Button>
-              <Button variant="outline" className="w-full" disabled={requestLoading}>
-                <Share className="w-4 h-4 ml-2" />
-                שתף
-              </Button>
+              {request && (
+                <>
+                  <Button 
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => aiAnalysisMutation.mutate()}
+                    disabled={aiAnalysisMutation.isPending || requestLoading}
+                  >
+                    {requestLoading ? (
+                      <CenteredLoadingSpinner size="sm" color="text-primary-foreground" />
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 ml-2" />
+                        {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'ניתוח AI מתקדם'}
+                      </>
+                    )}
+                  </Button>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" className="text-xs" disabled={requestLoading}>
+                      <Download className="w-3 h-3 ml-1" />
+                      ייצא
+                    </Button>
+                    <Button variant="outline" className="text-xs" disabled={requestLoading}>
+                      <Share className="w-3 h-3 ml-1" />
+                      שתף
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
-          {/* Status Timeline */}
-          <Card className="bg-card border-warning/20">
+          {/* Progress Overview */}
+          <Card className="bg-card border-info/20">
             <CardHeader>
-              <CardTitle>סטטוס בקשה</CardTitle>
+              <CardTitle className="text-base">התקדמות תהליך</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className="w-3 h-3 bg-success rounded-full"></div>
-                  <div>
-                    <p className="text-sm text-foreground font-medium">בקשה נוצרה</p>
-                    <p className="text-xs text-muted-foreground">
-                      {requestLoading ? '...טוען' : new Date(request.createdAt!).toLocaleString('he-IL')}
-                    </p>
+              {requestLoading ? (
+                <div className="space-y-3">
+                  <div className="h-4 bg-muted rounded animate-pulse"></div>
+                  <div className="h-8 bg-muted rounded animate-pulse"></div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>השלמה כללית</span>
+                    <span className="font-medium">{Math.round(workflowProgress)}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-500" 
+                      style={{ width: `${workflowProgress}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="text-center pt-2 border-t border-muted/20">
+                    <p className="text-sm text-muted-foreground mb-1">שלב נוכחי</p>
+                    <Badge className={getStatusBadge(request.status).className} variant="outline">
+                      {getStatusBadge(request.status).label}
+                    </Badge>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {documents && Array.isArray(documents) && documents.length > 0 ? (
-                  <div className="flex items-center space-x-reverse space-x-3">
-                    <div className="w-3 h-3 bg-success rounded-full"></div>
+          {/* Quick Stats - Only if we have meaningful data */}
+          {request && (request.emf || request.estimatedCost) && (
+            <Card className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 border-success/20">
+              <CardContent className="p-4">
+                <div className="text-center space-y-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">סיכום עלויות</h3>
+                  
+                  {request.emf && (
                     <div>
-                      <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
-                      <p className="text-xs text-muted-foreground">
-                        {documents.length} קבצים
+                      <p className="text-xs text-muted-foreground">תקציב מוקצה</p>
+                      <p className="text-lg font-bold text-info">
+                        ₪{parseFloat(request.emf).toLocaleString()}
                       </p>
                     </div>
-                  </div>
-                ) : null}
-
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${request.status === 'processing' ? 'bg-warning animate-pulse' : 'bg-muted'}`}></div>
-                  <div>
-                    <p className="text-sm text-foreground font-medium">ניתוח AI</p>
-                    <p className="text-xs text-muted-foreground">
-                      {request.status === 'processing' ? 'בתהליך' : 'ממתין'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${request.status === 'completed' ? 'bg-success' : 'bg-muted'}`}></div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">הערכת עלות</p>
-                    <p className="text-xs text-muted-foreground">
-                      {request.status === 'completed' ? 'הושלם' : 'ממתין'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Current Status */}
-          <Card className="bg-card">
-            <CardContent className="p-6">
-              <div className="text-center">
-                <Badge className={statusConfig.className} variant="outline">
-                  {statusConfig.label}
-                </Badge>
-                {request.estimatedCost && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground">עלות מוערכת</p>
-                    {requestLoading ? (
-                      <span className="text-2xl font-bold text-foreground h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
-                    ) : (
-                      <p className="text-2xl font-bold text-foreground">
-                        {new Intl.NumberFormat('he-IL', {
-                          style: 'currency',
-                          currency: 'ILS',
-                          minimumFractionDigits: 0,
-                        }).format(parseFloat(request.estimatedCost))}
+                  )}
+                  
+                  {request.estimatedCost && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">אומדן נוכחי</p>
+                      <p className="text-lg font-bold text-success">
+                        ₪{parseFloat(request.estimatedCost).toLocaleString()}
                       </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                    </div>
+                  )}
+                  
+                  {request.emf && request.estimatedCost && (
+                    <div className="pt-2 border-t border-muted/20">
+                      <p className="text-xs text-muted-foreground">חיסכון צפוי</p>
+                      <p className={`text-sm font-medium ${
+                        parseFloat(request.emf) > parseFloat(request.estimatedCost) 
+                          ? 'text-success' 
+                          : 'text-warning'
+                      }`}>
+                        {((parseFloat(request.emf) - parseFloat(request.estimatedCost)) / parseFloat(request.emf) * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
