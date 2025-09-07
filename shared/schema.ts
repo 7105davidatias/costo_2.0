@@ -104,33 +104,6 @@ export const marketInsights = pgTable("market_insights", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const procurementCategories = pgTable("procurement_categories", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  name: text("name").notNull(),
-  baseMultiplier: decimal("base_multiplier", { precision: 4, scale: 2 }).default("1.0"),
-  complexityFactor: decimal("complexity_factor", { precision: 4, scale: 2 }).default("1.0"),
-  averageUnitCost: decimal("average_unit_cost", { precision: 15, scale: 2 }),
-  deliveryDaysMin: integer("delivery_days_min"),
-  deliveryDaysMax: integer("delivery_days_max"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const historicalProcurements = pgTable("historical_procurements", {
-  id: serial("id").primaryKey(),
-  procurementId: text("procurement_id"),
-  categoryCode: text("category_code").references(() => procurementCategories.code),
-  itemDescription: text("item_description"),
-  quantity: integer("quantity"),
-  finalCost: decimal("final_cost", { precision: 15, scale: 2 }),
-  allocatedBudget: decimal("allocated_budget", { precision: 15, scale: 2 }),
-  costVariancePct: decimal("cost_variance_pct", { precision: 5, scale: 2 }),
-  supplierName: text("supplier_name"),
-  completionDate: timestamp("completion_date"),
-  technicalComplexity: text("technical_complexity"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -168,16 +141,6 @@ export const insertMarketInsightSchema = createInsertSchema(marketInsights).omit
   updatedAt: true,
 });
 
-export const insertProcurementCategorySchema = createInsertSchema(procurementCategories).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertHistoricalProcurementSchema = createInsertSchema(historicalProcurements).omit({
-  id: true,
-  createdAt: true,
-});
-
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -199,9 +162,3 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
 export type MarketInsight = typeof marketInsights.$inferSelect;
 export type InsertMarketInsight = z.infer<typeof insertMarketInsightSchema>;
-
-export type ProcurementCategory = typeof procurementCategories.$inferSelect;
-export type InsertProcurementCategory = z.infer<typeof insertProcurementCategorySchema>;
-
-export type HistoricalProcurement = typeof historicalProcurements.$inferSelect;
-export type InsertHistoricalProcurement = z.infer<typeof insertHistoricalProcurementSchema>;
