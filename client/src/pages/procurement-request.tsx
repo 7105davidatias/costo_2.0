@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, Search, Filter, Star, Save, Sparkles, Plus } from "lucide-react";
+import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, Search, Filter, Star, Save, Sparkles, Plus, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback, useEffect } from "react";
 import FileUpload from "@/components/ui/file-upload";
