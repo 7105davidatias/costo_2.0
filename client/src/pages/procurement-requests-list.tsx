@@ -199,7 +199,7 @@ export default function ProcurementRequestsList() {
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Calendar className="h-4 w-4 ml-1" />
-                  <span>{request.targetDate ? formatDate(request.targetDate.toISOString()) : 'לא צוין'}</span>
+                  <span>{request.targetDate ? formatDate(request.targetDate as unknown as string) : 'לא צוין'}</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Badge variant="outline" className={getPriorityBadge(request.priority).className}>
