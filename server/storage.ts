@@ -1450,6 +1450,12 @@ export class MemStorage implements IStorage {
         updated = true;
       }
       
+      // החזר את הסטטוס ל"חדש" אם הדרישה הושלמה או בעיבוד
+      if (request.status === 'completed' || request.status === 'in_progress' || request.status === 'processing') {
+        request.status = 'new';
+        updated = true;
+      }
+      
       if (updated) {
         request.updatedAt = new Date();
         this.procurementRequests.set(id, request);
@@ -1475,6 +1481,12 @@ export class MemStorage implements IStorage {
     console.log(`- ${clearedExtractedData} extracted data entries cleared`);
     console.log(`- ${clearedDocumentAnalysis} document analyses cleared`);
     console.log(`- ${updatedRequests} procurement requests updated`);
+    
+    // הדפס סטטוסים של כל הדרישות לצורך ניפוי באגים
+    console.log('Current request statuses:');
+    for (const [id, request] of this.procurementRequests.entries()) {
+      console.log(`  Request ${id}: ${request.status}`);
+    }
     
     return {
       clearedEstimations: totalEstimations,
