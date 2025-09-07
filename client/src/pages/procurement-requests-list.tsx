@@ -8,7 +8,7 @@ import { ProcurementRequest } from "@shared/schema";
 
 export default function ProcurementRequestsList() {
   const { data: requests, isLoading, error } = useQuery<ProcurementRequest[]>({
-    queryKey: ["/api/procurement-requests"],
+    queryKey: ["procurement-requests"],
   });
 
   const getStatusBadge = (status: string) => {
