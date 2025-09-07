@@ -973,17 +973,17 @@ export default function ProcurementRequest() {
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Upload className="text-secondary w-5 h-5" />
                   <span>ניהול מסמכים</span>
-                  {documents && Array.isArray(documents) && documents.length > 0 && (
+                  {(documents && Array.isArray(documents) && documents.length > 0) ? (
                     <Badge variant="outline" className="bg-success/10 text-success">
-                      {documents.length} קבצים
+                      {(documents as any[]).length} קבצים
                     </Badge>
-                  )}
+                  ) : null}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <FileUpload requestId={request?.id || parseInt(id || '0')} />
 
-                {documents && Array.isArray(documents) && documents.length > 0 && (
+                {(documents && Array.isArray(documents) && (documents as any[]).length > 0) ? (
                   <div className="mt-6 space-y-2">
                     <h4 className="font-medium text-foreground mb-3">קבצים שהועלו:</h4>
                     {(documents as any[]).map((doc: any) => (
@@ -1021,7 +1021,7 @@ export default function ProcurementRequest() {
                       </div>
                     ))}
                   </div>
-                )}
+                ) : null}
               </CardContent>
             </Card>
 
@@ -1063,7 +1063,7 @@ export default function ProcurementRequest() {
                     size="sm"
                   >
                     {aiAnalysisMutation.isPending ? (
-                      <LoadingSpinner size="sm" color="text-primary-foreground" />
+                      <LoadingSpinner size="sm" />
                     ) : (
                       <>
                         <Bot className="w-4 h-4 ml-2" />
@@ -1118,7 +1118,7 @@ export default function ProcurementRequest() {
 
                   <div className="text-center pt-2 border-t border-muted/20">
                     <p className="text-xs text-muted-foreground mb-1">שלב נוכחי</p>
-                    <Badge className={getStatusBadge(request.status).className} variant="outline" className="text-xs">
+                    <Badge className={`${getStatusBadge(request.status).className} text-xs`} variant="outline">
                       {getStatusBadge(request.status).label}
                     </Badge>
                   </div>

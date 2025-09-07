@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
-function SQLRunner() {
+function SqlRunner() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -142,4 +142,4 @@ function SQLRunner() {
   );
 }
 
-export default SQLRunner;
+export default SqlRunner;
