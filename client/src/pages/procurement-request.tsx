@@ -14,19 +14,9 @@ import AIAnalysis from "@/components/procurement/ai-analysis";
 import WorkflowProgress from "@/components/ui/workflow-progress";
 import SpecsDisplay from "@/components/procurement/specs-display";
 import EstimationMethods from "@/components/procurement/estimation-methods";
-import Templates from "@/components/procurement/templates";
 import { useMobile } from "@/hooks/use-mobile";
-import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 import { cn } from "@/lib/utils";
-
-// Define a mock setRequest function if it's not provided by context or hook
-// In a real app, this would likely come from useState or a context provider
-const setRequest = (requestData: any) => {
-  console.log("Setting request data:", requestData);
-  // This is a placeholder. In a real scenario, you'd update the component's state.
-  // For example: setRequestState(requestData);
-};
-
+import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
   const { id } = useParams();
@@ -38,15 +28,9 @@ export default function ProcurementRequest() {
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useMobile();
 
-  // Mock request state to allow setRequest to work
-  const [request, setRequestState] = useState<ProcurementRequestType | null>(null);
-
-  const { data: queryRequestData, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
+  const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
-    onSuccess: (data) => {
-      setRequestState(data); // Update local state when query data is fetched
-    }
   });
 
   const { data: documents } = useQuery({
@@ -99,34 +83,15 @@ export default function ProcurementRequest() {
     );
   }, []);
 
-  // Added handleSelectTemplate logic
-  const handleSelectTemplate = (template: any) => {
-    // מילוי נתונים מהתבנית
-    const updatedRequest = {
-      ...request, // Use the local state 'request' here
-      itemName: template.itemName,
-      category: template.category,
-      description: template.description,
-      specifications: template.specifications,
-      estimatedCost: template.estimatedCost
-    };
-
-    // עדכון המצב המקומי
-    setRequestState(updatedRequest); // Use the state setter 'setRequestState'
-
-    alert(`התבנית "${template.name}" נטענה בהצלחה!`);
-  };
-
-
   const handleCreateEstimate = useCallback(async () => {
     setIsLoading(true);
     try {
       // כאן תהיה הלוגיקה ליצירת אומדן
       console.log('Creating estimate with methods:', selectedMethods);
-
+      
       // סימולציה של תהליך
       await new Promise(resolve => setTimeout(resolve, 2000));
-
+      
       // ניווט לדף אומדן עלות
       window.location.href = `/cost-estimation/${id}`;
     } catch (error) {
@@ -476,7 +441,7 @@ export default function ProcurementRequest() {
     );
   }
 
-  if (!request) { // Use the local state 'request' here
+  if (!request) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-4">בקשת רכש לא נמצאה</h2>
@@ -614,7 +579,7 @@ export default function ProcurementRequest() {
             </CardHeader>
             <CardContent>
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
-
+              
               {/* Uploaded Files */}
               {documents && Array.isArray(documents) && documents.length > 0 ? (
                 <div className="mt-6 space-y-2">
@@ -665,9 +630,6 @@ export default function ProcurementRequest() {
             isLoading={isLoading}
             className="mb-6"
           />
-
-          {/* Templates Module */}
-          <Templates onSelectTemplate={handleSelectTemplate} />
 
           {/* AI Analysis Results */}
           <AIAnalysis requestId={request.id} specifications={request.specifications} />
@@ -763,7 +725,7 @@ export default function ProcurementRequest() {
                     </p>
                   </div>
                 </div>
-
+                
                 {documents && Array.isArray(documents) && documents.length > 0 ? (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>

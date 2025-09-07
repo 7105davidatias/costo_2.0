@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle, Brain, BarChart3, AlertTriangle, Zap } from "lucide-react";
+import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle } from "lucide-react";
 import CostTrendsChart from "@/components/charts/cost-trends-chart";
 import AccuracyChart from "@/components/charts/accuracy-chart";
 import { Link } from "wouter";
@@ -184,108 +184,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* AI Insights Panel */}
-      <Card className="bg-card border-success/20">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-reverse space-x-2">
-            <Brain className="text-success w-5 h-5" />
-            <span>תובנות AI מתקדמות</span>
-          </CardTitle>
-          <p className="text-muted-foreground text-sm">ניתוח מתקדם ומגמות בזמן אמת</p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <TrendingUp className="text-success mt-1 w-5 h-5" />
-                <div>
-                  <h4 className="font-medium text-foreground mb-1">מגמת חיסכון מתקדמת</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    מודל AI זיהה דפוס חיסכון של 15.2% בממוצע באומדנים החדשים.
-                  </p>
-                  <div className="flex items-center space-x-reverse space-x-2">
-                    <Badge variant="outline" className="bg-success/20 text-success text-xs">
-                      דיוק 96.8%
-                    </Badge>
-                    <Badge variant="outline" className="bg-primary/20 text-primary text-xs">
-                      12 דרישות נותחו
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-info/10 border border-info/30 rounded-lg p-4">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <BarChart3 className="text-info mt-1 w-5 h-5" />
-                <div>
-                  <h4 className="font-medium text-foreground mb-1">אופטימיזציה חכמה</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    זוהו 5 הזדמנויות איחוד רכישות - פוטנציאל חיסכון ₪245,000.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>• 3 דרישות טכנולוגיה</div>
-                    <div>• 2 דרישות ריהוט</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <AlertTriangle className="text-warning mt-1 w-5 h-5" />
-                <div>
-                  <h4 className="font-medium text-foreground mb-1">התראות שוק מתקדמות</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    זוהו 2 סיכונים בשרשרת האספקה ועלייה צפויה במחירי אנרגיה.
-                  </p>
-                  <div className="text-xs space-y-1">
-                    <div>• מחירי שבבים +3.2% (אמינות 89%)</div>
-                    <div>• זמני אספקה +2 שבועות (Q2)</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-              <div className="flex items-start space-x-reverse space-x-3">
-                <Zap className="text-purple-500 mt-1 w-5 h-5" />
-                <div>
-                  <h4 className="font-medium text-foreground mb-1">חדשנות בתחזיות</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    מודל למידת מכונה חדש שיפר דיוק תחזיות מחירים ב-23%.
-                  </p>
-                  <div className="flex items-center space-x-reverse space-x-2">
-                    <Badge variant="outline" className="bg-purple-500/20 text-purple-500 text-xs">
-                      רמת ביטחון גבוהה
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-6 pt-4 border-t border-muted/20">
-            <h5 className="font-medium text-foreground mb-3">פעולות מומלצות</h5>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="text-xs">
-                <TrendingUp className="w-3 h-3 ml-1" />
-                צפה בתחזיות שוק
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs">
-                <BarChart3 className="w-3 h-3 ml-1" />
-                נתח הזדמנויות איחוד
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs">
-                <AlertTriangle className="w-3 h-3 ml-1" />
-                סקר סיכונים
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Requests Table */}
       <Card className="bg-card border-primary/20">
