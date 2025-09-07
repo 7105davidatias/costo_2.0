@@ -813,6 +813,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Approve cost estimation and update procurement request
+  app.post("/api/cost-estimations/:id/approve", async (req, res) => {
+    try {
+      const estimationId = parseInt(req.params.id);
+      const estimation = await storage.getCostEstimation(estimationId);
+      
+      if (!estimation) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "אומדן לא נמצא" 
+        });
+      }
+
+      // Update the procurement request with the approved cost
+      const request = await storage.getProcurementRequest(estimation.procurementRequestId);
+      if (request) {
+        request.estimatedCost = estimation.totalCost;
+        request.status = 'completed';
+        request.updatedAt = new Date();
+        
+        await storage.updateProcurementRequest(estimation.procurementRequestId, request);
+      }
+
+      res.json({
+        success: true,
+        message: 'אומדן אושר בהצלחה! העלות עודכנה בדרישת הרכש.'
+      });
+    } catch (error) {
+      console.error('Error approving cost estimation:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה באישור האומדן'
+      });
+    }
+  });
+
   // Reset all AI data - comprehensive cleanup endpoint
   app.post("/api/admin/reset-all-ai-data", async (req, res) => {
     try {

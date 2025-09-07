@@ -533,9 +533,26 @@ export default function CostEstimation() {
               </Button>
               <Button 
                 className="bg-success text-white hover:bg-success/90"
-                onClick={() => {
-                  // TODO: Implement approval functionality
-                  alert('אומדן אושר בהצלחה! התמחור יועבר לאישור סופי.');
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/cost-estimations/${apiEstimation.id}/approve`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                      alert(result.message);
+                      // Redirect back to procurement request after approval
+                      window.location.href = `/procurement-request/${id}`;
+                    } else {
+                      alert('שגיאה באישור האומדן: ' + result.message);
+                    }
+                  } catch (error) {
+                    console.error('Error approving estimation:', error);
+                    alert('שגיאה באישור האומדן');
+                  }
                 }}
               >
                 <CheckCircle className="w-4 h-4 ml-2" />
