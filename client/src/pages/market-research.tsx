@@ -99,76 +99,6 @@ export default function MarketResearch() {
   console.log('MarketResearch - contextualSuppliers:', marketResearch?.supplierComparison);
   console.log('MarketResearch - suppliers (legacy):', suppliers);
 
-  // נתוני ספקים מהמסמכים - מבוסס על procurement_history.csv
-  const supplierData = [
-    {
-      name: "Dell Technologies",
-      rating: 4.5,
-      specialties: ["ציוד IT", "שרתים", "מחשבים"],
-      averageDeliveryDays: 30,
-      priceCompetitiveness: 85,
-      reliabilityScore: 95,
-      code: "DT",
-      discountPolicy: "8-12% לכמויות גדולות",
-      warrantyTerms: "3-5 שנות אחריות סטנדרט"
-    },
-    {
-      name: "ריהוט ישראלי", 
-      rating: 4.2,
-      specialties: ["ריהוט משרדי", "כסאות", "שולחנות"],
-      averageDeliveryDays: 25,
-      priceCompetitiveness: 90,
-      reliabilityScore: 88,
-      code: "RI",
-      discountPolicy: "5-10% על הזמנות מעל ₪50,000",
-      warrantyTerms: "2-3 שנות אחריות"
-    },
-    {
-      name: "TechSource Ltd",
-      rating: 4.8,
-      specialties: ["ציוד רשת", "אבטחת מידע", "פתרונות ענן"],
-      averageDeliveryDays: 15,
-      priceCompetitiveness: 92,
-      reliabilityScore: 96,
-      code: "TS",
-      discountPolicy: "15% לחוזים שנתיים",
-      warrantyTerms: "5 שנות אחריות מורחבת"
-    },
-    {
-      name: "מכוניות ישראל",
-      rating: 4.3,
-      specialties: ["רכב מסחרי", "משאיות", "ציוד תחבורה"],
-      averageDeliveryDays: 45,
-      priceCompetitiveness: 78,
-      reliabilityScore: 85,
-      code: "MI",
-      discountPolicy: "3-7% על צי רכב",
-      warrantyTerms: "3 שנות אחריות יצרן"
-    },
-    {
-      name: "מערכות אבטחה בע\"מ",
-      rating: 4.6,
-      specialties: ["מערכות אבטחה", "מצלמות", "בקרת גישה"],
-      averageDeliveryDays: 20,
-      priceCompetitiveness: 88,
-      reliabilityScore: 92,
-      code: "MA",
-      discountPolicy: "10-15% לפרויקטים מורכבים",
-      warrantyTerms: "2-4 שנות אחריות + תחזוקה"
-    },
-    {
-      name: "CompuTrade",
-      rating: 4.5,
-      specialties: ["ציוד מחשוב", "רכיבים", "שירותי IT"],
-      averageDeliveryDays: 12,
-      priceCompetitiveness: 94,
-      reliabilityScore: 89,
-      code: "CT",
-      discountPolicy: "5-8% על הזמנות מעל ₪100,000",
-      warrantyTerms: "1-3 שנות אחריות"
-    }
-  ];
-
   const formatCurrency = (amount: string | number) => {
     const value = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('he-IL', {
@@ -193,18 +123,17 @@ export default function MarketResearch() {
     return { label: 'סטנדרט', className: 'bg-muted/20 text-muted-foreground' };
   };
 
-  // Use contextual data if available, otherwise fallback to enhanced supplier data
+  // Use contextual data if available, otherwise fallback to legacy data
   const contextualSuppliers = marketResearch?.supplierComparison || [];
-  const enhancedSuppliers = supplierData.slice(0, 3);
+  const legacySuppliers = suppliers?.slice(0, 3) || [];
   
-  const supplierComparisonData = ((finalRequestId && marketResearch?.supplierComparison) ? 
-    marketResearch.supplierComparison : enhancedSuppliers).map((supplier: any, index: number) => ({
+  const supplierComparisonData = ((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
-    price: supplier.priceCompetitiveness || (95 - (index * 10)),
-    quality: (parseFloat(supplier.rating || "4.5") * 20),
-    delivery: supplier.averageDeliveryDays ? (100 - (supplier.averageDeliveryDays / 2)) : (100 - ((supplier.deliveryTime || "10").toString().match(/\d+/)?.[0] || 10) * 5),
-    service: supplier.reliabilityScore || supplier.reliability || 85,
-    reliability: supplier.reliabilityScore || supplier.reliability || 85,
+    price: 95 - (index * 10),
+    quality: parseFloat(supplier.rating || "4.5") * 20,
+    delivery: 100 - ((supplier.deliveryTime || "10").toString().match(/\d+/)?.[0] || 10) * 5,
+    service: supplier.reliability || 85,
+    reliability: supplier.reliability || 85,
   }));
 
   const priceHistoryData = (Array.isArray(marketInsight?.priceHistory) ? 
@@ -262,9 +191,7 @@ export default function MarketResearch() {
                         sum + parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0'), 0
                       ) / marketResearch.supplierComparison.length
                     )
-                  ) : formatCurrency(
-                    enhancedSuppliers.reduce((sum, supplier) => sum + (65000 * (supplier.priceCompetitiveness / 100)), 0) / enhancedSuppliers.length
-                  )}
+                  ) : (marketInsight?.averagePrice ? formatCurrency(marketInsight.averagePrice) : '₪68,300')}
                 </p>
                 <p className="text-primary text-sm mt-1">לכל יחידה</p>
               </div>
@@ -280,9 +207,9 @@ export default function MarketResearch() {
                 <p className="text-muted-foreground text-sm mb-1">מספר ספקים</p>
                 <p className="text-2xl font-bold text-foreground">
                   {finalRequestId && marketResearch?.supplierComparison ? 
-                    marketResearch.supplierComparison.length : supplierData.length}
+                    marketResearch.supplierComparison.length : (marketInsight?.supplierCount || 15)}
                 </p>
-                <p className="text-secondary text-sm mt-1">ספקים מאושרים</p>
+                <p className="text-secondary text-sm mt-1">ספקים פעילים</p>
               </div>
               <Store className="text-secondary w-8 h-8" />
             </div>
@@ -322,9 +249,7 @@ export default function MarketResearch() {
                         sum + parseInt(supplier.deliveryTime?.match(/\d+/)?.[0] || '0'), 0
                       ) / marketResearch.supplierComparison.length
                     )
-                  ) : Math.round(
-                    enhancedSuppliers.reduce((sum, supplier) => sum + supplier.averageDeliveryDays, 0) / enhancedSuppliers.length
-                  )}
+                  ) : '14'}
                 </p>
                 <p className="text-warning text-sm mt-1">ימי עסקים ממוצע</p>
               </div>
@@ -388,28 +313,20 @@ export default function MarketResearch() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : enhancedSuppliers).map((supplier: any, index: number) => {
+                {((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => {
                   const isContextual = !!(finalRequestId && marketResearch?.supplierComparison);
                   const supplierName = supplier.supplier || supplier.name;
                   const supplierRating = supplier.rating || "4.5";
-                  const supplierDeliveryTime = supplier.deliveryTime || (supplier.averageDeliveryDays ? `${supplier.averageDeliveryDays} ימים` : "10 ימים");
+                  const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
                   const supplierWarranty = supplier.warranty || supplier.warrantyTerms || "3 שנים";
                   const supplierDiscount = supplier.discount || supplier.discountPolicy || "ללא הנחה";
                   const supplierPrice = supplier.pricePerUnit || formatCurrency(60500 + (index * 2500));
                   const supplierCode = supplier.contact || supplier.code || supplierName.substring(0, 2);
                   
-                  // Enhanced recommendation logic based on supplier data
+                  // Determine recommendation based on context
                   const recommendationConfig = isContextual 
                     ? { label: index === 0 ? 'מומלץ' : index === 1 ? 'טוב' : 'סטנדרט', className: index === 0 ? 'bg-success/20 text-success' : index === 1 ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground' }
-                    : {
-                        label: supplier.reliabilityScore >= 95 ? 'מומלץ בחום' :
-                               supplier.reliabilityScore >= 90 ? 'מומלץ' :
-                               supplier.reliabilityScore >= 85 ? 'טוב' : 'סטנדרט',
-                        className: supplier.reliabilityScore >= 95 ? 'bg-success/20 text-success' :
-                                  supplier.reliabilityScore >= 90 ? 'bg-primary/20 text-primary' :
-                                  supplier.reliabilityScore >= 85 ? 'bg-secondary/20 text-secondary' :
-                                  'bg-muted/20 text-muted-foreground'
-                      };
+                    : getRecommendationBadge(supplier);
                   
                   return (
                     <tr key={index} className={`hover:bg-muted/10 ${index === 0 ? 'bg-success/5' : ''}`}>
