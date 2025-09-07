@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, FileTemplate, Search, Filter, Star, Save, Sparkles, Plus } from "lucide-react";
+import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight, Search, Filter, Star, Save, Sparkles, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback, useEffect } from "react";
 import FileUpload from "@/components/ui/file-upload";
@@ -731,7 +731,7 @@ export default function ProcurementRequest() {
             <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <FileTemplate className="text-primary w-5 h-5" />
+                  <FileText className="text-primary w-5 h-5" />
                   <span>התחל עם תבנית או צור חדש</span>
                 </CardTitle>
               </CardHeader>
@@ -744,14 +744,14 @@ export default function ProcurementRequest() {
                   <Dialog open={templateModalOpen} onOpenChange={setTemplateModalOpen}>
                     <DialogTrigger asChild>
                       <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <FileTemplate className="w-4 h-4 ml-2" />
+                        <FileText className="w-4 h-4 ml-2" />
                         בחר תבנית
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <FileTemplate className="h-5 w-5" />
+                          <FileText className="h-5 w-5" />
                           בחירת תבנית דרישת רכש
                         </DialogTitle>
                       </DialogHeader>
