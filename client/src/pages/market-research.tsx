@@ -15,6 +15,16 @@ import AIRecommendations from '@/components/market/ai-recommendations';
 export default function MarketResearch() {
   const { category } = useParams();
 
+  // State variables - must be at the top before any conditional logic
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [estimatedCost, setEstimatedCost] = useState<number>(100000);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [targetDate, setTargetDate] = useState<Date | undefined>(undefined);
+
   // Check if the parameter is actually a request ID (number) or a category (string)
   const isRequestId = category && !isNaN(Number(category));
   const requestId = isRequestId ? category : null;
@@ -248,17 +258,6 @@ export default function MarketResearch() {
   };
 
   const COLORS = ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa'];
-
-  // State variables for AI Recommendations component
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [priceFilter, setPriceFilter] = useState<string>('all');
-  const [estimatedCost, setEstimatedCost] = useState<number>(100000);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [targetDate, setTargetDate] = useState<Date | undefined>(undefined);
-
 
   return (
     <div className="space-y-8">
