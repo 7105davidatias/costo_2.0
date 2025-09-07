@@ -33,16 +33,16 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('document', file);
-      
+
       const response = await fetch(`/api/documents/upload/${requestId}`, {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error('Upload failed');
       }
-      
+
       return response.json();
     },
     onSuccess: (data, file) => {
@@ -53,15 +53,15 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
             : f
         )
       );
-      
+
       toast({
         title: "קובץ הועלה בהצלחה",
         description: `${file.name} הועלה ונשלח לניתוח AI`,
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ["/api/documents/request", requestId] });
       onUploadComplete?.(data);
-      
+
       // Remove from uploading files after success
       setTimeout(() => {
         setUploadingFiles(prev => prev.filter(f => f.file !== file));
@@ -75,7 +75,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
             : f
         )
       );
-      
+
       toast({
         title: "שגיאה בהעלאת קובץ",
         description: `נכשלה העלאת ${file.name}: ${error.message}`,
@@ -98,7 +98,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     handleFiles(files);
   }, []);
@@ -112,10 +112,10 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       ];
-      
+
       const isValidType = validTypes.includes(file.type);
       const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
-      
+
       if (!isValidType) {
         toast({
           title: "סוג קובץ לא נתמך",
@@ -124,7 +124,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
         });
         return false;
       }
-      
+
       if (!isValidSize) {
         toast({
           title: "קובץ גדול מדי",
@@ -133,7 +133,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
         });
         return false;
       }
-      
+
       return true;
     });
 
@@ -143,7 +143,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
         progress: 0,
         status: 'uploading'
       }]);
-      
+
       uploadMutation.mutate(file);
     });
   };
@@ -199,7 +199,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
           </Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* אזור העלאה */}
         <div
@@ -215,8 +215,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
           onClick={() => fileInputRef.current?.click()}
           role="button"
           tabIndex={0}
-          aria-label="העלה קבצים"
-        >
+          aria-label="העלה קבצים">
           <Upload className={cn(
             'w-8 h-8 mx-auto mb-2 transition-colors',
             dragActive ? 'text-primary' : 'text-muted-foreground'
@@ -234,7 +233,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
           <p className="text-xs text-muted-foreground mt-2">
             PDF, DOC, XLS עד 10MB
           </p>
-          
+
           <input
             ref={fileInputRef}
             type="file"
@@ -242,8 +241,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
             accept=".pdf,.doc,.docx,.xls,.xlsx"
             onChange={handleFileInput}
             className="hidden"
-            aria-hidden="true"
-          />
+            aria-hidden="true" />
         </div>
 
         {/* קבצים שהועלו */}
@@ -252,7 +250,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
             <h4 className="text-foreground text-sm font-semibold">
               קבצים שהועלו
             </h4>
-            
+
             {uploadingFiles.map((uploadingFile, index) => (
               <div
                 key={index}
@@ -280,24 +278,23 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
                           </Badge>
                         )}
                       </div>
-                      
+
                       {/* פס התקדמות העלאה */}
                       {uploadingFile.status === 'uploading' && (
                         <Progress 
                           value={uploadingFile.progress} 
-                          className="mt-2 h-1"
-                        />
+                          className="mt-2 h-1" />
                       )}
-                      
+
                       {uploadingFile.status === 'error' && (
                         <p className="text-xs text-destructive mt-1">{uploadingFile.error}</p>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     {getStatusIcon(uploadingFile.status)}
-                    
+
                     {uploadingFile.status === 'success' && onFileView && (
                       <Button
                         variant="ghost"
@@ -309,7 +306,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
                         <Eye className="w-4 h-4" />
                       </Button>
                     )}
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"

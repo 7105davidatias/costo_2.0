@@ -291,9 +291,30 @@ export default function MarketResearch() {
         </div>
       </div>
 
+      {/* Quick Actions Bar */}
+      <div className="flex flex-wrap gap-3 mb-6 p-4 bg-muted/20 rounded-lg">
+        <Button variant="outline" size="sm">
+          <Download className="w-4 h-4 ml-2" />
+          ייצא נתונים
+        </Button>
+        <Button variant="outline" size="sm">
+          <Star className="w-4 h-4 ml-2" />
+          שמור מחקר
+        </Button>
+        <Button variant="outline" size="sm">
+          <RefreshCw className="w-4 h-4 ml-2" />
+          רענן נתונים
+        </Button>
+        <div className="flex-1"></div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="w-4 h-4" />
+          עודכן לאחרונה: {new Date().toLocaleTimeString('he-IL')}
+        </div>
+      </div>
+
       {/* Market Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-card border-primary/20 animate-fade-in">
+        <Card className="bg-card border-primary/20 animate-fade-in card-hover">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

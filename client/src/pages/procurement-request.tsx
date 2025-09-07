@@ -913,15 +913,32 @@ export default function ProcurementRequest() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="mb-4 p-3 bg-info/10 border border-info/30 rounded-lg">
+                  <p className="text-sm text-info flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    שדות המסומנים ב-* הם שדות חובה. המערכת תציע השלמות אוטומטיות בהתבסס על נתונים קיימים.
+                  </p>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="itemName">שם הפריט *</Label>
+                    <Label htmlFor="itemName" className="flex items-center gap-1">
+                      שם הפריט 
+                      <span className="text-destructive">*</span>
+                      {formData.itemName && <CheckCircle className="w-4 h-4 text-success" />}
+                    </Label>
                     <Input
                       id="itemName"
                       value={formData.itemName}
                       onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
-                      placeholder="הזן שם הפריט"
+                      placeholder="הזן שם הפריט (לדוגמה: מחשב נייד Dell Latitude)"
+                      className={formData.itemName ? "border-success" : ""}
                     />
+                    {!formData.itemName && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        שם הפריט יעזור למערכת לזהות אוטומטית קטגוריה ומפרטים
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="quantity">כמות *</Label>
@@ -1015,14 +1032,45 @@ export default function ProcurementRequest() {
                 )}
 
                 <div className="flex gap-3 pt-4">
-                  <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Save className="w-4 h-4 ml-2" />
-                    שמור דרישת רכש
+                  <Button 
+                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={!formData.itemName || !formData.category}
+                  >
+                    {isLoading ? (
+                      <LoadingSpinner size="sm" type="calculation" />
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 ml-2" />
+                        שמור דרישת רכש
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    disabled={!formData.itemName}
+                  >
                     <Bot className="w-4 h-4 ml-2" />
                     בדיקת AI
                   </Button>
+                </div>
+                
+                {/* Progress indicator for form completion */}
+                <div className="mt-4 p-3 bg-muted/20 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">השלמת טופס</span>
+                    <span className="text-sm text-muted-foreground">
+                      {Math.round((Object.values(formData).filter(v => v && v !== '').length / Object.keys(formData).length) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      style={{ 
+                        width: `${(Object.values(formData).filter(v => v && v !== '').length / Object.keys(formData).length) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
