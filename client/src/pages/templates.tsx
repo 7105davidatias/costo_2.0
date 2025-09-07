@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ import {
 } from "@/data/document-templates";
 
 export default function Templates() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
 
   // סטטיסטיקות תבניות
@@ -55,7 +55,7 @@ export default function Templates() {
   const handleSelectTemplate = (template: DocumentTemplate) => {
     setSelectedTemplate(template);
     // Create new procurement request based on template
-    navigate(`/procurement-request/new?templateId=${template.id}`);
+    setLocation(`/procurement-request/new?templateId=${template.id}`);
   };
 
   const formatCurrency = (amount: number) => {
