@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema } from "@shared/schema";
+import { PricingEngine, initializePricingEngine, type EstimationRequest } from "@shared/pricing-engine";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,6 +27,18 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize pricing engine with data from storage
+  let pricingEngine: PricingEngine;
+  
+  const initializePricingEngineData = async () => {
+    const categories = await storage.getProcurementCategories();
+    const historical = await storage.getHistoricalProcurements();
+    const suppliers = await storage.getSupplierPerformance();
+    pricingEngine = initializePricingEngine(categories, historical, suppliers);
+  };
+  
+  await initializePricingEngineData();
+
   // Procurement Requests
   app.get("/api/procurement-requests", async (req, res) => {
     try {
@@ -877,6 +890,297 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advanced Estimation - 5 methods using PricingEngine
+  app.post("/api/advanced-estimation", async (req, res) => {
+    try {
+      const { requestId, methods = ['market-based', 'analogous', 'parametric', 'bottom-up', 'expert-judgment'] } = req.body;
+      
+      if (!requestId) {
+        return res.status(400).json({
+          success: false,
+          error: 'מזהה דרישת רכש נדרש'
+        });
+      }
+
+      const procurementRequest = await storage.getProcurementRequest(requestId);
+      if (!procurementRequest) {
+        return res.status(404).json({
+          success: false,
+          error: 'דרישת רכש לא נמצאה'
+        });
+      }
+
+      // Prepare estimation request
+      const estimationRequest: EstimationRequest = {
+        requestId: procurementRequest.id,
+        itemName: procurementRequest.itemName,
+        description: procurementRequest.description || '',
+        category: procurementRequest.category,
+        quantity: procurementRequest.quantity,
+        specifications: procurementRequest.specifications || {},
+        targetDate: procurementRequest.targetDate,
+        emf: procurementRequest.emf
+      };
+
+      // Refresh pricing engine data
+      await initializePricingEngineData();
+
+      // Calculate comprehensive estimation
+      const comprehensiveEstimation = pricingEngine.calculateComprehensiveEstimation(
+        estimationRequest,
+        methods
+      );
+
+      res.json({
+        success: true,
+        data: comprehensiveEstimation,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Advanced estimation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'שגיאה בחישוב אומדן מתקדם'
+      });
+    }
+  });
+
+  // Historical Data by Category
+  app.get("/api/historical-data/:category", async (req, res) => {
+    try {
+      const { category } = req.params;
+      const { limit = 20, sortBy = 'completedDate' } = req.query;
+
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          error: 'קטגוריה נדרשת'
+        });
+      }
+
+      // Get historical procurements for category
+      const historicalData = await storage.getHistoricalProcurementsByCategory(category);
+      
+      // Sort and limit results
+      const sortedData = historicalData
+        .sort((a, b) => {
+          if (sortBy === 'completedDate') {
+            return new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime();
+          }
+          if (sortBy === 'variance') {
+            return Math.abs(b.variance) - Math.abs(a.variance);
+          }
+          if (sortBy === 'satisfaction') {
+            return b.satisfaction - a.satisfaction;
+          }
+          return 0;
+        })
+        .slice(0, parseInt(limit as string));
+
+      // Calculate statistics
+      const stats = {
+        totalProcurements: historicalData.length,
+        averageVariance: historicalData.reduce((sum, p) => sum + p.variance, 0) / historicalData.length,
+        averageSatisfaction: historicalData.reduce((sum, p) => sum + p.satisfaction, 0) / historicalData.length,
+        totalValue: historicalData.reduce((sum, p) => sum + p.actualCost, 0),
+        topSuppliers: getTopSuppliers(historicalData),
+        riskFactors: extractRiskFactors(historicalData)
+      };
+
+      res.json({
+        success: true,
+        data: {
+          category,
+          procurements: sortedData,
+          statistics: stats
+        },
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Historical data error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה בקבלת נתונים היסטוריים'
+      });
+    }
+  });
+
+  // Supplier Recommendations
+  app.get("/api/supplier-recommendations/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const procurementRequest = await storage.getProcurementRequest(requestId);
+      
+      if (!procurementRequest) {
+        return res.status(404).json({
+          success: false,
+          error: 'דרישת רכש לא נמצאה'
+        });
+      }
+
+      // Get supplier performance data
+      const allSuppliers = await storage.getSupplierPerformance();
+      
+      // Get historical data for this category
+      const categoryHistory = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
+      
+      // Calculate supplier scores based on multiple factors
+      const supplierRecommendations = allSuppliers.map(supplier => {
+        const supplierHistory = categoryHistory.filter(h => h.supplierId === supplier.supplierId);
+        
+        // Calculate comprehensive score
+        const performanceScore = (
+          supplier.rating * 0.25 +
+          supplier.reliabilityScore / 25 +  // Convert to 0-4 scale
+          supplier.costEfficiency * 0.25 +
+          supplier.qualityScore * 0.25
+        );
+        
+        const experienceScore = Math.min(supplierHistory.length / 5, 1) * 4; // Experience factor
+        const satisfactionScore = supplierHistory.length > 0 ? 
+          supplierHistory.reduce((sum, h) => sum + h.satisfaction, 0) / supplierHistory.length : 
+          supplier.rating;
+        
+        const overallScore = (performanceScore + experienceScore + satisfactionScore) / 3;
+        
+        // Calculate risk factors
+        const riskFactors = [];
+        if (supplier.defectRate > 5) riskFactors.push('שיעור פגמים גבוה');
+        if (supplier.onTimeDelivery < 85) riskFactors.push('עיכובים בזמני אספקה');
+        if (supplier.responseTime > 24) riskFactors.push('זמן תגובה איטי');
+        if (supplierHistory.length === 0) riskFactors.push('חוסר ניסיון בקטגוריה זו');
+        
+        return {
+          supplierId: supplier.supplierId,
+          supplierName: supplier.supplierName,
+          overallScore: Math.round(overallScore * 10) / 10,
+          performanceMetrics: {
+            rating: supplier.rating,
+            reliabilityScore: supplier.reliabilityScore,
+            costEfficiency: supplier.costEfficiency,
+            qualityScore: supplier.qualityScore,
+            avgDeliveryTime: supplier.avgDeliveryTime,
+            onTimeDelivery: supplier.onTimeDelivery,
+            defectRate: supplier.defectRate,
+            responseTime: supplier.responseTime
+          },
+          categoryExperience: {
+            ordersInCategory: supplierHistory.length,
+            averageSatisfaction: satisfactionScore,
+            successfulProjects: supplierHistory.filter(h => h.satisfaction >= 4).length
+          },
+          riskFactors,
+          recommendation: generateSupplierRecommendation(overallScore, riskFactors, supplierHistory.length)
+        };
+      })
+      .sort((a, b) => b.overallScore - a.overallScore)
+      .slice(0, 5); // Top 5 recommendations
+
+      res.json({
+        success: true,
+        data: {
+          requestId,
+          category: procurementRequest.category,
+          recommendations: supplierRecommendations,
+          selectionCriteria: {
+            weightings: {
+              performance: '25%',
+              reliability: '25%',
+              costEfficiency: '25%',
+              quality: '25%'
+            },
+            bonusFactors: [
+              'ניסיון קודם בקטגוריה',
+              'רמת שביעות רצון גבוהה',
+              'זמני אספקה קצרים'
+            ]
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Supplier recommendations error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה בקבלת המלצות ספקים'
+      });
+    }
+  });
+
+  // Risk Assessment
+  app.get("/api/risk-assessment/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const procurementRequest = await storage.getProcurementRequest(requestId);
+      
+      if (!procurementRequest) {
+        return res.status(404).json({
+          success: false,
+          error: 'דרישת רכש לא נמצאה'
+        });
+      }
+
+      // Get category data for risk assessment
+      const categoryData = await storage.getProcurementCategoriesByName(procurementRequest.category);
+      const historicalData = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
+      
+      // Initialize pricing engine for risk analysis
+      await initializePricingEngineData();
+      
+      const estimationRequest: EstimationRequest = {
+        requestId: procurementRequest.id,
+        itemName: procurementRequest.itemName,
+        description: procurementRequest.description || '',
+        category: procurementRequest.category,
+        quantity: procurementRequest.quantity,
+        specifications: procurementRequest.specifications || {},
+        targetDate: procurementRequest.targetDate,
+        emf: procurementRequest.emf
+      };
+
+      // Calculate risk factors using pricing engine
+      const marketEstimation = pricingEngine.calculateMarketBasedEstimate(estimationRequest);
+      const riskFactors = marketEstimation.risks;
+      
+      // Additional risk analysis
+      const riskAssessment = {
+        overallRiskLevel: calculateOverallRisk(procurementRequest, categoryData[0], historicalData),
+        riskCategories: {
+          financial: assessFinancialRisk(procurementRequest, historicalData),
+          operational: assessOperationalRisk(procurementRequest, categoryData[0]),
+          market: assessMarketRisk(procurementRequest, categoryData[0]),
+          supplier: assessSupplierRisk(procurementRequest),
+          timeline: assessTimelineRisk(procurementRequest, categoryData[0])
+        },
+        riskFactors,
+        mitigationStrategies: generateMitigationStrategies(procurementRequest, categoryData[0], historicalData),
+        contingencyRecommendations: generateContingencyRecommendations(procurementRequest),
+        monitoringIndicators: generateMonitoringIndicators(procurementRequest, categoryData[0])
+      };
+
+      res.json({
+        success: true,
+        data: {
+          requestId,
+          requestTitle: procurementRequest.itemName,
+          category: procurementRequest.category,
+          riskAssessment,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('Risk assessment error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה בהערכת סיכונים'
+      });
+    }
+  });
+
   // SQL Runner for development (only works with memory storage simulation)
   app.post("/api/sql-runner", async (req, res) => {
     try {
@@ -950,6 +1254,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper functions for advanced estimation endpoints
+
+function getTopSuppliers(historicalData: any[]) {
+  const supplierStats = historicalData.reduce((acc, proc) => {
+    if (!acc[proc.supplierId]) {
+      acc[proc.supplierId] = {
+        supplierId: proc.supplierId,
+        orders: 0,
+        totalValue: 0,
+        avgSatisfaction: 0,
+        satisfactionSum: 0
+      };
+    }
+    acc[proc.supplierId].orders++;
+    acc[proc.supplierId].totalValue += proc.actualCost;
+    acc[proc.supplierId].satisfactionSum += proc.satisfaction;
+    acc[proc.supplierId].avgSatisfaction = acc[proc.supplierId].satisfactionSum / acc[proc.supplierId].orders;
+    return acc;
+  }, {} as Record<number, any>);
+
+  return Object.values(supplierStats)
+    .sort((a: any, b: any) => b.avgSatisfaction - a.avgSatisfaction)
+    .slice(0, 3);
+}
+
+function extractRiskFactors(historicalData: any[]) {
+  const factors = [];
+  
+  const avgVariance = historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length;
+  if (avgVariance > 10) factors.push('סטיית מחיר גבוהה');
+  
+  const recentProjects = historicalData.filter(p => 
+    new Date(p.completedDate) > new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
+  );
+  if (recentProjects.length < 3) factors.push('מעט נתונים עדכניים');
+  
+  const lowSatisfaction = historicalData.filter(p => p.satisfaction < 3.5).length;
+  if (lowSatisfaction > historicalData.length * 0.3) factors.push('שביעות רצון נמוכה');
+  
+  return factors;
+}
+
+function generateSupplierRecommendation(score: number, riskFactors: string[], experience: number) {
+  if (score >= 4.0 && riskFactors.length === 0) {
+    return 'מומלץ מאוד - ספק מעולה עם ביצועים גבוהים';
+  } else if (score >= 3.5 && riskFactors.length <= 1) {
+    return 'מומלץ - ספק אמין עם ביצועים טובים';
+  } else if (score >= 3.0) {
+    return 'מתאים בתנאים - בדוק היבטים ספציפיים';
+  } else if (experience === 0) {
+    return 'ספק חדש - דרוש ניסיון נוסף בקטגוריה';
+  } else {
+    return 'לא מומלץ - ביצועים נמוכים או סיכונים גבוהים';
+  }
+}
+
+function calculateOverallRisk(request: any, category: any, historicalData: any[]) {
+  let riskScore = 0;
+  let maxScore = 5;
+  
+  // Budget risk
+  if (parseFloat(request.emf || '0') < 50000) riskScore += 0.5;
+  else if (parseFloat(request.emf || '0') > 1000000) riskScore += 1;
+  
+  // Category risk
+  if (category && category.riskFactor > 0.5) riskScore += 1.5;
+  else if (category && category.riskFactor > 0.3) riskScore += 1;
+  
+  // Timeline risk
+  if (request.targetDate) {
+    const daysToTarget = (new Date(request.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
+    if (daysToTarget < 30) riskScore += 1.5;
+    else if (daysToTarget < 60) riskScore += 1;
+  }
+  
+  // Historical variance risk
+  const avgVariance = historicalData.length > 0 ? 
+    historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
+  if (avgVariance > 15) riskScore += 1;
+  else if (avgVariance > 8) riskScore += 0.5;
+  
+  const riskPercentage = (riskScore / maxScore) * 100;
+  
+  if (riskPercentage < 30) return 'נמוך';
+  if (riskPercentage < 60) return 'בינוני';
+  return 'גבוה';
+}
+
+function assessFinancialRisk(request: any, historicalData: any[]) {
+  const budget = parseFloat(request.emf || '0');
+  const avgVariance = historicalData.length > 0 ? 
+    historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
+  
+  return {
+    level: budget > 500000 && avgVariance > 10 ? 'גבוה' : avgVariance > 5 ? 'בינוני' : 'נמוך',
+    factors: [
+      `תקציב: ₪${budget.toLocaleString()}`,
+      `סטיית מחיר היסטורית: ${avgVariance.toFixed(1)}%`,
+      `סיכון לחריגה: ${avgVariance > 10 ? 'גבוה' : 'בינוני'}`
+    ]
+  };
+}
+
+function assessOperationalRisk(request: any, category: any) {
+  const complexity = request.specifications?.complexity || 'בינונית';
+  
+  return {
+    level: complexity === 'גבוהה' || request.quantity > 100 ? 'גבוה' : 'בינוני',
+    factors: [
+      `מורכבות: ${complexity}`,
+      `כמות: ${request.quantity}`,
+      `סיכון ביצועי: ${category?.riskFactor > 0.4 ? 'גבוה' : 'בינוני'}`
+    ]
+  };
+}
+
+function assessMarketRisk(request: any, category: any) {
+  const volatility = category?.marketVolatility || 0.3;
+  
+  return {
+    level: volatility > 0.4 ? 'גבוה' : volatility > 0.2 ? 'בינוני' : 'נמוך',
+    factors: [
+      `תנודתיות שוק: ${(volatility * 100).toFixed(1)}%`,
+      `יציבות מחירים: ${volatility < 0.2 ? 'טובה' : 'בינונית'}`,
+      `תחרותיות: ${category?.name.includes('IT') ? 'גבוהה' : 'בינונית'}`
+    ]
+  };
+}
+
+function assessSupplierRisk(request: any) {
+  return {
+    level: 'בינוני',
+    factors: [
+      'זמינות ספקים מרובים',
+      'איכות ספקים מוכחת',
+      'סיכון תלות בספק יחיד'
+    ]
+  };
+}
+
+function assessTimelineRisk(request: any, category: any) {
+  const targetDate = request.targetDate ? new Date(request.targetDate) : null;
+  const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
+  const avgDeliveryTime = category?.avgDeliveryTime || 30;
+  
+  return {
+    level: daysToTarget < avgDeliveryTime ? 'גבוה' : daysToTarget < avgDeliveryTime * 1.5 ? 'בינוני' : 'נמוך',
+    factors: [
+      `זמן עד התאריך המבוקש: ${Math.round(daysToTarget)} ימים`,
+      `זמן אספקה ממוצע: ${avgDeliveryTime} ימים`,
+      `מרווח זמן: ${daysToTarget > avgDeliveryTime ? 'מספיק' : 'צפוף'}`
+    ]
+  };
+}
+
+function generateMitigationStrategies(request: any, category: any, historicalData: any[]) {
+  const strategies = [];
+  
+  // Financial mitigation
+  if (parseFloat(request.emf || '0') > 500000) {
+    strategies.push({
+      risk: 'סיכון פיננסי',
+      strategy: 'פיצול הרכישה לשלבים',
+      impact: 'הפחתת חשיפה פיננסית'
+    });
+  }
+  
+  // Timeline mitigation
+  const targetDate = request.targetDate ? new Date(request.targetDate) : null;
+  const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
+  
+  if (daysToTarget < 60) {
+    strategies.push({
+      risk: 'סיכון לוחות זמנים',
+      strategy: 'זירוז תהליכי אישור',
+      impact: 'קיצור זמני עיבוד'
+    });
+  }
+  
+  // Market mitigation
+  if (category?.marketVolatility > 0.4) {
+    strategies.push({
+      risk: 'תנודתיות שוק',
+      strategy: 'קבלת הצעות מחיר מרובות',
+      impact: 'הבטחת תחרותיות'
+    });
+  }
+  
+  return strategies;
+}
+
+function generateContingencyRecommendations(request: any) {
+  return [
+    {
+      scenario: 'חריגה מתקציב',
+      action: 'הכנת תקציב חירום של 15%',
+      trigger: 'כאשר האומדן חורג ב-10% מהתקציב המתוכנן'
+    },
+    {
+      scenario: 'עיכוב באספקה',
+      action: 'זיהוי ספק גיבוי',
+      trigger: 'כאשר הספק מדווח על עיכוב צפוי'
+    },
+    {
+      scenario: 'שינוי בדרישות',
+      action: 'הכנת מפרט גמיש',
+      trigger: 'כאשר מתגלים צרכים נוספים'
+    }
+  ];
+}
+
+function generateMonitoringIndicators(request: any, category: any) {
+  return [
+    {
+      indicator: 'מעקב מחירים',
+      frequency: 'שבועי',
+      threshold: 'שינוי של 5% במחירי שוק',
+      action: 'עדכון אומדן'
+    },
+    {
+      indicator: 'זמני אספקה',
+      frequency: 'יומי',
+      threshold: 'עיכוב של 3 ימים או יותר',
+      action: 'הפעלת ספק גיבוי'
+    },
+    {
+      indicator: 'איכות מוצר',
+      frequency: 'בביקורות ביניים',
+      threshold: 'סטייה ממפרטים',
+      action: 'תיקון מיידי או החלפת ספק'
+    }
+  ];
 }
 
 // Helper functions for estimation calculations
