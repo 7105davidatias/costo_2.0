@@ -29,7 +29,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = "/api/" + queryKey.join("/");
+    const url = queryKey.join("/");
     const res = await fetch(url, {
       credentials: "include",
     });
