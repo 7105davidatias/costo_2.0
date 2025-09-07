@@ -12,6 +12,19 @@ interface SupplierChartProps {
 }
 
 export default function SupplierChart({ data }: SupplierChartProps) {
+  // Check if data is available and valid
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-2">📊</div>
+          <p className="text-muted-foreground text-sm">אין נתוני ספקים זמינים להצגה</p>
+          <p className="text-muted-foreground text-xs mt-1">יתכן שהנתונים עדיין נטענים או שאין ספקים מתאימים</p>
+        </div>
+      </div>
+    );
+  }
+
   // Transform data for radar chart
   const categories = ['מחיר', 'איכות', 'זמן אספקה', 'שירות', 'אמינות'];
   const radarData = categories.map(category => {

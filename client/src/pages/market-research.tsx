@@ -821,331 +821,8 @@ export default function MarketResearch() {
           </div>
         </TabsContent>
 
-        {/* AI Insights Tab */}
-        <TabsContent value="ai-insights" className="space-y-6">
-          {/* AI Recommendations */}
-          <Card className="bg-card border-success/20">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-reverse space-x-2">
-                <Brain className="text-success w-5 h-5" />
-                <span>המלצות AI מותאמות אישית</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {aiRecommendations.map((rec, index) => (
-                  <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
-                    <div className="flex items-start space-x-reverse space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">{index + 1}</span>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-foreground">{rec.title}</h4>
-                          <Badge className={`text-xs ${
-                            rec.priority === 'גבוהה' ? 'bg-destructive/20 text-destructive' :
-                            rec.priority === 'בינונית' ? 'bg-warning/20 text-warning' :
-                            'bg-muted/20 text-muted-foreground'
-                          }`}>
-                            {rec.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{rec.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Market Intelligence Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="bg-card border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <Calculator className="text-primary w-5 h-5" />
-                  <span>אינטליגנציה כלכלית</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">אופטימיזציה כלכלית</h4>
-                    <p className="text-sm text-muted-foreground">
-                      ניתוח נתונים מזהה פוטנציאל חיסכון של {formatCurrency(15000)} 
-                      דרך עיתוי רכישה אסטרטגי ומשא ומתן מותאם
-                    </p>
-                  </div>
-                  <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">יתרון תחרותי</h4>
-                    <p className="text-sm text-muted-foreground">
-                      הארגון יכול להשיג מחיר 12% מתחת לממוצע השוק 
-                      בזכות נתונים מתקדמים ויחסי ספקים
-                    </p>
-                  </div>
-                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">אזהרת שוק</h4>
-                    <p className="text-sm text-muted-foreground">
-                      צפויה עלייה של 5-8% במחירי חומרי גלם ברבעון הבא - 
-                      מומלץ להזמין מוקדם
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-info/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <Medal className="text-info w-5 h-5" />
-                  <span>ביצועים והשוואות</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">דירוג תחרותי</span>
-                    <span className="text-foreground font-bold">8.7/10</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">חיסכון לעומת אמש</span>
-                    <span className="text-success font-bold">+23%</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">מהירות החלטה</span>
-                    <span className="text-primary font-bold">3.2x מהר יותר</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">דיוק תחזיות</span>
-                    <span className="text-warning font-bold">94.5%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
+        {/* AI Recommendations Tab (Integrated from AI Insights) */}
         <TabsContent value="ai-recommendations" className="space-y-6">
-          <AIRecommendations
-            requestId={finalRequestId}
-            category={selectedCategory}
-            estimatedCost={estimatedCost}
-            quantity={quantity}
-            suppliers={suppliers?.map(supplier => ({
-              id: supplier.id,
-              name: supplier.name,
-              rating: supplier.rating || 4.5,
-              priceLevel: Math.round(supplier.costEfficiency || 3),
-              reliability: supplier.reliability || 85,
-              avgDeliveryTime: supplier.deliveryTime || 10,
-              costEfficiency: supplier.costEfficiency || 4.2,
-              onTimeDelivery: supplier.onTimeDelivery || 90,
-              defectRate: supplier.defectRate || 2,
-              responseTime: supplier.responseTime || 12
-            })) || []}
-            targetDate={targetDate}
-          />
-        </TabsContent>
-
-        {/* Trends Tab */}
-        <TabsContent value="trends" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Seasonal Trends */}
-            <Card className="bg-card border-info/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <Calendar className="text-info w-5 h-5" />
-                  <span>מגמות עונתיות וחיזוי מחירים</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={seasonalTrendsData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        dataKey="season" 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-card border border-info/20 p-3 rounded-lg shadow-lg" dir="rtl">
-                              <p className="text-foreground font-medium mb-2">{label}</p>
-                              {payload[0]?.value && <p className="text-info">מגמה בפועל: {payload[0].value}%</p>}
-                              {payload[1]?.value && <p className="text-primary">חיזוי: {payload[1].value}%</p>}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="trend" 
-                        stroke="#60a5fa" 
-                        fill="#60a5fa" 
-                        fillOpacity={0.3}
-                        name="מגמה בפועל"
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="prediction" 
-                        stroke="#34d399" 
-                        fill="#34d399" 
-                        fillOpacity={0.2}
-                        strokeDasharray="5 5"
-                        name="חיזוי"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Price History */}
-            <Card className="bg-card border-secondary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <TrendingUp className="text-secondary w-5 h-5" />
-                  <span>היסטוריית מחירים - 12 חודש</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <PriceTrackingChart data={priceHistoryData} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Price Insights */}
-          <Card className="bg-card border-primary/20">
-            <CardHeader>
-              <CardTitle>תובנות מחירים מתקדמות</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-                  <h4 className="font-medium text-success mb-2">עיתוי אופטימלי</h4>
-                  <p className="text-sm text-muted-foreground">
-                    רכישה במרץ-אפריל מביאה לחיסכון ממוצע של 8-12% בשל סוף שנת הכספים
-                  </p>
-                </div>
-                <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
-                  <h4 className="font-medium text-warning mb-2">מגמת עליה צפויה</h4>
-                  <p className="text-sm text-muted-foreground">
-                    חיזוי עליית מחירים של 3-5% ברבעון הקרוב בשל אינפלציה עולמית
-                  </p>
-                </div>
-                <div className="bg-info/10 border border-info/30 rounded-lg p-4">
-                  <h4 className="font-medium text-info mb-2">הזדמנות חיסכון</h4>
-                  <p className="text-sm text-muted-foreground">
-                    רכישה בכמויות גדולות (10+ יחידות) מביאה להנחות של עד 18%
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Geographical Availability Tab */}
-        <TabsContent value="geographical" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Availability Heatmap */}
-            <Card className="bg-card border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <MapPin className="text-primary w-5 h-5" />
-                  <span>מפת זמינות ספקים</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={availabilityHeatmapData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        dataKey="region" 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                      />
-                      <YAxis 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
-                              <p className="text-foreground font-medium mb-2">{label}</p>
-                              <p className="text-primary">זמינות: {data.availability}%</p>
-                              <p className="text-secondary">ספקים: {data.suppliers}</p>
-                              <p className="text-warning">זמן אספקה: {data.avgDelivery} ימים</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Bar dataKey="availability" fill="#60a5fa" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Regional Details */}
-            <Card className="bg-card border-secondary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-reverse space-x-2">
-                  <Store className="text-secondary w-5 h-5" />
-                  <span>פילוח אזורי מפורט</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {availabilityHeatmapData.map((region, index) => (
-                    <div key={index} className="p-4 bg-muted/10 border border-muted/20 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-foreground">{region.region}</h4>
-                        <Badge className={`${
-                          region.availability >= 90 ? 'bg-success/20 text-success' :
-                          region.availability >= 80 ? 'bg-warning/20 text-warning' :
-                          'bg-destructive/20 text-destructive'
-                        }`}>
-                          {region.availability}% זמינות
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">ספקים פעילים: </span>
-                          <span className="text-foreground font-medium">{region.suppliers}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">זמן אספקה ממוצע: </span>
-                          <span className="text-foreground font-medium">{region.avgDelivery} ימים</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* AI Insights Tab */}
-        <TabsContent value="ai-insights" className="space-y-6">
           {/* AI Recommendations */}
           <Card className="bg-card border-success/20">
             <CardHeader>
@@ -1250,92 +927,92 @@ export default function MarketResearch() {
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
 
-      {/* Data Sources Section */}
-      <Card className="bg-card border-info/20">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-reverse space-x-2">
-            <ExternalLink className="text-info w-5 h-5" />
-            <span>מקורות המידע והנתונים</span>
-          </CardTitle>
-          <p className="text-muted-foreground text-sm">מקורות המידע והנתונים המתקדמים שעליהם מתבסס מחקר השוק</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(requestId && marketResearch?.informationSources ? marketResearch.informationSources : [
-              {
-                title: "מחירון הממשלה המעודכן",
-                description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי + עדכונים חדים",
-                lastUpdated: "ינואר 2024",
-                reliability: "גבוהה"
-              },
-              {
-                title: "Intel Israel & AMD",
-                description: "נתוני מחירים מספקים מאושרים בישראל + ניתוח תחרותי",
-                lastUpdated: "דצמבר 2023", 
-                reliability: "גבוהה"
-              },
-              {
-                title: "TechSource Ltd + Competitors",
-                description: "הסכמי מחיר מעודכנים עם ספקים מועדפים וניתוח תחרותי מתקדם",
-                lastUpdated: "נובמבר 2023",
-                reliability: "גבוהה"
-              },
-              {
-                title: "AI Market Intelligence",
-                description: "ניתוח נתונים בזמן אמת ממקורות גלובליים ומקומיים",
-                lastUpdated: "יומי",
-                reliability: "גבוהה"
-              },
-              {
-                title: "מדד המחירים + חיזוי כלכלי",
-                description: "נתוני אינפלציה, חיזויים כלכליים ומגמות שוק",
-                lastUpdated: "שבועי",
-                reliability: "גבוהה"
-              },
-              {
-                title: "נתוני ביצועים היסטוריים",
-                description: "מסד נתונים של עסקאות קודמות וביצועי ספקים",
-                lastUpdated: "רציף",
-                reliability: "גבוהה"
-              }
-            ]).map((source: any, index: number) => (
-              <div key={index} className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-                <div className="flex items-start space-x-reverse space-x-3">
-                  <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-foreground mb-1">{source.title}</h4>
-                    <p className="text-sm text-muted-foreground mb-2">{source.description}</p>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-muted-foreground">עודכן: {source.lastUpdated}</p>
-                      {source.reliability && (
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          source.reliability === 'גבוהה' ? 'bg-success/20 text-success' :
-                          source.reliability === 'בינונית' ? 'bg-warning/20 text-warning' :
-                          'bg-muted/20 text-muted-foreground'
-                        }`}>
-                          אמינות {source.reliability}
-                        </span>
-                      )}
+        {/* Data Sources Section */}
+        <Card className="bg-card border-info/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-reverse space-x-2">
+              <ExternalLink className="text-info w-5 h-5" />
+              <span>מקורות המידע והנתונים</span>
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">מקורות המידע והנתונים המתקדמים שעליהם מתבסס מחקר השוק</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(requestId && marketResearch?.informationSources ? marketResearch.informationSources : [
+                {
+                  title: "מחירון הממשלה המעודכן",
+                  description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי + עדכונים חדים",
+                  lastUpdated: "ינואר 2024",
+                  reliability: "גבוהה"
+                },
+                {
+                  title: "Intel Israel & AMD",
+                  description: "נתוני מחירים מספקים מאושרים בישראל + ניתוח תחרותי",
+                  lastUpdated: "דצמבר 2023", 
+                  reliability: "גבוהה"
+                },
+                {
+                  title: "TechSource Ltd + Competitors",
+                  description: "הסכמי מחיר מעודכנים עם ספקים מועדפים וניתוח תחרותי מתקדם",
+                  lastUpdated: "נובמבר 2023",
+                  reliability: "גבוהה"
+                },
+                {
+                  title: "AI Market Intelligence",
+                  description: "ניתוח נתונים בזמן אמת ממקורות גלובליים ומקומיים",
+                  lastUpdated: "יומי",
+                  reliability: "גבוהה"
+                },
+                {
+                  title: "מדד המחירים + חיזוי כלכלי",
+                  description: "נתוני אינפלציה, חיזויים כלכליים ומגמות שוק",
+                  lastUpdated: "שבועי",
+                  reliability: "גבוהה"
+                },
+                {
+                  title: "נתוני ביצועים היסטוריים",
+                  description: "מסד נתונים של עסקאות קודמות וביצועי ספקים",
+                  lastUpdated: "רציף",
+                  reliability: "גבוהה"
+                }
+              ]).map((source: any, index: number) => (
+                <div key={index} className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start space-x-reverse space-x-3">
+                    <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-foreground mb-1">{source.title}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">{source.description}</p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">עודכן: {source.lastUpdated}</p>
+                        {source.reliability && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            source.reliability === 'גבוהה' ? 'bg-success/20 text-success' :
+                            source.reliability === 'בינונית' ? 'bg-warning/20 text-warning' :
+                            'bg-muted/20 text-muted-foreground'
+                          }`}>
+                            אמינות {source.reliability}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 p-4 bg-info/10 border border-info/30 rounded-lg">
-            <div className="flex items-start space-x-reverse space-x-2">
-              <Shield className="text-info mt-0.5 w-4 h-4 flex-shrink-0" />
-              <p className="text-sm text-muted-foreground">
-                כל המידע מתבסס על מקורות מאושרים ומעודכנים. המערכת משתמשת באלגוריתמי AI מתקדמים 
-                לניתוח נתונים בזמן אמת ומתעדכנת באופן שוטף לדיוק מקסימלי.
-              </p>
+              ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            <div className="mt-4 p-4 bg-info/10 border border-info/30 rounded-lg">
+              <div className="flex items-start space-x-reverse space-x-2">
+                <Shield className="text-info mt-0.5 w-4 h-4 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  כל המידע מתבסס על מקורות מאושרים ומעודכנים. המערכת משתמשת באלגוריתמי AI מתקדמים 
+                  לניתוח נתונים בזמן אמת ומתעדכנת באופן שוטף לדיוק מקסימלי.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Tabs>
     </div>
   );
 }

@@ -5,6 +5,19 @@ interface PriceTrackingChartProps {
 }
 
 export default function PriceTrackingChart({ data }: PriceTrackingChartProps) {
+  // Check if data is available and valid
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-2">📈</div>
+          <p className="text-muted-foreground text-sm">אין נתוני מחירים היסטוריים זמינים</p>
+          <p className="text-muted-foreground text-xs mt-1">ייתכן שהמוצר חדש או שהנתונים עדיין נטענים</p>
+        </div>
+      </div>
+    );
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
