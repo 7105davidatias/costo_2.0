@@ -11,6 +11,8 @@ import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
 import { Scatter, ScatterChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell, PieChart, Pie, BarChart, Bar, LineChart, Line, Area, AreaChart } from 'recharts';
 import AIRecommendations from '@/components/market/ai-recommendations';
+import { LoadingSpinner, CenteredLoadingSpinner } from '@/components/ui/loading-spinner';
+import { TableSkeleton, ChartSkeleton, CardSkeleton } from '@/components/ui/enhanced-skeleton';
 
 export default function MarketResearch() {
   const { category } = useParams();
@@ -87,20 +89,14 @@ export default function MarketResearch() {
 
   // Add early return with loading state
   if (finalRequestId && marketResearchLoading) {
-    return <div className="flex justify-center items-center h-64">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">טוען נתוני מחקר שוק...</p>
-      </div>
+    return <div className="flex justify-center items-center h-screen">
+      <CenteredLoadingSpinner type="research" />
     </div>;
   }
 
   if (!finalRequestId && suppliersLoading) {
-    return <div className="flex justify-center items-center h-64">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">טוען נתוני ספקים...</p>
-      </div>
+    return <div className="flex justify-center items-center h-screen">
+      <CenteredLoadingSpinner type="suppliers" />
     </div>;
   }
 
@@ -115,6 +111,7 @@ export default function MarketResearch() {
 
   const formatCurrency = (amount: string | number) => {
     const value = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(value)) return '₪0';
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
       currency: 'ILS',
@@ -296,19 +293,20 @@ export default function MarketResearch() {
 
       {/* Market Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-card border-primary/20">
+        <Card className="bg-card border-primary/20 animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">ממוצע שוק</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {finalRequestId && marketResearch?.supplierComparison ? (
-                    formatCurrency(
-                      marketResearch.supplierComparison.reduce((sum, supplier) => 
-                        sum + parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0'), 0
-                      ) / marketResearch.supplierComparison.length
-                    )
-                  ) : (marketInsight?.averagePrice ? formatCurrency(marketInsight.averagePrice) : '₪68,300')}
+                  {loading ? <div className="h-8 w-32 bg-muted rounded animate-pulse"></div> :
+                    finalRequestId && marketResearch?.supplierComparison ? (
+                      formatCurrency(
+                        marketResearch.supplierComparison.reduce((sum, supplier) => 
+                          sum + parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0'), 0
+                        ) / marketResearch.supplierComparison.length
+                      )
+                    ) : (marketInsight?.averagePrice ? formatCurrency(marketInsight.averagePrice) : '₪68,300')}
                 </p>
                 <p className="text-primary text-sm mt-1">לכל יחידה</p>
               </div>
@@ -317,14 +315,15 @@ export default function MarketResearch() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-secondary/20">
+        <Card className="bg-card border-secondary/20 animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">ספקים פעילים</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {finalRequestId && marketResearch?.supplierComparison ? 
-                    marketResearch.supplierComparison.length : (marketInsight?.supplierCount || 15)}
+                  {loading ? <div className="h-8 w-16 bg-muted rounded animate-pulse"></div> :
+                    finalRequestId && marketResearch?.supplierComparison ? 
+                      marketResearch.supplierComparison.length : (marketInsight?.supplierCount || 15)}
                 </p>
                 <p className="text-secondary text-sm mt-1">ניתוח תחרותי</p>
               </div>
@@ -333,21 +332,22 @@ export default function MarketResearch() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-success/20">
+        <Card className="bg-card border-success/20 animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">חיסכון פוטנציאלי</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {finalRequestId && marketResearch?.supplierComparison ? (
-                    formatCurrency(
-                      Math.max(...marketResearch.supplierComparison.map(supplier => 
-                        parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0')
-                      )) - Math.min(...marketResearch.supplierComparison.map(supplier => 
-                        parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0')
-                      ))
-                    )
-                  ) : '₪12,500'}
+                  {loading ? <div className="h-8 w-32 bg-muted rounded animate-pulse"></div> :
+                    finalRequestId && marketResearch?.supplierComparison ? (
+                      formatCurrency(
+                        Math.max(...marketResearch.supplierComparison.map(supplier => 
+                          parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0')
+                        )) - Math.min(...marketResearch.supplierComparison.map(supplier => 
+                          parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0')
+                        ))
+                      )
+                    ) : '₪12,500'}
                 </p>
                 <p className="text-success text-sm mt-1">15% חיסכון אפשרי</p>
               </div>
@@ -356,13 +356,14 @@ export default function MarketResearch() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-warning/20">
+        <Card className="bg-card border-warning/20 animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">ציון סיכון</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {finalRequestId ? '7.2' : '6.8'}
+                  {loading ? <div className="h-8 w-16 bg-muted rounded animate-pulse"></div> :
+                    finalRequestId ? '7.2' : '6.8'}
                 </p>
                 <p className="text-warning text-sm mt-1">בינוני-נמוך</p>
               </div>
@@ -385,14 +386,26 @@ export default function MarketResearch() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Placeholder for Overview content if needed */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          ) : (
+            // Placeholder for Overview content if needed
+            <div className="flex justify-center items-center h-64 bg-muted/20 rounded-lg">
+              <p className="text-muted-foreground">תוכן לסקירה כללית יוצג כאן.</p>
+            </div>
+          )}
         </TabsContent>
 
         {/* Suppliers Tab */}
         <TabsContent value="suppliers" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Price vs Quality Scatter Plot */}
-            <Card className="bg-card border-primary/20">
+            <Card className="bg-card border-primary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Target className="text-primary w-5 h-5" />
@@ -400,44 +413,50 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        type="number" 
-                        dataKey="price" 
-                        name="מחיר"
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `₪${(value/1000).toFixed(0)}K`}
-                      />
-                      <YAxis 
-                        type="number" 
-                        dataKey="quality" 
-                        name="איכות"
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `${(value/20).toFixed(1)}`}
-                      />
-                      <Tooltip content={<CustomScatterTooltip />} />
-                      <Scatter 
-                        name="ספקים" 
-                        data={priceQualityScatterData} 
-                        fill="#60a5fa"
-                      >
-                        {priceQualityScatterData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Scatter>
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ScatterChart>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                        <XAxis 
+                          type="number" 
+                          dataKey="price" 
+                          name="מחיר"
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                          tickFormatter={(value) => `₪${(value/1000).toFixed(0)}K`}
+                        />
+                        <YAxis 
+                          type="number" 
+                          dataKey="quality" 
+                          name="איכות"
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                          tickFormatter={(value) => `${(value/20).toFixed(1)}`}
+                        />
+                        <Tooltip content={<CustomScatterTooltip />} />
+                        <Scatter 
+                          name="ספקים" 
+                          data={priceQualityScatterData} 
+                          fill="#60a5fa"
+                        >
+                          {priceQualityScatterData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Scatter>
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Supplier Performance Radar */}
-            <Card className="bg-card border-secondary/20">
+            <Card className="bg-card border-secondary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Zap className="text-secondary w-5 h-5" />
@@ -445,15 +464,21 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <SupplierChart data={supplierComparisonData} />
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <SupplierChart data={supplierComparisonData} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Detailed Supplier Comparison Table */}
-          <Card className="bg-card border-primary/20">
+          <Card className="bg-card border-primary/20 animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-reverse space-x-2">
                 <Store className="text-primary w-5 h-5" />
@@ -461,78 +486,82 @@ export default function MarketResearch() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/20">
-                    <tr>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">ספק</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">מחיר ליחידה</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">דירוג</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">זמן אספקה</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">אחריות</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">ציון תחרותי</th>
-                      <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">המלצה</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-muted/20">
-                    {((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => {
-                      const isContextual = !!(finalRequestId && marketResearch?.supplierComparison);
-                      const supplierName = supplier.supplier || supplier.name;
-                      const supplierRating = supplier.rating || "4.5";
-                      const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
-                      const supplierWarranty = supplier.warranty || supplier.warrantyTerms || "3 שנים";
-                      const supplierPrice = supplier.pricePerUnit || formatCurrency(60500 + (index * 2500));
-                      const supplierCode = supplier.contact || supplier.code || supplierName.substring(0, 2);
-                      const competitiveScore = (95 - index * 5) + Math.random() * 10;
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/20">
+                      <tr>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">ספק</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">מחיר ליחידה</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">דירוג</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">זמן אספקה</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">אחריות</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">ציון תחרותי</th>
+                        <th className="px-6 py-4 text-right text-sm font-medium text-muted-foreground">המלצה</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-muted/20">
+                      {((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => {
+                        const isContextual = !!(finalRequestId && marketResearch?.supplierComparison);
+                        const supplierName = supplier.supplier || supplier.name;
+                        const supplierRating = supplier.rating || "4.5";
+                        const supplierDeliveryTime = supplier.deliveryTime || "10 ימים";
+                        const supplierWarranty = supplier.warranty || supplier.warrantyTerms || "3 שנים";
+                        const supplierPrice = supplier.pricePerUnit || formatCurrency(60500 + (index * 2500));
+                        const supplierCode = supplier.contact || supplier.code || supplierName.substring(0, 2);
+                        const competitiveScore = (95 - index * 5) + Math.random() * 10;
 
-                      // Determine recommendation based on context
-                      const recommendationConfig = isContextual 
-                        ? { label: index === 0 ? 'מומלץ ביותר' : index === 1 ? 'טוב מאוד' : 'סטנדרט', className: index === 0 ? 'bg-success/20 text-success' : index === 1 ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground' }
-                        : getRecommendationBadge(supplier);
+                        // Determine recommendation based on context
+                        const recommendationConfig = isContextual 
+                          ? { label: index === 0 ? 'מומלץ ביותר' : index === 1 ? 'טוב מאוד' : 'סטנדרט', className: index === 0 ? 'bg-success/20 text-success' : index === 1 ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground' }
+                          : getRecommendationBadge(supplier);
 
-                      return (
-                        <tr key={index} className={`hover:bg-muted/10 ${index === 0 ? 'bg-success/5' : ''}`}>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-reverse space-x-3">
-                              <div className={`w-8 h-8 ${index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : 'bg-purple-600'} rounded-lg flex items-center justify-center`}>
-                                <span className="text-white text-xs font-bold">{supplierCode}</span>
+                        return (
+                          <tr key={index} className={`hover:bg-muted/10 ${index === 0 ? 'bg-success/5' : ''}`}>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center space-x-reverse space-x-3">
+                                <div className={`w-8 h-8 ${index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : 'bg-purple-600'} rounded-lg flex items-center justify-center`}>
+                                  <span className="text-white text-xs font-bold">{supplierCode}</span>
+                                </div>
+                                <span className="text-foreground font-medium">{supplierName}</span>
                               </div>
-                              <span className="text-foreground font-medium">{supplierName}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-foreground font-bold">{supplierPrice}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-reverse space-x-1">
-                              <span className="text-foreground">{supplierRating}</span>
-                              <div className="flex text-yellow-400">
-                                {Array.from({ length: 5 }, (_, i) => (
-                                  <span key={i} className={`text-xs ${i < Math.floor(parseFloat(supplierRating)) ? 'text-yellow-400' : 'text-muted'}`}>
-                                    ★
-                                  </span>
-                                ))}
+                            </td>
+                            <td className="px-6 py-4 text-foreground font-bold">{supplierPrice}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center space-x-reverse space-x-1">
+                                <span className="text-foreground">{supplierRating}</span>
+                                <div className="flex text-yellow-400">
+                                  {Array.from({ length: 5 }, (_, i) => (
+                                    <span key={i} className={`text-xs ${i < Math.floor(parseFloat(supplierRating)) ? 'text-yellow-400' : 'text-muted'}`}>
+                                      ★
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className={`px-6 py-4 ${parseInt(supplierDeliveryTime) <= 10 ? 'text-success' : parseInt(supplierDeliveryTime) <= 14 ? 'text-warning' : 'text-muted-foreground'}`}>
-                            {supplierDeliveryTime}
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground">{supplierWarranty}</td>
-                          <td className="px-6 py-4">
-                            <span className={`font-bold ${competitiveScore >= 90 ? 'text-success' : competitiveScore >= 80 ? 'text-warning' : 'text-muted-foreground'}`}>
-                              {competitiveScore.toFixed(1)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge className={recommendationConfig.className}>
-                              {recommendationConfig.label}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            </td>
+                            <td className={`px-6 py-4 ${parseInt(supplierDeliveryTime) <= 10 ? 'text-success' : parseInt(supplierDeliveryTime) <= 14 ? 'text-warning' : 'text-muted-foreground'}`}>
+                              {supplierDeliveryTime}
+                            </td>
+                            <td className="px-6 py-4 text-muted-foreground">{supplierWarranty}</td>
+                            <td className="px-6 py-4">
+                              <span className={`font-bold ${competitiveScore >= 90 ? 'text-success' : competitiveScore >= 80 ? 'text-warning' : 'text-muted-foreground'}`}>
+                                {competitiveScore.toFixed(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge className={recommendationConfig.className}>
+                                {recommendationConfig.label}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -541,7 +570,7 @@ export default function MarketResearch() {
         <TabsContent value="risk" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Risk Matrix Scatter */}
-            <Card className="bg-card border-warning/20">
+            <Card className="bg-card border-warning/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <AlertTriangle className="text-warning w-5 h-5" />
@@ -549,49 +578,55 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        type="number" 
-                        dataKey="probability" 
-                        name="הסתברות"
-                        domain={[1, 5]}
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                      />
-                      <YAxis 
-                        type="number" 
-                        dataKey="impact" 
-                        name="השפעה"
-                        domain={[1, 5]}
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                      />
-                      <Tooltip content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-card border border-warning/20 p-3 rounded-lg shadow-lg" dir="rtl">
-                              <p className="text-foreground font-medium mb-2">{data.risk}</p>
-                              <p className="text-warning">הסתברות: {data.probability}/5</p>
-                              <p className="text-destructive">השפעה: {data.impact}/5</p>
-                              <p className="text-primary">פתרון: {data.mitigation}</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Scatter name="סיכונים" data={riskMatrixData} fill="#fbbf24" />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ScatterChart>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                        <XAxis 
+                          type="number" 
+                          dataKey="probability" 
+                          name="הסתברות"
+                          domain={[1, 5]}
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                        />
+                        <YAxis 
+                          type="number" 
+                          dataKey="impact" 
+                          name="השפעה"
+                          domain={[1, 5]}
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                        />
+                        <Tooltip content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-card border border-warning/20 p-3 rounded-lg shadow-lg" dir="rtl">
+                                <p className="text-foreground font-medium mb-2">{data.risk}</p>
+                                <p className="text-warning">הסתברות: {data.probability}/5</p>
+                                <p className="text-destructive">השפעה: {data.impact}/5</p>
+                                <p className="text-primary">פתרון: {data.mitigation}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }} />
+                        <Scatter name="סיכונים" data={riskMatrixData} fill="#fbbf24" />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Risk Assessment Details */}
-            <Card className="bg-card border-destructive/20">
+            <Card className="bg-card border-destructive/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Shield className="text-destructive w-5 h-5" />
@@ -599,29 +634,37 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {riskMatrixData.map((risk, index) => {
-                    const riskLevel = risk.impact * risk.probability;
-                    const riskColor = riskLevel >= 12 ? 'destructive' : riskLevel >= 8 ? 'warning' : 'success';
+                {loading ? (
+                  <div className="space-y-4">
+                    <CardSkeleton />
+                    <CardSkeleton />
+                    <CardSkeleton />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {riskMatrixData.map((risk, index) => {
+                      const riskLevel = risk.impact * risk.probability;
+                      const riskColor = riskLevel >= 12 ? 'destructive' : riskLevel >= 8 ? 'warning' : 'success';
 
-                    return (
-                      <div key={index} className={`p-4 bg-${riskColor}/10 border border-${riskColor}/30 rounded-lg`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-foreground">{risk.risk}</h4>
-                          <Badge className={`bg-${riskColor}/20 text-${riskColor}`}>
-                            {riskLevel >= 12 ? 'גבוה' : riskLevel >= 8 ? 'בינוני' : 'נמוך'}
-                          </Badge>
+                      return (
+                        <div key={index} className={`p-4 bg-${riskColor}/10 border border-${riskColor}/30 rounded-lg`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-foreground">{risk.risk}</h4>
+                            <Badge className={`bg-${riskColor}/20 text-${riskColor}`}>
+                              {riskLevel >= 12 ? 'גבוה' : riskLevel >= 8 ? 'בינוני' : 'נמוך'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            השפעה: {risk.impact}/5 | הסתברות: {risk.probability}/5
+                          </p>
+                          <p className="text-sm text-primary">
+                            <strong>אמצעי מניעה:</strong> {risk.mitigation}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          השפעה: {risk.impact}/5 | הסתברות: {risk.probability}/5
-                        </p>
-                        <p className="text-sm text-primary">
-                          <strong>אמצעי מניעה:</strong> {risk.mitigation}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -631,7 +674,7 @@ export default function MarketResearch() {
         <TabsContent value="trends" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Seasonal Trends */}
-            <Card className="bg-card border-info/20">
+            <Card className="bg-card border-info/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Calendar className="text-info w-5 h-5" />
@@ -639,57 +682,63 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={seasonalTrendsData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        dataKey="season" 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-card border border-info/20 p-3 rounded-lg shadow-lg" dir="rtl">
-                              <p className="text-foreground font-medium mb-2">{label}</p>
-                              {payload[0]?.value && <p className="text-info">מגמה בפועל: {payload[0].value}%</p>}
-                              {payload[1]?.value && <p className="text-primary">חיזוי: {payload[1].value}%</p>}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="trend" 
-                        stroke="#60a5fa" 
-                        fill="#60a5fa" 
-                        fillOpacity={0.3}
-                        name="מגמה בפועל"
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="prediction" 
-                        stroke="#34d399" 
-                        fill="#34d399" 
-                        fillOpacity={0.2}
-                        strokeDasharray="5 5"
-                        name="חיזוי"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={seasonalTrendsData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                        <XAxis 
+                          dataKey="season" 
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF', fontSize: 12 }}
+                        />
+                        <YAxis 
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                          tickFormatter={(value) => `${value}%`}
+                        />
+                        <Tooltip content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-card border border-info/20 p-3 rounded-lg shadow-lg" dir="rtl">
+                                <p className="text-foreground font-medium mb-2">{label}</p>
+                                {payload[0]?.value !== null && payload[0]?.value !== undefined && <p className="text-info">מגמה בפועל: {payload[0].value}%</p>}
+                                {payload[1]?.value !== null && payload[1]?.value !== undefined && <p className="text-primary">חיזוי: {payload[1].value}%</p>}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="trend" 
+                          stroke="#60a5fa" 
+                          fill="#60a5fa" 
+                          fillOpacity={0.3}
+                          name="מגמה בפועל"
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="prediction" 
+                          stroke="#34d399" 
+                          fill="#34d399" 
+                          fillOpacity={0.2}
+                          strokeDasharray="5 5"
+                          name="חיזוי"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Price History */}
-            <Card className="bg-card border-secondary/20">
+            <Card className="bg-card border-secondary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <TrendingUp className="text-secondary w-5 h-5" />
@@ -697,39 +746,53 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <PriceTrackingChart data={priceHistoryData} />
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <PriceTrackingChart data={priceHistoryData} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Price Insights */}
-          <Card className="bg-card border-primary/20">
+          <Card className="bg-card border-primary/20 animate-fade-in">
             <CardHeader>
               <CardTitle>תובנות מחירים מתקדמות</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-                  <h4 className="font-medium text-success mb-2">עיתוי אופטימלי</h4>
-                  <p className="text-sm text-muted-foreground">
-                    רכישה במרץ-אפריל מביאה לחיסכון ממוצע של 8-12% בשל סוף שנת הכספים
-                  </p>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <CardSkeleton />
+                  <CardSkeleton />
+                  <CardSkeleton />
                 </div>
-                <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
-                  <h4 className="font-medium text-warning mb-2">מגמת עליה צפויה</h4>
-                  <p className="text-sm text-muted-foreground">
-                    חיזוי עליית מחירים של 3-5% ברבעון הקרוב בשל אינפלציה עולמית
-                  </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-success/10 border border-success/30 rounded-lg p-4">
+                    <h4 className="font-medium text-success mb-2">עיתוי אופטימלי</h4>
+                    <p className="text-sm text-muted-foreground">
+                      רכישה במרץ-אפריל מביאה לחיסכון ממוצע של 8-12% בשל סוף שנת הכספים
+                    </p>
+                  </div>
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
+                    <h4 className="font-medium text-warning mb-2">מגמת עליה צפויה</h4>
+                    <p className="text-sm text-muted-foreground">
+                      חיזוי עליית מחירים של 3-5% ברבעון הקרוב בשל אינפלציה עולמית
+                    </p>
+                  </div>
+                  <div className="bg-info/10 border border-info/30 rounded-lg p-4">
+                    <h4 className="font-medium text-info mb-2">הזדמנות חיסכון</h4>
+                    <p className="text-sm text-muted-foreground">
+                      רכישה בכמויות גדולות (10+ יחידות) מביאה להנחות של עד 18%
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-info/10 border border-info/30 rounded-lg p-4">
-                  <h4 className="font-medium text-info mb-2">הזדמנות חיסכון</h4>
-                  <p className="text-sm text-muted-foreground">
-                    רכישה בכמויות גדולות (10+ יחידות) מביאה להנחות של עד 18%
-                  </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -738,7 +801,7 @@ export default function MarketResearch() {
         <TabsContent value="geographical" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Availability Heatmap */}
-            <Card className="bg-card border-primary/20">
+            <Card className="bg-card border-primary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <MapPin className="text-primary w-5 h-5" />
@@ -746,43 +809,49 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={availabilityHeatmapData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                      <XAxis 
-                        dataKey="region" 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                      />
-                      <YAxis 
-                        stroke="#FFFFFF"
-                        tick={{ fill: '#FFFFFF' }}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
-                              <p className="text-foreground font-medium mb-2">{label}</p>
-                              <p className="text-primary">זמינות: {data.availability}%</p>
-                              <p className="text-secondary">ספקים: {data.suppliers}</p>
-                              <p className="text-warning">זמן אספקה: {data.avgDelivery} ימים</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Bar dataKey="availability" fill="#60a5fa" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {loading ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <LoadingSpinner type="chart" />
+                  </div>
+                ) : (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={availabilityHeatmapData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                        <XAxis 
+                          dataKey="region" 
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                        />
+                        <YAxis 
+                          stroke="#FFFFFF"
+                          tick={{ fill: '#FFFFFF' }}
+                          tickFormatter={(value) => `${value}%`}
+                        />
+                        <Tooltip content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
+                                <p className="text-foreground font-medium mb-2">{label}</p>
+                                <p className="text-primary">זמינות: {data.availability}%</p>
+                                <p className="text-secondary">ספקים: {data.suppliers}</p>
+                                <p className="text-warning">זמן אספקה: {data.avgDelivery} ימים</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }} />
+                        <Bar dataKey="availability" fill="#60a5fa" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Regional Details */}
-            <Card className="bg-card border-secondary/20">
+            <Card className="bg-card border-secondary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Store className="text-secondary w-5 h-5" />
@@ -790,32 +859,39 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {availabilityHeatmapData.map((region, index) => (
-                    <div key={index} className="p-4 bg-muted/10 border border-muted/20 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-foreground">{region.region}</h4>
-                        <Badge className={`${
-                          region.availability >= 90 ? 'bg-success/20 text-success' :
-                          region.availability >= 80 ? 'bg-warning/20 text-warning' :
-                          'bg-destructive/20 text-destructive'
-                        }`}>
-                          {region.availability}% זמינות
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">ספקים פעילים: </span>
-                          <span className="text-foreground font-medium">{region.suppliers}</span>
+                {loading ? (
+                  <div className="space-y-4">
+                    <CardSkeleton />
+                    <CardSkeleton />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {availabilityHeatmapData.map((region, index) => (
+                      <div key={index} className="p-4 bg-muted/10 border border-muted/20 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium text-foreground">{region.region}</h4>
+                          <Badge className={`${
+                            region.availability >= 90 ? 'bg-success/20 text-success' :
+                            region.availability >= 80 ? 'bg-warning/20 text-warning' :
+                            'bg-destructive/20 text-destructive'
+                          }`}>
+                            {region.availability}% זמינות
+                          </Badge>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">זמן אספקה ממוצע: </span>
-                          <span className="text-foreground font-medium">{region.avgDelivery} ימים</span>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">ספקים פעילים: </span>
+                            <span className="text-foreground font-medium">{region.suppliers}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">זמן אספקה ממוצע: </span>
+                            <span className="text-foreground font-medium">{region.avgDelivery} ימים</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -824,7 +900,7 @@ export default function MarketResearch() {
         {/* AI Recommendations Tab (Integrated from AI Insights) */}
         <TabsContent value="ai-recommendations" className="space-y-6">
           {/* AI Recommendations */}
-          <Card className="bg-card border-success/20">
+          <Card className="bg-card border-success/20 animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-reverse space-x-2">
                 <Brain className="text-success w-5 h-5" />
@@ -832,38 +908,46 @@ export default function MarketResearch() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {aiRecommendations.map((rec, index) => (
-                  <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
-                    <div className="flex items-start space-x-reverse space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">{index + 1}</span>
+              {loading ? (
+                <div className="space-y-4">
+                  <CardSkeleton />
+                  <CardSkeleton />
+                  <CardSkeleton />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {aiRecommendations.map((rec, index) => (
+                    <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
+                      <div className="flex items-start space-x-reverse space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{index + 1}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-foreground">{rec.title}</h4>
-                          <Badge className={`text-xs ${
-                            rec.priority === 'גבוהה' ? 'bg-destructive/20 text-destructive' :
-                            rec.priority === 'בינונית' ? 'bg-warning/20 text-warning' :
-                            'bg-muted/20 text-muted-foreground'
-                          }`}>
-                            {rec.priority}
-                          </Badge>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-foreground">{rec.title}</h4>
+                            <Badge className={`text-xs ${
+                              rec.priority === 'גבוהה' ? 'bg-destructive/20 text-destructive' :
+                              rec.priority === 'בינונית' ? 'bg-warning/20 text-warning' :
+                              'bg-muted/20 text-muted-foreground'
+                            }`}>
+                              {rec.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{rec.description}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{rec.description}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Market Intelligence Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="bg-card border-primary/20">
+            <Card className="bg-card border-primary/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Calculator className="text-primary w-5 h-5" />
@@ -871,33 +955,41 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">אופטימיזציה כלכלית</h4>
-                    <p className="text-sm text-muted-foreground">
-                      ניתוח נתונים מזהה פוטנציאל חיסכון של {formatCurrency(15000)} 
-                      דרך עיתוי רכישה אסטרטגי ומשא ומתן מותאם
-                    </p>
+                {loading ? (
+                  <div className="space-y-4">
+                    <CardSkeleton />
+                    <CardSkeleton />
+                    <CardSkeleton />
                   </div>
-                  <div className="bg-success/10 border border-success/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">יתרון תחרותי</h4>
-                    <p className="text-sm text-muted-foreground">
-                      הארגון יכול להשיג מחיר 12% מתחת לממוצע השוק 
-                      בזכות נתונים מתקדמים ויחסי ספקים
-                    </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                      <h4 className="font-medium text-foreground mb-2">אופטימיזציה כלכלית</h4>
+                      <p className="text-sm text-muted-foreground">
+                        ניתוח נתונים מזהה פוטנציאל חיסכון של {formatCurrency(15000)} 
+                        דרך עיתוי רכישה אסטרטגי ומשא ומתן מותאם
+                      </p>
+                    </div>
+                    <div className="bg-success/10 border border-success/30 rounded-lg p-4">
+                      <h4 className="font-medium text-foreground mb-2">יתרון תחרותי</h4>
+                      <p className="text-sm text-muted-foreground">
+                        הארגון יכול להשיג מחיר 12% מתחת לממוצע השוק 
+                        בזכות נתונים מתקדמים ויחסי ספקים
+                      </p>
+                    </div>
+                    <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
+                      <h4 className="font-medium text-foreground mb-2">אזהרת שוק</h4>
+                      <p className="text-sm text-muted-foreground">
+                        צפויה עלייה של 5-8% במחירי חומרי גלם ברבעון הבא - 
+                        מומלץ להזמין מוקדם
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
-                    <h4 className="font-medium text-foreground mb-2">אזהרת שוק</h4>
-                    <p className="text-sm text-muted-foreground">
-                      צפויה עלייה של 5-8% במחירי חומרי גלם ברבעון הבא - 
-                      מומלץ להזמין מוקדם
-                    </p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-info/20">
+            <Card className="bg-card border-info/20 animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-reverse space-x-2">
                   <Medal className="text-info w-5 h-5" />
@@ -905,31 +997,40 @@ export default function MarketResearch() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">דירוג תחרותי</span>
-                    <span className="text-foreground font-bold">8.7/10</span>
+                {loading ? (
+                  <div className="space-y-4">
+                    <CardSkeleton />
+                    <CardSkeleton />
+                    <CardSkeleton />
+                    <CardSkeleton />
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">חיסכון לעומת אמש</span>
-                    <span className="text-success font-bold">+23%</span>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                      <span className="text-muted-foreground">דירוג תחרותי</span>
+                      <span className="text-foreground font-bold">8.7/10</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                      <span className="text-muted-foreground">חיסכון לעומת אמש</span>
+                      <span className="text-success font-bold">+23%</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                      <span className="text-muted-foreground">מהירות החלטה</span>
+                      <span className="text-primary font-bold">3.2x מהר יותר</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                      <span className="text-muted-foreground">דיוק תחזיות</span>
+                      <span className="text-warning font-bold">94.5%</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">מהירות החלטה</span>
-                    <span className="text-primary font-bold">3.2x מהר יותר</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
-                    <span className="text-muted-foreground">דיוק תחזיות</span>
-                    <span className="text-warning font-bold">94.5%</span>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         {/* Data Sources Section */}
-        <Card className="bg-card border-info/20">
+        <Card className="bg-card border-info/20 animate-fade-in">
           <CardHeader>
             <CardTitle className="flex items-center space-x-reverse space-x-2">
               <ExternalLink className="text-info w-5 h-5" />
@@ -938,68 +1039,76 @@ export default function MarketResearch() {
             <p className="text-muted-foreground text-sm">מקורות המידע והנתונים המתקדמים שעליהם מתבסס מחקר השוק</p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(requestId && marketResearch?.informationSources ? marketResearch.informationSources : [
-                {
-                  title: "מחירון הממשלה המעודכן",
-                  description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי + עדכונים חדים",
-                  lastUpdated: "ינואר 2024",
-                  reliability: "גבוהה"
-                },
-                {
-                  title: "Intel Israel & AMD",
-                  description: "נתוני מחירים מספקים מאושרים בישראל + ניתוח תחרותי",
-                  lastUpdated: "דצמבר 2023", 
-                  reliability: "גבוהה"
-                },
-                {
-                  title: "TechSource Ltd + Competitors",
-                  description: "הסכמי מחיר מעודכנים עם ספקים מועדפים וניתוח תחרותי מתקדם",
-                  lastUpdated: "נובמבר 2023",
-                  reliability: "גבוהה"
-                },
-                {
-                  title: "AI Market Intelligence",
-                  description: "ניתוח נתונים בזמן אמת ממקורות גלובליים ומקומיים",
-                  lastUpdated: "יומי",
-                  reliability: "גבוהה"
-                },
-                {
-                  title: "מדד המחירים + חיזוי כלכלי",
-                  description: "נתוני אינפלציה, חיזויים כלכליים ומגמות שוק",
-                  lastUpdated: "שבועי",
-                  reliability: "גבוהה"
-                },
-                {
-                  title: "נתוני ביצועים היסטוריים",
-                  description: "מסד נתונים של עסקאות קודמות וביצועי ספקים",
-                  lastUpdated: "רציף",
-                  reliability: "גבוהה"
-                }
-              ]).map((source: any, index: number) => (
-                <div key={index} className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-                  <div className="flex items-start space-x-reverse space-x-3">
-                    <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-medium text-foreground mb-1">{source.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-2">{source.description}</p>
-                      <div className="flex justify-between items-center">
-                        <p className="text-xs text-muted-foreground">עודכן: {source.lastUpdated}</p>
-                        {source.reliability && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            source.reliability === 'גבוהה' ? 'bg-success/20 text-success' :
-                            source.reliability === 'בינונית' ? 'bg-warning/20 text-warning' :
-                            'bg-muted/20 text-muted-foreground'
-                          }`}>
-                            אמינות {source.reliability}
-                          </span>
-                        )}
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(requestId && marketResearch?.informationSources ? marketResearch.informationSources : [
+                  {
+                    title: "מחירון הממשלה המעודכן",
+                    description: "מחירון ממשלתי רשמי לציוד מחשוב ורכש ציבורי + עדכונים חדים",
+                    lastUpdated: "ינואר 2024",
+                    reliability: "גבוהה"
+                  },
+                  {
+                    title: "Intel Israel & AMD",
+                    description: "נתוני מחירים מספקים מאושרים בישראל + ניתוח תחרותי",
+                    lastUpdated: "דצמבר 2023", 
+                    reliability: "גבוהה"
+                  },
+                  {
+                    title: "TechSource Ltd + Competitors",
+                    description: "הסכמי מחיר מעודכנים עם ספקים מועדפים וניתוח תחרותי מתקדם",
+                    lastUpdated: "נובמבר 2023",
+                    reliability: "גבוהה"
+                  },
+                  {
+                    title: "AI Market Intelligence",
+                    description: "ניתוח נתונים בזמן אמת ממקורות גלובליים ומקומיים",
+                    lastUpdated: "יומי",
+                    reliability: "גבוהה"
+                  },
+                  {
+                    title: "מדד המחירים + חיזוי כלכלי",
+                    description: "נתוני אינפלציה, חיזויים כלכליים ומגמות שוק",
+                    lastUpdated: "שבועי",
+                    reliability: "גבוהה"
+                  },
+                  {
+                    title: "נתוני ביצועים היסטוריים",
+                    description: "מסד נתונים של עסקאות קודמות וביצועי ספקים",
+                    lastUpdated: "רציף",
+                    reliability: "גבוהה"
+                  }
+                ]).map((source: any, index: number) => (
+                  <div key={index} className="bg-muted/10 border border-muted/20 rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-start space-x-reverse space-x-3">
+                      <ExternalLink className="text-primary mt-1 w-4 h-4 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-foreground mb-1">{source.title}</h4>
+                        <p className="text-sm text-muted-foreground mb-2">{source.description}</p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs text-muted-foreground">עודכן: {source.lastUpdated}</p>
+                          {source.reliability && (
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              source.reliability === 'גבוהה' ? 'bg-success/20 text-success' :
+                              source.reliability === 'בינונית' ? 'bg-warning/20 text-warning' :
+                              'bg-muted/20 text-muted-foreground'
+                            }`}>
+                              אמינות {source.reliability}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-4 p-4 bg-info/10 border border-info/30 rounded-lg">
               <div className="flex items-start space-x-reverse space-x-2">

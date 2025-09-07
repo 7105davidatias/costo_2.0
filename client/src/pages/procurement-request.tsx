@@ -23,6 +23,8 @@ import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 import { documentTemplates, searchTemplates, getTemplatesByCategory, categories, type DocumentTemplate } from "@/data/document-templates";
+import { LoadingSpinner, CenteredLoadingSpinner } from '@/components/ui/loading-spinner';
+import { CardSkeleton, FormSkeleton } from '@/components/ui/enhanced-skeleton';
 
 export default function ProcurementRequest() {
   const { id } = useParams();
@@ -83,12 +85,12 @@ export default function ProcurementRequest() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`AI analysis failed: ${response.status} - ${errorText}`);
         }
-        
+
         return await response.json();
       } catch (error) {
         console.error('AI Analysis error:', error);
@@ -214,7 +216,7 @@ export default function ProcurementRequest() {
 
     toast({
       title: "תבנית נטענה בהצלחה",
-      description: `התבנית "${template.title}" נטענה. ניתן לערוך ולהתאים את הפרטים.`,
+      description: `התבנית "${template.title}" נטענה. ניתן לערוך ולהתאים את הפרטים.`, 
     });
   }, [toast]);
 
@@ -624,20 +626,46 @@ export default function ProcurementRequest() {
     );
   }
 
+  // Skeleton loader for the request data itself
   if (requestLoading) {
     return (
-      <div className="space-y-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className={cn(
-          "grid gap-4 md:gap-8",
-          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
-        )}>
-            <div className="lg:col-span-2 space-y-6">
-              <div className="h-64 bg-muted rounded"></div>
-              <div className="h-48 bg-muted rounded"></div>
+      <div className="min-h-screen bg-background p-4 md:p-6">
+        <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 mb-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <ArrowRight className="w-4 h-4 ml-1 rotate-180" />
+                  חזרה
+                </Button>
+              </Link>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center md:text-right">
+                פרטי דרישת רכש
+              </h1>
             </div>
-            <div className="h-96 bg-muted rounded"></div>
+            <div className="flex space-x-reverse space-x-4">
+              <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
+                <FileText className="w-4 h-4 ml-2" />
+                מחקר שוק
+              </Button>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Bot className="w-4 h-4 ml-2" />
+                צור אומדן עלות
+              </Button>
+            </div>
+          </div>
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
+            <div className={cn(
+              "grid gap-4 md:gap-8",
+              isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
+            )}>
+              <div className="lg:col-span-2 space-y-6">
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+              <div className="h-96 bg-muted rounded"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -693,10 +721,14 @@ export default function ProcurementRequest() {
               </Button>
             </Link>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center md:text-right">
-              פרטי דרישת רכש - {request.requestNumber}
+              פרטי דרישת רכש {requestLoading ? '' : ` - ${request.requestNumber}`}
             </h1>
           </div>
-          <p className="text-muted-foreground">{request.itemName}</p>
+          {requestLoading ? (
+            <p className="h-6 w-1/2 bg-muted rounded animate-pulse"></p>
+          ) : (
+            <p className="text-muted-foreground">{request.itemName}</p>
+          )}
         </div>
         <div className="flex space-x-reverse space-x-4">
           <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
@@ -715,10 +747,14 @@ export default function ProcurementRequest() {
       </div>
 
       {/* Workflow Progress */}
-      <WorkflowProgress 
-        steps={workflowSteps}
-        currentProgress={workflowProgress}
-      />
+      {requestLoading ? (
+        <div className="animate-pulse h-20 bg-muted rounded w-full"></div>
+      ) : (
+        <WorkflowProgress 
+          steps={workflowSteps}
+          currentProgress={workflowProgress}
+        />
+      )}
 
         <div className={cn(
           "grid gap-4 md:gap-8",
@@ -1091,22 +1127,34 @@ export default function ProcurementRequest() {
           </Card>
 
           {/* Specifications Display */}
-          <SpecsDisplay 
-            specs={procurementSpecs}
-            className="mb-6"
-          />
+          {requestLoading ? (
+            <CardSkeleton />
+          ) : (
+            <SpecsDisplay 
+              specs={procurementSpecs}
+              className="mb-6"
+            />
+          )}
 
           {/* Estimation Methods */}
-          <EstimationMethods
-            methods={estimationMethodsWithSelection}
-            onMethodToggle={handleMethodToggle}
-            onCreateEstimate={handleCreateEstimate}
-            isLoading={isLoading}
-            className="mb-6"
-          />
+          {requestLoading ? (
+            <CardSkeleton />
+          ) : (
+            <EstimationMethods
+              methods={estimationMethodsWithSelection}
+              onMethodToggle={handleMethodToggle}
+              onCreateEstimate={handleCreateEstimate}
+              isLoading={isLoading}
+              className="mb-6"
+            />
+          )}
 
           {/* AI Analysis Results */}
-          <AIAnalysis requestId={request.id} specifications={request.specifications} />
+          {requestLoading ? (
+            <CardSkeleton />
+          ) : (
+            <AIAnalysis requestId={request.id} specifications={request.specifications} />
+          )}
         </div>
 
         {/* Sidebar */}
@@ -1119,9 +1167,13 @@ export default function ProcurementRequest() {
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground mb-2">EMF (תקציב מוקצה)</h3>
                   <p className="text-muted-foreground text-sm mb-3">התקציב המוקצה למימוש הדרישה</p>
-                  <span className="text-2xl font-bold text-info">
-                    {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
-                  </span>
+                  {requestLoading ? (
+                    <span className="text-2xl font-bold text-info h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
+                  ) : (
+                    <span className="text-2xl font-bold text-info">
+                      {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1132,12 +1184,12 @@ export default function ProcurementRequest() {
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground mb-2">אומדן עלות</h3>
                   <p className="text-muted-foreground text-sm mb-3">אומדן שנוצר במערכת</p>
-                  {request.estimatedCost ? (
-                    <span className="text-2xl font-bold text-success">
-                      ₪{parseFloat(request.estimatedCost).toLocaleString()}
-                    </span>
+                  {requestLoading ? (
+                    <span className="text-2xl font-bold text-success h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
                   ) : (
-                    <span className="text-xl text-muted-foreground">טרם נוצר</span>
+                    <span className="text-2xl font-bold text-success">
+                      {request.estimatedCost ? `₪${parseFloat(request.estimatedCost).toLocaleString()}` : 'טרם נוצר'}
+                    </span>
                   )}
                 </div>
               </CardContent>
@@ -1153,10 +1205,16 @@ export default function ProcurementRequest() {
               <Button 
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={() => aiAnalysisMutation.mutate()}
-                disabled={aiAnalysisMutation.isPending}
+                disabled={aiAnalysisMutation.isPending || requestLoading}
               >
-                <Play className="w-4 h-4 ml-2" />
-                {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
+                {requestLoading ? (
+                  <CenteredLoadingSpinner size="sm" color="text-primary-foreground" />
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 ml-2" />
+                    {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
+                  </>
+                )}
               </Button>
               <Button 
                 variant="outline" 
@@ -1168,15 +1226,16 @@ export default function ProcurementRequest() {
                   // Navigate directly with the ID in the URL
                   window.location.href = `/market-research/${id || ''}`;
                 }}
+                disabled={requestLoading}
               >
                 <Bot className="w-4 h-4 ml-2" />
                 מחקר שוק
               </Button>
-              <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
+              <Button variant="outline" className="w-full" disabled={requestLoading}>
                 <Download className="w-4 h-4 ml-2" />
                 ייצא דוח
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" disabled={requestLoading}>
                 <Share className="w-4 h-4 ml-2" />
                 שתף
               </Button>
@@ -1195,7 +1254,7 @@ export default function ProcurementRequest() {
                   <div>
                     <p className="text-sm text-foreground font-medium">בקשה נוצרה</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(request.createdAt!).toLocaleString('he-IL')}
+                      {requestLoading ? '...טוען' : new Date(request.createdAt!).toLocaleString('he-IL')}
                     </p>
                   </div>
                 </div>
@@ -1245,13 +1304,17 @@ export default function ProcurementRequest() {
                 {request.estimatedCost && (
                   <div className="mt-4">
                     <p className="text-sm text-muted-foreground">עלות מוערכת</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {new Intl.NumberFormat('he-IL', {
-                        style: 'currency',
-                        currency: 'ILS',
-                        minimumFractionDigits: 0,
-                      }).format(parseFloat(request.estimatedCost))}
-                    </p>
+                    {requestLoading ? (
+                      <span className="text-2xl font-bold text-foreground h-8 w-1/2 bg-muted rounded animate-pulse inline-block"></span>
+                    ) : (
+                      <p className="text-2xl font-bold text-foreground">
+                        {new Intl.NumberFormat('he-IL', {
+                          style: 'currency',
+                          currency: 'ILS',
+                          minimumFractionDigits: 0,
+                        }).format(parseFloat(request.estimatedCost))}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

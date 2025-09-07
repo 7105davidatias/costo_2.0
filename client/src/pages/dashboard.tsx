@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,9 @@ import CostTrendsChart from "@/components/charts/cost-trends-chart";
 import AccuracyChart from "@/components/charts/accuracy-chart";
 import { Link } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { DashboardSkeleton } from '@/components/ui/enhanced-skeleton';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
 
 interface DashboardStats {
   totalEstimatedCosts: number;
@@ -48,15 +50,11 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array(6).fill(0).map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded"></div>
-            ))}
-          </div>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center space-x-3 mb-6">
+          <LoadingSpinner type="calculation" />
         </div>
+        <DashboardSkeleton />
       </div>
     );
   }
