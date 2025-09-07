@@ -52,6 +52,13 @@ export interface IStorage {
 
   // Admin functions for demo reset
   resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }>;
+  resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }>;
+  resetAllAIData(): Promise<{
+    clearedEstimations: number;
+    clearedExtractedData: number;
+    clearedDocumentAnalysis: number;
+    updatedRequests: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -1406,6 +1413,75 @@ export class MemStorage implements IStorage {
 
     console.log(`Cost estimations reset completed: ${totalEstimations} estimations cleared, ${updatedRequests} requests updated`);
     return { totalEstimations, clearedEstimations: totalEstimations };
+  }
+
+  // אפס את כל נתוני ה-AI והאומדנים במערכת
+  async resetAllAIData(): Promise<{
+    clearedEstimations: number;
+    clearedExtractedData: number;
+    clearedDocumentAnalysis: number;
+    updatedRequests: number;
+  }> {
+    console.log('Starting comprehensive AI data reset...');
+    
+    // 1. נקה את כל האומדנים
+    const totalEstimations = this.costEstimations.size;
+    this.costEstimations.clear();
+    
+    // 2. נקה נתוני ניתוח AI מדרישות רכש
+    let clearedExtractedData = 0;
+    let updatedRequests = 0;
+    
+    for (const [id, request] of this.procurementRequests.entries()) {
+      let updated = false;
+      
+      // נקה את הנתונים שחולצו
+      if (request.extractedData) {
+        request.extractedData = null;
+        request.extractionDate = null;
+        request.extractionStatus = 'not_extracted';
+        clearedExtractedData++;
+        updated = true;
+      }
+      
+      // נקה את האומדן המחושב
+      if (request.estimatedCost) {
+        request.estimatedCost = null;
+        updated = true;
+      }
+      
+      if (updated) {
+        request.updatedAt = new Date();
+        this.procurementRequests.set(id, request);
+        updatedRequests++;
+      }
+    }
+    
+    // 3. נקה נתוני ניתוח מסמכים
+    let clearedDocumentAnalysis = 0;
+    
+    for (const [id, document] of this.documents.entries()) {
+      if (document.isAnalyzed || document.analysisResults || document.extractedSpecs) {
+        document.isAnalyzed = false;
+        document.analysisResults = null;
+        document.extractedSpecs = null;
+        this.documents.set(id, document);
+        clearedDocumentAnalysis++;
+      }
+    }
+    
+    console.log(`AI data reset completed:`);
+    console.log(`- ${totalEstimations} cost estimations cleared`);
+    console.log(`- ${clearedExtractedData} extracted data entries cleared`);
+    console.log(`- ${clearedDocumentAnalysis} document analyses cleared`);
+    console.log(`- ${updatedRequests} procurement requests updated`);
+    
+    return {
+      clearedEstimations: totalEstimations,
+      clearedExtractedData,
+      clearedDocumentAnalysis,
+      updatedRequests
+    };
   }
 }
 

@@ -813,6 +813,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset all AI data - comprehensive cleanup endpoint
+  app.post("/api/admin/reset-all-ai-data", async (req, res) => {
+    try {
+      console.log('Admin reset all AI data endpoint called');
+      
+      const result = await storage.resetAllAIData();
+      
+      res.json({
+        success: true,
+        message: 'כל נתוני ה-AI ואומדני העלויות אופסו בהצלחה',
+        results: {
+          clearedEstimations: result.clearedEstimations,
+          clearedExtractedData: result.clearedExtractedData,
+          clearedDocumentAnalysis: result.clearedDocumentAnalysis,
+          updatedRequests: result.updatedRequests
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting all AI data:', error);
+      res.status(500).json({
+        success: false,
+        error: 'שגיאה באיפוס נתוני AI'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
