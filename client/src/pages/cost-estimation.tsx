@@ -54,20 +54,28 @@ export default function CostEstimation() {
         // Convert existing estimation to display format
         const displayEstimation = {
           finalEstimate: {
-            amount: existingEstimation.estimatedCost,
-            confidence: existingEstimation.confidence,
-            methodology: existingEstimation.methodology
+            amount: parseFloat(existingEstimation.totalCost),
+            confidence: existingEstimation.confidenceLevel,
+            methodology: 'אומדן מבוסס נתונים היסטוריים ומחקר שוק מתקדם'
           },
-          breakdown: existingEstimation.methodsUsed?.map((method: string, index: number) => ({
-            method: method,
-            estimate: existingEstimation.estimatedCost / (existingEstimation.methodsUsed?.length || 1),
-            confidence: existingEstimation.confidence,
-            breakdown: []
-          })) || [],
+          breakdown: [
+            {
+              method: 'אומדן מחיר בסיסי',
+              estimate: parseFloat(existingEstimation.basePrice),
+              confidence: existingEstimation.confidenceLevel,
+              breakdown: []
+            },
+            {
+              method: 'מס וחיובים נוספים', 
+              estimate: parseFloat(existingEstimation.tax),
+              confidence: 100,
+              breakdown: []
+            }
+          ],
           marketComparison: {
-            marketPrice: existingEstimation.estimatedCost * 1.15,
+            marketPrice: existingEstimation.marketPrice ? parseFloat(existingEstimation.marketPrice) : parseFloat(existingEstimation.totalCost) * 1.15,
             pricePosition: 'תחרותי',
-            savings: existingEstimation.estimatedCost * 0.15
+            savings: existingEstimation.potentialSavings ? parseFloat(existingEstimation.potentialSavings) : parseFloat(existingEstimation.totalCost) * 0.15
           },
           recommendations: [
             'האומדן מבוסס על נתונים היסטוריים ואמינים',
@@ -75,7 +83,7 @@ export default function CostEstimation() {
             'האומדן כולל מרווח ביטחון מתאים'
           ],
           requestDetails: {
-            title: request?.title || '',
+            title: request?.itemName || '',
             requestNumber: request?.requestNumber || ''
           },
           aiAnalysisResults: {
