@@ -29,14 +29,14 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize pricing engine with data from storage
   let pricingEngine: PricingEngine;
-  
+
   const initializePricingEngineData = async () => {
     const categories = await storage.getProcurementCategories();
     const historical = await storage.getHistoricalProcurements();
     const suppliers = await storage.getSupplierPerformance();
     pricingEngine = initializePricingEngine(categories, historical, suppliers);
   };
-  
+
   await initializePricingEngineData();
 
   // Procurement Requests
@@ -626,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const category = req.category || 'אחר';
         const cost = parseFloat(req.estimatedCost || '0');
         const existing = acc.find(c => c.category === category);
-        
+
         if (existing) {
           existing.amount += cost;
         } else {
@@ -982,7 +982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/advanced-estimation", async (req, res) => {
     try {
       const { requestId, methods = ['market-based', 'analogous', 'parametric', 'bottom-up', 'expert-judgment'] } = req.body;
-      
+
       if (!requestId) {
         return res.status(400).json({
           success: false,
@@ -1049,7 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get historical procurements for category
       const historicalData = await storage.getHistoricalProcurementsByCategory(category);
-      
+
       // Sort and limit results
       const sortedData = historicalData
         .sort((a, b) => {
@@ -1069,8 +1069,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate statistics
       const stats = {
         totalProcurements: historicalData.length,
-        averageVariance: historicalData.reduce((sum, p) => sum + p.variance, 0) / historicalData.length,
-        averageSatisfaction: historicalData.reduce((sum, p) => sum + p.satisfaction, 0) / historicalData.length,
+        averageVariance: historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + p.variance, 0) / historicalData.length : 0,
+        averageSatisfaction: historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + p.satisfaction, 0) / historicalData.length : 0,
         totalValue: historicalData.reduce((sum, p) => sum + p.actualCost, 0),
         topSuppliers: getTopSuppliers(historicalData),
         riskFactors: extractRiskFactors(historicalData)
@@ -1100,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const procurementRequest = await storage.getProcurementRequest(requestId);
-      
+
       if (!procurementRequest) {
         return res.status(404).json({
           success: false,
@@ -1110,14 +1110,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get supplier performance data
       const allSuppliers = await storage.getSupplierPerformance();
-      
+
       // Get historical data for this category
       const categoryHistory = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
-      
+
       // Calculate supplier scores based on multiple factors
       const supplierRecommendations = allSuppliers.map(supplier => {
         const supplierHistory = categoryHistory.filter(h => h.supplierId === supplier.supplierId);
-        
+
         // Calculate comprehensive score
         const performanceScore = (
           supplier.rating * 0.25 +
@@ -1125,21 +1125,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           supplier.costEfficiency * 0.25 +
           supplier.qualityScore * 0.25
         );
-        
+
         const experienceScore = Math.min(supplierHistory.length / 5, 1) * 4; // Experience factor
         const satisfactionScore = supplierHistory.length > 0 ? 
           supplierHistory.reduce((sum, h) => sum + h.satisfaction, 0) / supplierHistory.length : 
           supplier.rating;
-        
+
         const overallScore = (performanceScore + experienceScore + satisfactionScore) / 3;
-        
+
         // Calculate risk factors
         const riskFactors = [];
         if (supplier.defectRate > 5) riskFactors.push('שיעור פגמים גבוה');
         if (supplier.onTimeDelivery < 85) riskFactors.push('עיכובים בזמני אספקה');
         if (supplier.responseTime > 24) riskFactors.push('זמן תגובה איטי');
         if (supplierHistory.length === 0) riskFactors.push('חוסר ניסיון בקטגוריה זו');
-        
+
         return {
           supplierId: supplier.supplierId,
           supplierName: supplier.supplierName,
@@ -1203,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const procurementRequest = await storage.getProcurementRequest(requestId);
-      
+
       if (!procurementRequest) {
         return res.status(404).json({
           success: false,
@@ -1214,10 +1214,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get category data for risk assessment
       const categoryData = await storage.getProcurementCategoriesByName(procurementRequest.category);
       const historicalData = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
-      
+
       // Initialize pricing engine for risk analysis
       await initializePricingEngineData();
-      
+
       const estimationRequest: EstimationRequest = {
         requestId: procurementRequest.id,
         itemName: procurementRequest.itemName,
@@ -1232,7 +1232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate risk factors using pricing engine
       const marketEstimation = pricingEngine.calculateMarketBasedEstimate(estimationRequest);
       const riskFactors = marketEstimation.risks;
-      
+
       // Additional risk analysis
       const riskAssessment = {
         overallRiskLevel: calculateOverallRisk(procurementRequest, categoryData[0], historicalData),
@@ -1340,6 +1340,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reports endpoints
+  app.get("/api/reports/savings", async (req, res) => {
+    try {
+      const { dateRange, category } = req.query;
+      // Mock savings data based on historical procurement data
+      const savingsData = {
+        totalSavings: 2450000,
+        yearlyGrowth: 18.5,
+        topCategories: [
+          { category: "טכנולוגיה", savings: 890000 },
+          { category: "שירותים", savings: 650000 },
+          { category: "ציוד משרדי", savings: 520000 },
+          { category: "אחזקה", savings: 390000 }
+        ],
+        monthlyTrend: [
+          { month: "ינואר", savings: 180000 },
+          { month: "פברואר", savings: 220000 },
+          { month: "מרץ", savings: 195000 },
+          { month: "אפריל", savings: 240000 },
+          { month: "מאי", savings: 285000 },
+          { month: "יוני", savings: 310000 },
+          { month: "יולי", savings: 295000 },
+          { month: "אוגוסט", savings: 330000 },
+          { month: "ספטמבר", savings: 275000 },
+          { month: "אוקטובר", savings: 320000 }
+        ]
+      };
+      res.json(savingsData);
+    } catch (error) {
+      console.error("Savings report error:", error);
+      res.status(500).json({ error: "Failed to generate savings report" });
+    }
+  });
+
+  app.get("/api/reports/suppliers", async (req, res) => {
+    try {
+      const suppliersData = {
+        suppliers: [
+          {
+            name: "חברת פיתוח Alpha-Tech",
+            rating: 4.8,
+            onTimeDelivery: 96,
+            costEfficiency: 92,
+            qualityScore: 94,
+            totalOrders: 24,
+            totalValue: 2850000
+          },
+          {
+            name: "Beta Solutions Ltd",
+            rating: 4.6,
+            onTimeDelivery: 88,
+            costEfficiency: 89,
+            qualityScore: 91,
+            totalOrders: 18,
+            totalValue: 1950000
+          },
+          {
+            name: "Gamma Consulting",
+            rating: 4.4,
+            onTimeDelivery: 92,
+            costEfficiency: 85,
+            qualityScore: 88,
+            totalOrders: 15,
+            totalValue: 1450000
+          }
+        ]
+      };
+      res.json(suppliersData);
+    } catch (error) {
+      console.error("Suppliers report error:", error);
+      res.status(500).json({ error: "Failed to generate suppliers report" });
+    }
+  });
+
+  app.get("/api/reports/accuracy", async (req, res) => {
+    try {
+      const accuracyData = {
+        overallAccuracy: 87.5,
+        byCategory: [
+          { category: "טכנולוגיה", accuracy: 92 },
+          { category: "שירותים", accuracy: 88 },
+          { category: "ציוד משרדי", accuracy: 85 },
+          { category: "אחזקה", accuracy: 82 }
+        ],
+        monthlyTrend: [
+          { month: "ינואר", accuracy: 78 },
+          { month: "פברואר", accuracy: 81 },
+          { month: "מרץ", accuracy: 83 },
+          { month: "אפריל", accuracy: 85 },
+          { month: "מאי", accuracy: 87 },
+          { month: "יוני", accuracy: 89 },
+          { month: "יולי", accuracy: 88 },
+          { month: "אוגוסט", accuracy: 90 },
+          { month: "ספטמבר", accuracy: 89 },
+          { month: "אוקטובר", accuracy: 92 }
+        ],
+        improvementTrend: 14.2
+      };
+      res.json(accuracyData);
+    } catch (error) {
+      console.error("Accuracy report error:", error);
+      res.status(500).json({ error: "Failed to generate accuracy report" });
+    }
+  });
+
+  app.get("/api/reports/cost-trends", async (req, res) => {
+    try {
+      const trendsData = {
+        categories: [
+          {
+            category: "טכנולוגיה",
+            currentQuarter: 3200000,
+            previousQuarter: 2950000,
+            yearOverYear: 12.5,
+            trend: 'up'
+          },
+          {
+            category: "שירותים",
+            currentQuarter: 2100000,
+            previousQuarter: 2250000,
+            yearOverYear: -4.2,
+            trend: 'down'
+          },
+          {
+            category: "ציוד משרדי",
+            currentQuarter: 850000,
+            previousQuarter: 830000,
+            yearOverYear: 2.1,
+            trend: 'stable'
+          }
+        ],
+        totalSpend: 8950000,
+        avgOrderValue: 285000
+      };
+      res.json(trendsData);
+    } catch (error) {
+      console.error("Cost trends report error:", error);
+      res.status(500).json({ error: "Failed to generate cost trends report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
@@ -1371,18 +1512,18 @@ function getTopSuppliers(historicalData: any[]) {
 
 function extractRiskFactors(historicalData: any[]) {
   const factors = [];
-  
-  const avgVariance = historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length;
+
+  const avgVariance = historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
   if (avgVariance > 10) factors.push('סטיית מחיר גבוהה');
-  
+
   const recentProjects = historicalData.filter(p => 
     new Date(p.completedDate) > new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
   );
   if (recentProjects.length < 3) factors.push('מעט נתונים עדכניים');
-  
+
   const lowSatisfaction = historicalData.filter(p => p.satisfaction < 3.5).length;
-  if (lowSatisfaction > historicalData.length * 0.3) factors.push('שביעות רצון נמוכה');
-  
+  if (historicalData.length > 0 && lowSatisfaction > historicalData.length * 0.3) factors.push('שביעות רצון נמוכה');
+
   return factors;
 }
 
@@ -1403,30 +1544,30 @@ function generateSupplierRecommendation(score: number, riskFactors: string[], ex
 function calculateOverallRisk(request: any, category: any, historicalData: any[]) {
   let riskScore = 0;
   let maxScore = 5;
-  
+
   // Budget risk
   if (parseFloat(request.emf || '0') < 50000) riskScore += 0.5;
   else if (parseFloat(request.emf || '0') > 1000000) riskScore += 1;
-  
+
   // Category risk
   if (category && category.riskFactor > 0.5) riskScore += 1.5;
   else if (category && category.riskFactor > 0.3) riskScore += 1;
-  
+
   // Timeline risk
   if (request.targetDate) {
     const daysToTarget = (new Date(request.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
     if (daysToTarget < 30) riskScore += 1.5;
     else if (daysToTarget < 60) riskScore += 1;
   }
-  
+
   // Historical variance risk
   const avgVariance = historicalData.length > 0 ? 
     historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
   if (avgVariance > 15) riskScore += 1;
   else if (avgVariance > 8) riskScore += 0.5;
-  
+
   const riskPercentage = (riskScore / maxScore) * 100;
-  
+
   if (riskPercentage < 30) return 'נמוך';
   if (riskPercentage < 60) return 'בינוני';
   return 'גבוה';
@@ -1436,7 +1577,7 @@ function assessFinancialRisk(request: any, historicalData: any[]) {
   const budget = parseFloat(request.emf || '0');
   const avgVariance = historicalData.length > 0 ? 
     historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
-  
+
   return {
     level: budget > 500000 && avgVariance > 10 ? 'גבוה' : avgVariance > 5 ? 'בינוני' : 'נמוך',
     factors: [
@@ -1449,7 +1590,7 @@ function assessFinancialRisk(request: any, historicalData: any[]) {
 
 function assessOperationalRisk(request: any, category: any) {
   const complexity = request.specifications?.complexity || 'בינונית';
-  
+
   return {
     level: complexity === 'גבוהה' || request.quantity > 100 ? 'גבוה' : 'בינוני',
     factors: [
@@ -1462,7 +1603,7 @@ function assessOperationalRisk(request: any, category: any) {
 
 function assessMarketRisk(request: any, category: any) {
   const volatility = category?.marketVolatility || 0.3;
-  
+
   return {
     level: volatility > 0.4 ? 'גבוה' : volatility > 0.2 ? 'בינוני' : 'נמוך',
     factors: [
@@ -1488,7 +1629,7 @@ function assessTimelineRisk(request: any, category: any) {
   const targetDate = request.targetDate ? new Date(request.targetDate) : null;
   const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
   const avgDeliveryTime = category?.avgDeliveryTime || 30;
-  
+
   return {
     level: daysToTarget < avgDeliveryTime ? 'גבוה' : daysToTarget < avgDeliveryTime * 1.5 ? 'בינוני' : 'נמוך',
     factors: [
@@ -1501,7 +1642,7 @@ function assessTimelineRisk(request: any, category: any) {
 
 function generateMitigationStrategies(request: any, category: any, historicalData: any[]) {
   const strategies = [];
-  
+
   // Financial mitigation
   if (parseFloat(request.emf || '0') > 500000) {
     strategies.push({
@@ -1510,11 +1651,11 @@ function generateMitigationStrategies(request: any, category: any, historicalDat
       impact: 'הפחתת חשיפה פיננסית'
     });
   }
-  
+
   // Timeline mitigation
   const targetDate = request.targetDate ? new Date(request.targetDate) : null;
   const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
-  
+
   if (daysToTarget < 60) {
     strategies.push({
       risk: 'סיכון לוחות זמנים',
@@ -1522,7 +1663,7 @@ function generateMitigationStrategies(request: any, category: any, historicalDat
       impact: 'קיצור זמני עיבוד'
     });
   }
-  
+
   // Market mitigation
   if (category?.marketVolatility > 0.4) {
     strategies.push({
@@ -1531,7 +1672,7 @@ function generateMitigationStrategies(request: any, category: any, historicalDat
       impact: 'הבטחת תחרותיות'
     });
   }
-  
+
   return strategies;
 }
 

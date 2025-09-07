@@ -9,8 +9,10 @@ import ProcurementRequest from "@/pages/procurement-request";
 import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
+import Reports from "@/pages/reports";
 import NotFound from "@/pages/not-found";
 import Templates from "@/pages/templates";
+import SqlRunner from "@/pages/sql-runner";
 
 
 function Router() {
@@ -25,8 +27,10 @@ function Router() {
           <Route path="/procurement-request/:id?" component={ProcurementRequest} />
           <Route path="/cost-estimation/:id?" component={CostEstimation} />
           <Route path="/market-research/:category?" component={MarketResearch} />
+          <Route path="/reports" component={Reports} />
           <Route path="/templates" component={Templates} />
-          <Route path="*" component={NotFound} />
+          <Route path="/sql-runner" component={SqlRunner} />
+          <Route component={NotFound} />
         </Switch>
       </main>
     </div>
