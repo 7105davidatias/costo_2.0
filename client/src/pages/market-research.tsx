@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,45 +9,46 @@ import SupplierChart from "@/components/charts/supplier-chart";
 import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
 import { Scatter, ScatterChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell, PieChart, Pie, BarChart, Bar, LineChart, Line, Area, AreaChart } from 'recharts';
+import AIRecommendations from '@/components/market/ai-recommendations';
 
 export default function MarketResearch() {
   const { category } = useParams();
-  
+
   // Check if the parameter is actually a request ID (number) or a category (string)
   const isRequestId = category && !isNaN(Number(category));
   const requestId = isRequestId ? category : null;
   const actualCategory = !isRequestId ? category : null;
-  
+
   // Force debugging info
   console.log('Raw category parameter:', category);
   console.log('Is numeric check:', category, !isNaN(Number(category || '')));
   console.log('Number conversion:', Number(category || ''));
   console.log('Final isRequestId:', isRequestId);
   console.log('Final requestId:', requestId);
-  
+
   // Additional check - if the user is viewing a specific product category but we have a requestId in URL
   if (category === 'מוצרים' && window.location.pathname.includes('/13')) {
     console.log('Detected direct URL access for request 13');
   }
-  
+
   // Check localStorage for request context or use URL parameter
   const storedRequestId = localStorage.getItem('currentRequestId');
-  
+
   // FINAL FIX: If user navigated from a general category but has a stored request context, use it
   let finalRequestId = requestId;
-  
+
   if (!requestId && category === 'מוצרים' && storedRequestId) {
     console.log('Redirecting from general category to specific request:', storedRequestId);
     finalRequestId = storedRequestId;
     // Update the URL to reflect the correct request ID
     window.history.replaceState({}, '', `/market-research/${storedRequestId}`);
   }
-  
+
   console.log('Final decision - requestId:', finalRequestId);
   console.log('Stored requestId from localStorage:', storedRequestId);
   console.log('Original category param:', category);
   console.log('Document referrer:', document.referrer);
-  
+
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch, isLoading: marketResearchLoading, error: marketResearchError } = useQuery({
     queryKey: ["/api/market-research", finalRequestId],
@@ -129,7 +129,7 @@ export default function MarketResearch() {
   // Use contextual data if available, otherwise fallback to legacy data
   const contextualSuppliers = marketResearch?.supplierComparison || [];
   const legacySuppliers = suppliers?.slice(0, 3) || [];
-  
+
   const supplierComparisonData = ((finalRequestId && marketResearch?.supplierComparison) ? marketResearch.supplierComparison : (suppliers?.slice(0, 3) || [])).map((supplier: any, index: number) => ({
     supplier: supplier.supplier || supplier.name,
     price: 95 - (index * 10),
@@ -188,7 +188,7 @@ export default function MarketResearch() {
   const getAIRecommendations = () => {
     if (finalRequestId && marketResearch?.requestDetails) {
       const requestTitle = marketResearch.requestDetails.title || '';
-      
+
       if (requestTitle.includes('מחשב') || requestTitle.includes('לפטופ')) {
         return [
           {
@@ -212,7 +212,7 @@ export default function MarketResearch() {
         ];
       }
     }
-    
+
     return [
       {
         title: 'אופטימיזציה מותאמת',
@@ -247,6 +247,17 @@ export default function MarketResearch() {
   };
 
   const COLORS = ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa'];
+
+  // State variables for AI Recommendations component
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [estimatedCost, setEstimatedCost] = useState<number>(100000);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [targetDate, setTargetDate] = useState<Date | undefined>(undefined);
+
 
   return (
     <div className="space-y-8">
@@ -362,17 +373,23 @@ export default function MarketResearch() {
       </div>
 
       {/* Advanced Analytics Tabs */}
-      <Tabs defaultValue="competitive" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="competitive">ניתוח תחרותי</TabsTrigger>
-          <TabsTrigger value="risk">מטריצת סיכונים</TabsTrigger>
-          <TabsTrigger value="trends">מגמות מחירים</TabsTrigger>
-          <TabsTrigger value="geographical">זמינות גיאוגרפית</TabsTrigger>
-          <TabsTrigger value="ai-insights">תובנות AI</TabsTrigger>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview">סקירה כללית</TabsTrigger>
+          <TabsTrigger value="suppliers">השוואת ספקים</TabsTrigger>
+          <TabsTrigger value="ai-recommendations">המלצות AI</TabsTrigger>
+          <TabsTrigger value="trends">מגמות ותחזיות</TabsTrigger>
+          <TabsTrigger value="analytics">ניתוח מתקדם</TabsTrigger>
+          <TabsTrigger value="insights">תובנות שוק</TabsTrigger>
         </TabsList>
 
-        {/* Competitive Analysis Tab */}
-        <TabsContent value="competitive" className="space-y-6">
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Placeholder for Overview content if needed */}
+        </TabsContent>
+
+        {/* Suppliers Tab */}
+        <TabsContent value="suppliers" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Price vs Quality Scatter Plot */}
             <Card className="bg-card border-primary/20">
@@ -467,12 +484,12 @@ export default function MarketResearch() {
                       const supplierPrice = supplier.pricePerUnit || formatCurrency(60500 + (index * 2500));
                       const supplierCode = supplier.contact || supplier.code || supplierName.substring(0, 2);
                       const competitiveScore = (95 - index * 5) + Math.random() * 10;
-                      
+
                       // Determine recommendation based on context
                       const recommendationConfig = isContextual 
                         ? { label: index === 0 ? 'מומלץ ביותר' : index === 1 ? 'טוב מאוד' : 'סטנדרט', className: index === 0 ? 'bg-success/20 text-success' : index === 1 ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground' }
                         : getRecommendationBadge(supplier);
-                      
+
                       return (
                         <tr key={index} className={`hover:bg-muted/10 ${index === 0 ? 'bg-success/5' : ''}`}>
                           <td className="px-6 py-4">
@@ -586,7 +603,7 @@ export default function MarketResearch() {
                   {riskMatrixData.map((risk, index) => {
                     const riskLevel = risk.impact * risk.probability;
                     const riskColor = riskLevel >= 12 ? 'destructive' : riskLevel >= 8 ? 'warning' : 'success';
-                    
+
                     return (
                       <div key={index} className={`p-4 bg-${riskColor}/10 border border-${riskColor}/30 rounded-lg`}>
                         <div className="flex justify-between items-start mb-2">
@@ -610,7 +627,330 @@ export default function MarketResearch() {
           </div>
         </TabsContent>
 
-        {/* Price Trends Tab */}
+        {/* Trends Tab */}
+        <TabsContent value="trends" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Seasonal Trends */}
+            <Card className="bg-card border-info/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <Calendar className="text-info w-5 h-5" />
+                  <span>מגמות עונתיות וחיזוי מחירים</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={seasonalTrendsData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                      <XAxis 
+                        dataKey="season" 
+                        stroke="#FFFFFF"
+                        tick={{ fill: '#FFFFFF', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        stroke="#FFFFFF"
+                        tick={{ fill: '#FFFFFF' }}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border border-info/20 p-3 rounded-lg shadow-lg" dir="rtl">
+                              <p className="text-foreground font-medium mb-2">{label}</p>
+                              {payload[0]?.value && <p className="text-info">מגמה בפועל: {payload[0].value}%</p>}
+                              {payload[1]?.value && <p className="text-primary">חיזוי: {payload[1].value}%</p>}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="trend" 
+                        stroke="#60a5fa" 
+                        fill="#60a5fa" 
+                        fillOpacity={0.3}
+                        name="מגמה בפועל"
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="prediction" 
+                        stroke="#34d399" 
+                        fill="#34d399" 
+                        fillOpacity={0.2}
+                        strokeDasharray="5 5"
+                        name="חיזוי"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Price History */}
+            <Card className="bg-card border-secondary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <TrendingUp className="text-secondary w-5 h-5" />
+                  <span>היסטוריית מחירים - 12 חודש</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <PriceTrackingChart data={priceHistoryData} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Price Insights */}
+          <Card className="bg-card border-primary/20">
+            <CardHeader>
+              <CardTitle>תובנות מחירים מתקדמות</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-success/10 border border-success/30 rounded-lg p-4">
+                  <h4 className="font-medium text-success mb-2">עיתוי אופטימלי</h4>
+                  <p className="text-sm text-muted-foreground">
+                    רכישה במרץ-אפריל מביאה לחיסכון ממוצע של 8-12% בשל סוף שנת הכספים
+                  </p>
+                </div>
+                <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
+                  <h4 className="font-medium text-warning mb-2">מגמת עליה צפויה</h4>
+                  <p className="text-sm text-muted-foreground">
+                    חיזוי עליית מחירים של 3-5% ברבעון הקרוב בשל אינפלציה עולמית
+                  </p>
+                </div>
+                <div className="bg-info/10 border border-info/30 rounded-lg p-4">
+                  <h4 className="font-medium text-info mb-2">הזדמנות חיסכון</h4>
+                  <p className="text-sm text-muted-foreground">
+                    רכישה בכמויות גדולות (10+ יחידות) מביאה להנחות של עד 18%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Geographical Availability Tab */}
+        <TabsContent value="geographical" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Availability Heatmap */}
+            <Card className="bg-card border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <MapPin className="text-primary w-5 h-5" />
+                  <span>מפת זמינות ספקים</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={availabilityHeatmapData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                      <XAxis 
+                        dataKey="region" 
+                        stroke="#FFFFFF"
+                        tick={{ fill: '#FFFFFF' }}
+                      />
+                      <YAxis 
+                        stroke="#FFFFFF"
+                        tick={{ fill: '#FFFFFF' }}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
+                              <p className="text-foreground font-medium mb-2">{label}</p>
+                              <p className="text-primary">זמינות: {data.availability}%</p>
+                              <p className="text-secondary">ספקים: {data.suppliers}</p>
+                              <p className="text-warning">זמן אספקה: {data.avgDelivery} ימים</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
+                      <Bar dataKey="availability" fill="#60a5fa" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Regional Details */}
+            <Card className="bg-card border-secondary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <Store className="text-secondary w-5 h-5" />
+                  <span>פילוח אזורי מפורט</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {availabilityHeatmapData.map((region, index) => (
+                    <div key={index} className="p-4 bg-muted/10 border border-muted/20 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-foreground">{region.region}</h4>
+                        <Badge className={`${
+                          region.availability >= 90 ? 'bg-success/20 text-success' :
+                          region.availability >= 80 ? 'bg-warning/20 text-warning' :
+                          'bg-destructive/20 text-destructive'
+                        }`}>
+                          {region.availability}% זמינות
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">ספקים פעילים: </span>
+                          <span className="text-foreground font-medium">{region.suppliers}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">זמן אספקה ממוצע: </span>
+                          <span className="text-foreground font-medium">{region.avgDelivery} ימים</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* AI Insights Tab */}
+        <TabsContent value="ai-insights" className="space-y-6">
+          {/* AI Recommendations */}
+          <Card className="bg-card border-success/20">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-reverse space-x-2">
+                <Brain className="text-success w-5 h-5" />
+                <span>המלצות AI מותאמות אישית</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {aiRecommendations.map((rec, index) => (
+                  <div key={index} className="p-4 bg-success/5 border-r-4 border-success rounded-lg">
+                    <div className="flex items-start space-x-reverse space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-foreground">{rec.title}</h4>
+                          <Badge className={`text-xs ${
+                            rec.priority === 'גבוהה' ? 'bg-destructive/20 text-destructive' :
+                            rec.priority === 'בינונית' ? 'bg-warning/20 text-warning' :
+                            'bg-muted/20 text-muted-foreground'
+                          }`}>
+                            {rec.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{rec.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Market Intelligence Summary */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="bg-card border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <Calculator className="text-primary w-5 h-5" />
+                  <span>אינטליגנציה כלכלית</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                    <h4 className="font-medium text-foreground mb-2">אופטימיזציה כלכלית</h4>
+                    <p className="text-sm text-muted-foreground">
+                      ניתוח נתונים מזהה פוטנציאל חיסכון של {formatCurrency(15000)} 
+                      דרך עיתוי רכישה אסטרטגי ומשא ומתן מותאם
+                    </p>
+                  </div>
+                  <div className="bg-success/10 border border-success/30 rounded-lg p-4">
+                    <h4 className="font-medium text-foreground mb-2">יתרון תחרותי</h4>
+                    <p className="text-sm text-muted-foreground">
+                      הארגון יכול להשיג מחיר 12% מתחת לממוצע השוק 
+                      בזכות נתונים מתקדמים ויחסי ספקים
+                    </p>
+                  </div>
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
+                    <h4 className="font-medium text-foreground mb-2">אזהרת שוק</h4>
+                    <p className="text-sm text-muted-foreground">
+                      צפויה עלייה של 5-8% במחירי חומרי גלם ברבעון הבא - 
+                      מומלץ להזמין מוקדם
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-info/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-reverse space-x-2">
+                  <Medal className="text-info w-5 h-5" />
+                  <span>ביצועים והשוואות</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                    <span className="text-muted-foreground">דירוג תחרותי</span>
+                    <span className="text-foreground font-bold">8.7/10</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                    <span className="text-muted-foreground">חיסכון לעומת אמש</span>
+                    <span className="text-success font-bold">+23%</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                    <span className="text-muted-foreground">מהירות החלטה</span>
+                    <span className="text-primary font-bold">3.2x מהר יותר</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/10 rounded-lg">
+                    <span className="text-muted-foreground">דיוק תחזיות</span>
+                    <span className="text-warning font-bold">94.5%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ai-recommendations" className="space-y-6">
+          <AIRecommendations
+            requestId={finalRequestId}
+            category={selectedCategory}
+            estimatedCost={estimatedCost}
+            quantity={quantity}
+            suppliers={suppliers?.map(supplier => ({
+              id: supplier.id,
+              name: supplier.name,
+              rating: supplier.rating || 4.5,
+              priceLevel: Math.round(supplier.costEfficiency || 3),
+              reliability: supplier.reliability || 85,
+              avgDeliveryTime: supplier.deliveryTime || 10,
+              costEfficiency: supplier.costEfficiency || 4.2,
+              onTimeDelivery: supplier.onTimeDelivery || 90,
+              defectRate: supplier.defectRate || 2,
+              responseTime: supplier.responseTime || 12
+            })) || []}
+            targetDate={targetDate}
+          />
+        </TabsContent>
+
+        {/* Trends Tab */}
         <TabsContent value="trends" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Seasonal Trends */}
