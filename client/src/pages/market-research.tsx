@@ -64,7 +64,7 @@ export default function MarketResearch() {
 
   // Use new contextual market research API if requestId is provided
   const { data: marketResearch, isLoading: marketResearchLoading, error: marketResearchError } = useQuery({
-    queryKey: ["/api/market-research", finalRequestId],
+    queryKey: ["market-research", finalRequestId],
     enabled: !!finalRequestId,
   });
 
@@ -78,12 +78,12 @@ export default function MarketResearch() {
   // Fallback to category-based market insights
   const decodedCategory = actualCategory ? decodeURIComponent(actualCategory) : "ציוד טכנולוגי";
   const { data: marketInsight } = useQuery<MarketInsight>({
-    queryKey: ["/api/market-insights", decodedCategory],
+    queryKey: ["market-insights", decodedCategory],
     enabled: !finalRequestId,
   });
 
   const { data: suppliers, isLoading: suppliersLoading } = useQuery<Supplier[]>({
-    queryKey: ["/api/suppliers"],
+    queryKey: ["suppliers"],
     enabled: !finalRequestId,
   });
 

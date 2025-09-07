@@ -39,12 +39,12 @@ interface RealTimeStats {
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["dashboard/stats"],
   });
 
   // Fetch additional real-time data
   const { data: realTimeStats } = useQuery<RealTimeStats>({
-    queryKey: ["/api/dashboard/realtime"],
+    queryKey: ["dashboard/realtime"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

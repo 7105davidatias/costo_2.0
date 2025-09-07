@@ -28,13 +28,13 @@ export default function CostEstimation() {
   console.log('Selected methods array:', selectedMethods);
 
   const { data: request } = useQuery<ProcurementRequest>({
-    queryKey: ["/api/procurement-requests", id],
+    queryKey: ["procurement-requests", id],
     enabled: !!id,
   });
 
   // Check for existing estimation
   const { data: existingEstimation, isLoading: existingLoading } = useQuery<CostEstimationType>({
-    queryKey: ["/api/cost-estimations/request", id],
+    queryKey: ["cost-estimations/request", id],
     enabled: !!id,
     retry: false,
   });

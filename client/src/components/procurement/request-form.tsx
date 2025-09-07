@@ -73,8 +73,8 @@ export default function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
         description: `בקשה ${data.requestNumber} נוצרה ונשלחה לעיבוד`,
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["procurement-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard/stats"] });
       
       onSuccess?.();
       setLocation(`/procurement-request/${data.id}`);

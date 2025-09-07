@@ -59,7 +59,7 @@ export default function FileUpload({ requestId, onUploadComplete, onFileView, cl
         description: `${file.name} הועלה ונשלח לניתוח AI`,
       });
 
-      queryClient.invalidateQueries({ queryKey: ["/api/documents/request", requestId] });
+      queryClient.invalidateQueries({ queryKey: ["documents/request", requestId] });
       onUploadComplete?.(data);
 
       // Remove from uploading files after success

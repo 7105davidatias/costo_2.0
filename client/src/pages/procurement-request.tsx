@@ -58,21 +58,21 @@ export default function ProcurementRequest() {
   });
 
   const { data: request, isLoading: requestLoading, error: requestError } = useQuery<ProcurementRequestType>({
-    queryKey: ["/api/procurement-requests", id],
+    queryKey: ["procurement-requests", id],
     enabled: !!id,
     retry: 2,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: documents, error: documentsError } = useQuery({
-    queryKey: ["/api/documents/request", id],
+    queryKey: ["documents/request", id],
     enabled: !!id,
     retry: 2,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: extractedData, refetch: refetchExtractedData, error: extractedDataError } = useQuery({
-    queryKey: ["/api/procurement-requests", id, "extracted-data"],
+    queryKey: ["procurement-requests", id, "extracted-data"],
     enabled: !!id,
     retry: 2,
     staleTime: 5 * 60 * 1000,
@@ -103,8 +103,8 @@ export default function ProcurementRequest() {
         description: "תוצאות הניתוח זמינות לצפייה",
       });
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["/api/documents/request", id] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests", id, "extracted-data"] }),
+        queryClient.invalidateQueries({ queryKey: ["documents/request", id] }),
+        queryClient.invalidateQueries({ queryKey: ["procurement-requests", id, "extracted-data"] }),
         refetchExtractedData()
       ]).catch(error => {
         console.error('Error refreshing data after AI analysis:', error);
