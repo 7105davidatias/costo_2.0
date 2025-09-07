@@ -10,6 +10,8 @@ import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
 import NotFound from "@/pages/not-found";
+import Templates from "@/pages/templates";
+
 
 function Router() {
   return (
@@ -23,7 +25,8 @@ function Router() {
           <Route path="/procurement-request/:id?" component={ProcurementRequest} />
           <Route path="/cost-estimation/:id?" component={CostEstimation} />
           <Route path="/market-research/:category?" component={MarketResearch} />
-          <Route component={NotFound} />
+          <Route path="/templates" component={Templates} />
+          <Route path="*" component={NotFound} />
         </Switch>
       </main>
     </div>

@@ -85,6 +85,12 @@ export default function Sidebar({ className }: SidebarProps) {
           icon: TrendingUp,
           badge: null
         },
+        { 
+          path: "/templates", 
+          label: "תבניות מסמכים", 
+          icon: FileText,
+          badge: null
+        },
       ]
     }
   ];
