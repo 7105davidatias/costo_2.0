@@ -7,6 +7,55 @@ import {
   type MarketInsight, type InsertMarketInsight
 } from "@shared/schema";
 
+// טיפוסי נתונים חדשים למערכת v2.0
+export interface ProcurementCategory {
+  id: string;
+  name: string;
+  pricingMultiplier: number;
+  riskFactor: number;
+  avgDeliveryTime: number;
+  specifications: string[];
+  marketVolatility: number;
+}
+
+export interface HistoricalProcurement {
+  id: string;
+  requestNumber: string;
+  category: string;
+  itemName: string;
+  quantity: number;
+  actualCost: number;
+  estimatedCost: number;
+  variance: number;
+  supplierId: number;
+  completedDate: Date;
+  satisfaction: number;
+  lessons: string[];
+}
+
+export interface SupplierPerformance {
+  supplierId: number;
+  supplierName: string;
+  rating: number;
+  avgDeliveryTime: number;
+  reliabilityScore: number;
+  costEfficiency: number;
+  qualityScore: number;
+  totalOrders: number;
+  onTimeDelivery: number;
+  defectRate: number;
+  responseTime: number;
+}
+
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  category: string;
+  estimatedCost: number;
+  specifications: any;
+  template: any;
+}
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -50,6 +99,26 @@ export interface IStorage {
   getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null>;
   clearExtractedData(requestId: number): Promise<void>;
 
+  // New v2.0 Methods - קטגוריות רכש
+  getProcurementCategories(): Promise<ProcurementCategory[]>;
+  getProcurementCategory(id: string): Promise<ProcurementCategory | undefined>;
+  getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]>;
+
+  // New v2.0 Methods - רכישות היסטוריות
+  getHistoricalProcurements(): Promise<HistoricalProcurement[]>;
+  getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]>;
+  getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]>;
+
+  // New v2.0 Methods - ביצועי ספקים
+  getSupplierPerformance(): Promise<SupplierPerformance[]>;
+  getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined>;
+  getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]>;
+
+  // New v2.0 Methods - תבניות מסמכים
+  getDocumentTemplates(): Promise<DocumentTemplate[]>;
+  getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined>;
+  getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]>;
+
   // Admin functions for demo reset
   resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }>;
   resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }>;
@@ -71,6 +140,12 @@ export class MemStorage implements IStorage {
   private marketInsights: Map<number, MarketInsight>;
   private currentId: number;
 
+  // New v2.0 Collections
+  public procurementCategories: Map<string, ProcurementCategory>;
+  public historicalProcurements: Map<string, HistoricalProcurement>;
+  public supplierPerformance: Map<number, SupplierPerformance>;
+  public documentTemplates: Map<string, DocumentTemplate>;
+
   constructor() {
     this.users = new Map();
     this.procurementRequests = new Map();
@@ -80,6 +155,13 @@ export class MemStorage implements IStorage {
     this.documents = new Map();
     this.marketInsights = new Map();
     this.currentId = 1;
+
+    // Initialize new v2.0 collections
+    this.procurementCategories = new Map();
+    this.historicalProcurements = new Map();
+    this.supplierPerformance = new Map();
+    this.documentTemplates = new Map();
+
     this.seedData();
   }
 
@@ -1163,6 +1245,656 @@ export class MemStorage implements IStorage {
     };
 
     this.marketInsights.set(marketInsight.id, marketInsight);
+
+    // New v2.0 Data Seeding
+    this.seedProcurementCategories();
+    this.seedHistoricalProcurements();
+    this.seedSupplierPerformance();
+    this.seedDocumentTemplates();
+  }
+
+  private seedProcurementCategories() {
+    const categories: ProcurementCategory[] = [
+      {
+        id: "IT001",
+        name: "חומרה - מחשבים",
+        pricingMultiplier: 1.15,
+        riskFactor: 0.3,
+        avgDeliveryTime: 14,
+        specifications: ["מעבד", "זיכרון", "אחסון", "מסך"],
+        marketVolatility: 0.25
+      },
+      {
+        id: "IT002",
+        name: "חומרה - שרתים",
+        pricingMultiplier: 1.25,
+        riskFactor: 0.4,
+        avgDeliveryTime: 21,
+        specifications: ["מעבד", "זיכרון ECC", "אחסון רדיק", "רשת"],
+        marketVolatility: 0.35
+      },
+      {
+        id: "FURN01",
+        name: "ריהוט משרדי",
+        pricingMultiplier: 1.1,
+        riskFactor: 0.2,
+        avgDeliveryTime: 28,
+        specifications: ["חומר", "ארגונומיה", "אחריות", "התאמה"],
+        marketVolatility: 0.15
+      },
+      {
+        id: "SERV01",
+        name: "שירותים",
+        pricingMultiplier: 1.3,
+        riskFactor: 0.5,
+        avgDeliveryTime: 90,
+        specifications: ["היקף", "מורכבות", "משך זמן", "מומחיות"],
+        marketVolatility: 0.45
+      },
+      {
+        id: "PROD01",
+        name: "מוצרים",
+        pricingMultiplier: 1.2,
+        riskFactor: 0.35,
+        avgDeliveryTime: 45,
+        specifications: ["איכות", "כמות", "מפרט", "תקנים"],
+        marketVolatility: 0.30
+      },
+      {
+        id: "CONST01",
+        name: "בנייה ותשתיות",
+        pricingMultiplier: 1.4,
+        riskFactor: 0.6,
+        avgDeliveryTime: 120,
+        specifications: ["שטח", "חומרים", "מורכבות", "תקנות"],
+        marketVolatility: 0.50
+      },
+      {
+        id: "RAW01",
+        name: "חומרי גלם",
+        pricingMultiplier: 1.1,
+        riskFactor: 0.4,
+        avgDeliveryTime: 30,
+        specifications: ["סוג חומר", "כמות", "איכות", "מפרט טכני"],
+        marketVolatility: 0.60
+      },
+      {
+        id: "FLEET01",
+        name: "צי רכב",
+        pricingMultiplier: 1.2,
+        riskFactor: 0.3,
+        avgDeliveryTime: 60,
+        specifications: ["סוג רכב", "מנוע", "ציוד", "אחריות"],
+        marketVolatility: 0.25
+      }
+    ];
+
+    categories.forEach(category => this.procurementCategories.set(category.id, category));
+  }
+
+  private seedHistoricalProcurements() {
+    const historical: HistoricalProcurement[] = [
+      {
+        id: "HIST-001",
+        requestNumber: "REQ-2023-050",
+        category: "IT001",
+        itemName: "מחשבים ניידים Dell Latitude 5530",
+        quantity: 15,
+        actualCost: 78000,
+        estimatedCost: 75000,
+        variance: 4.0,
+        supplierId: 1,
+        completedDate: new Date("2023-06-15"),
+        satisfaction: 4.2,
+        lessons: ["הוסף זמן להובלה", "בדוק זמינות מלאי מראש"]
+      },
+      {
+        id: "HIST-002",
+        requestNumber: "REQ-2023-051",
+        category: "FURN01",
+        itemName: "כסאות ארגונומיים למשרד",
+        quantity: 40,
+        actualCost: 62000,
+        estimatedCost: 60000,
+        variance: 3.3,
+        supplierId: 3,
+        completedDate: new Date("2023-07-20"),
+        satisfaction: 4.0,
+        lessons: ["בדוק איכות ריפוד", "השווה מחירים"]
+      },
+      {
+        id: "HIST-003",
+        requestNumber: "REQ-2023-052",
+        category: "IT002",
+        itemName: "שרתי Dell PowerEdge R450",
+        quantity: 2,
+        actualCost: 120000,
+        estimatedCost: 115000,
+        variance: 4.3,
+        supplierId: 2,
+        completedDate: new Date("2023-08-10"),
+        satisfaction: 4.8,
+        lessons: ["התקנה מורכבת יותר", "דרוש יותר זמן הכנה"]
+      },
+      {
+        id: "HIST-004",
+        requestNumber: "REQ-2023-053",
+        category: "SERV01",
+        itemName: "פיתוח מערכת CRM",
+        quantity: 1,
+        actualCost: 850000,
+        estimatedCost: 800000,
+        variance: 6.25,
+        supplierId: 1,
+        completedDate: new Date("2023-12-01"),
+        satisfaction: 4.5,
+        lessons: ["דרישות השתנו במהלך הפרויקט", "צרכים נוספים התגלו"]
+      },
+      {
+        id: "HIST-005",
+        requestNumber: "REQ-2023-054",
+        category: "PROD01",
+        itemName: "מחשבי עבודה HP EliteDesk",
+        quantity: 30,
+        actualCost: 180000,
+        estimatedCost: 175000,
+        variance: 2.9,
+        supplierId: 1,
+        completedDate: new Date("2023-09-15"),
+        satisfaction: 4.3,
+        lessons: ["מחיר יציב", "ספק אמין"]
+      },
+      // הוספת 15 רכישות היסטוריות נוספות
+      {
+        id: "HIST-006",
+        requestNumber: "REQ-2023-055",
+        category: "IT001",
+        itemName: "מסכי Dell UltraSharp 27 אינץ'",
+        quantity: 20,
+        actualCost: 45000,
+        estimatedCost: 42000,
+        variance: 7.1,
+        supplierId: 2,
+        completedDate: new Date("2023-10-05"),
+        satisfaction: 4.6,
+        lessons: ["איכות מסך מעולה", "מחיר עלה בגלל ביקוש"]
+      },
+      {
+        id: "HIST-007",
+        requestNumber: "REQ-2023-056",
+        category: "FURN01",
+        itemName: "שולחנות עמידה חשמליים",
+        quantity: 12,
+        actualCost: 36000,
+        estimatedCost: 38000,
+        variance: -5.3,
+        supplierId: 3,
+        completedDate: new Date("2023-11-12"),
+        satisfaction: 4.4,
+        lessons: ["הנחה בלתי צפויה", "איכות טובה מהצפוי"]
+      },
+      {
+        id: "HIST-008",
+        requestNumber: "REQ-2023-057",
+        category: "SERV01",
+        itemName: "שירותי גיבוי ואבטחה",
+        quantity: 1,
+        actualCost: 420000,
+        estimatedCost: 400000,
+        variance: 5.0,
+        supplierId: 1,
+        completedDate: new Date("2023-12-20"),
+        satisfaction: 4.7,
+        lessons: ["שירות מעולה", "תוספות שלא חזינו"]
+      },
+      {
+        id: "HIST-009",
+        requestNumber: "REQ-2023-058",
+        category: "IT002",
+        itemName: "מערכת אחסון SAN",
+        quantity: 1,
+        actualCost: 320000,
+        estimatedCost: 310000,
+        variance: 3.2,
+        supplierId: 2,
+        completedDate: new Date("2024-01-08"),
+        satisfaction: 4.5,
+        lessons: ["התקנה מורכבת", "ביצועים מעולים"]
+      },
+      {
+        id: "HIST-010",
+        requestNumber: "REQ-2023-059",
+        category: "PROD01",
+        itemName: "מדפסות רשת HP LaserJet",
+        quantity: 8,
+        actualCost: 24000,
+        estimatedCost: 25000,
+        variance: -4.0,
+        supplierId: 1,
+        completedDate: new Date("2024-01-15"),
+        satisfaction: 4.1,
+        lessons: ["מחיר טוב", "התקנה פשוטה"]
+      },
+      {
+        id: "HIST-011",
+        requestNumber: "REQ-2022-080",
+        category: "CONST01",
+        itemName: "שיפוץ משרדים קומה 3",
+        quantity: 1,
+        actualCost: 280000,
+        estimatedCost: 250000,
+        variance: 12.0,
+        supplierId: 3,
+        completedDate: new Date("2022-11-30"),
+        satisfaction: 3.8,
+        lessons: ["עלויות נסתרות", "לוח זמנים התארך"]
+      },
+      {
+        id: "HIST-012",
+        requestNumber: "REQ-2022-081",
+        category: "RAW01",
+        itemName: "חומרי גלם לייצור Q4",
+        quantity: 60,
+        actualCost: 195000,
+        estimatedCost: 200000,
+        variance: -2.5,
+        supplierId: 2,
+        completedDate: new Date("2022-12-15"),
+        satisfaction: 4.3,
+        lessons: ["מחיר יציב", "איכות טובה"]
+      },
+      {
+        id: "HIST-013",
+        requestNumber: "REQ-2022-082",
+        category: "FLEET01",
+        itemName: "רכבי מסחרי צי החברה",
+        quantity: 5,
+        actualCost: 425000,
+        estimatedCost: 450000,
+        variance: -5.6,
+        supplierId: 1,
+        completedDate: new Date("2023-01-20"),
+        satisfaction: 4.6,
+        lessons: ["הנחת כמות", "שירות מעולה"]
+      },
+      {
+        id: "HIST-014",
+        requestNumber: "REQ-2022-083",
+        category: "IT001",
+        itemName: "טאבלטים לעובדי שטח",
+        quantity: 25,
+        actualCost: 87000,
+        estimatedCost: 85000,
+        variance: 2.4,
+        supplierId: 2,
+        completedDate: new Date("2023-02-10"),
+        satisfaction: 4.2,
+        lessons: ["מגן נוסף נדרש", "באטרי טוב"]
+      },
+      {
+        id: "HIST-015",
+        requestNumber: "REQ-2022-084",
+        category: "SERV01",
+        itemName: "ייעוץ ארגוני ושיפור תהליכים",
+        quantity: 1,
+        actualCost: 520000,
+        estimatedCost: 500000,
+        variance: 4.0,
+        supplierId: 3,
+        completedDate: new Date("2023-03-25"),
+        satisfaction: 4.4,
+        lessons: ["תוצאות מעולות", "כדאי להמשיך"]
+      },
+      {
+        id: "HIST-016",
+        requestNumber: "REQ-2022-085",
+        category: "FURN01",
+        itemName: "ארונות אחסון למשרד",
+        quantity: 15,
+        actualCost: 22500,
+        estimatedCost: 24000,
+        variance: -6.3,
+        supplierId: 3,
+        completedDate: new Date("2023-04-12"),
+        satisfaction: 4.0,
+        lessons: ["איכות סבירה", "מחיר זול"]
+      },
+      {
+        id: "HIST-017",
+        requestNumber: "REQ-2022-086",
+        category: "IT002",
+        itemName: "מערכת גיבוי מתקדמת",
+        quantity: 1,
+        actualCost: 185000,
+        estimatedCost: 180000,
+        variance: 2.8,
+        supplierId: 1,
+        completedDate: new Date("2023-05-08"),
+        satisfaction: 4.8,
+        lessons: ["מערכת מעולה", "תמיכה טובה"]
+      },
+      {
+        id: "HIST-018",
+        requestNumber: "REQ-2022-087",
+        category: "PROD01",
+        itemName: "מכשירי תקשורת אלחוטית",
+        quantity: 50,
+        actualCost: 95000,
+        estimatedCost: 92000,
+        variance: 3.3,
+        supplierId: 2,
+        completedDate: new Date("2023-05-20"),
+        satisfaction: 4.3,
+        lessons: ["טווח טוב", "קליטה יציבה"]
+      },
+      {
+        id: "HIST-019",
+        requestNumber: "REQ-2022-088",
+        category: "CONST01",
+        itemName: "בניית מחסן עזר",
+        quantity: 1,
+        actualCost: 650000,
+        estimatedCost: 600000,
+        variance: 8.3,
+        supplierId: 3,
+        completedDate: new Date("2023-07-30"),
+        satisfaction: 3.9,
+        lessons: ["עלויות נוספות", "תוצאה טובה"]
+      },
+      {
+        id: "HIST-020",
+        requestNumber: "REQ-2022-089",
+        category: "RAW01",
+        itemName: "פלסטיק מיוחד לייצור",
+        quantity: 35,
+        actualCost: 168000,
+        estimatedCost: 170000,
+        variance: -1.2,
+        supplierId: 2,
+        completedDate: new Date("2023-08-15"),
+        satisfaction: 4.5,
+        lessons: ["איכות מעולה", "מחיר יציב"]
+      }
+    ];
+
+    historical.forEach(hist => this.historicalProcurements.set(hist.id, hist));
+  }
+
+  private seedSupplierPerformance() {
+    const performance: SupplierPerformance[] = [
+      {
+        supplierId: 1,
+        supplierName: "TechSource Ltd",
+        rating: 4.8,
+        avgDeliveryTime: 10,
+        reliabilityScore: 98,
+        costEfficiency: 4.5,
+        qualityScore: 4.7,
+        totalOrders: 45,
+        onTimeDelivery: 96,
+        defectRate: 2,
+        responseTime: 4
+      },
+      {
+        supplierId: 2,
+        supplierName: "Dell Technologies",
+        rating: 4.5,
+        avgDeliveryTime: 30,
+        reliabilityScore: 92,
+        costEfficiency: 4.2,
+        qualityScore: 4.8,
+        totalOrders: 28,
+        onTimeDelivery: 89,
+        defectRate: 1,
+        responseTime: 8
+      },
+      {
+        supplierId: 3,
+        supplierName: "CompuTrade",
+        rating: 4.2,
+        avgDeliveryTime: 25,
+        reliabilityScore: 88,
+        costEfficiency: 4.4,
+        qualityScore: 4.1,
+        totalOrders: 32,
+        onTimeDelivery: 85,
+        defectRate: 5,
+        responseTime: 12
+      },
+      // 7 ספקים נוספים
+      {
+        supplierId: 4,
+        supplierName: "ריהוט ישראלי בע\"מ",
+        rating: 4.2,
+        avgDeliveryTime: 25,
+        reliabilityScore: 85,
+        costEfficiency: 4.3,
+        qualityScore: 4.2,
+        totalOrders: 18,
+        onTimeDelivery: 88,
+        defectRate: 3,
+        responseTime: 6
+      },
+      {
+        supplierId: 5,
+        supplierName: "מערכות IT מתקדמות",
+        rating: 4.6,
+        avgDeliveryTime: 18,
+        reliabilityScore: 94,
+        costEfficiency: 4.4,
+        qualityScore: 4.6,
+        totalOrders: 22,
+        onTimeDelivery: 91,
+        defectRate: 2,
+        responseTime: 5
+      },
+      {
+        supplierId: 6,
+        supplierName: "בנייה ותשתיות כהן",
+        rating: 3.9,
+        avgDeliveryTime: 45,
+        reliabilityScore: 78,
+        costEfficiency: 3.8,
+        qualityScore: 4.0,
+        totalOrders: 12,
+        onTimeDelivery: 75,
+        defectRate: 8,
+        responseTime: 24
+      },
+      {
+        supplierId: 7,
+        supplierName: "חומרי גלם שמיר",
+        rating: 4.3,
+        avgDeliveryTime: 15,
+        reliabilityScore: 89,
+        costEfficiency: 4.5,
+        qualityScore: 4.3,
+        totalOrders: 35,
+        onTimeDelivery: 92,
+        defectRate: 3,
+        responseTime: 8
+      },
+      {
+        supplierId: 8,
+        supplierName: "צי רכב ישראל",
+        rating: 4.4,
+        avgDeliveryTime: 35,
+        reliabilityScore: 87,
+        costEfficiency: 4.2,
+        qualityScore: 4.4,
+        totalOrders: 15,
+        onTimeDelivery: 87,
+        defectRate: 4,
+        responseTime: 12
+      },
+      {
+        supplierId: 9,
+        supplierName: "שירותי IT ובטחון",
+        rating: 4.7,
+        avgDeliveryTime: 20,
+        reliabilityScore: 95,
+        costEfficiency: 4.3,
+        qualityScore: 4.8,
+        totalOrders: 25,
+        onTimeDelivery: 94,
+        defectRate: 1,
+        responseTime: 6
+      },
+      {
+        supplierId: 10,
+        supplierName: "פתרונות משרד מודרני",
+        rating: 4.1,
+        avgDeliveryTime: 22,
+        reliabilityScore: 83,
+        costEfficiency: 4.2,
+        qualityScore: 4.0,
+        totalOrders: 20,
+        onTimeDelivery: 82,
+        defectRate: 6,
+        responseTime: 10
+      }
+    ];
+
+    performance.forEach(perf => this.supplierPerformance.set(perf.supplierId, perf));
+  }
+
+  private seedDocumentTemplates() {
+    const templates: DocumentTemplate[] = [
+      {
+        id: "REQ-2024-001",
+        name: "מחשבים ניידים Dell Latitude 5520",
+        category: "IT001",
+        estimatedCost: 130000,
+        specifications: {
+          processor: "Intel Core i5",
+          memory: "16GB DDR4",
+          storage: "512GB SSD",
+          display: "15.6 FHD",
+          quantity: 25
+        },
+        template: {
+          title: "רכש מחשבים ניידים",
+          description: "רכש 25 מחשבים ניידים לעובדי המשרד",
+          category: "חומרה - מחשבים",
+          department: "IT"
+        }
+      },
+      {
+        id: "REQ-2024-003",
+        name: "שרתי Dell PowerEdge R750",
+        category: "IT002",
+        estimatedCost: 200000,
+        specifications: {
+          processor: "Intel Xeon Silver 4314 (16 cores)",
+          memory: "64GB DDR4 ECC",
+          storage: "2x 1TB NVMe SSD",
+          network: "4x 1GbE + 2x 10GbE",
+          quantity: 3
+        },
+        template: {
+          title: "רכש שרתי דאטה סנטר",
+          description: "רכש 3 שרתי Dell עבור מרכז הנתונים",
+          category: "חומרה - שרתים",
+          department: "IT"
+        }
+      },
+      {
+        id: "REQ-2024-010",
+        name: "מערכת ניהול משאבי אנוש",
+        category: "SERV01",
+        estimatedCost: 1000000,
+        specifications: {
+          estimatedHours: 2400,
+          teamSize: 6,
+          duration: "8 חודשים",
+          technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
+          complexity: "גבוהה"
+        },
+        template: {
+          title: "פיתוח מערכת HR",
+          description: "פיתוח מערכת ניהול משאבי אנוש מקיפה",
+          category: "שירותים",
+          department: "משאבי אנוש"
+        }
+      },
+      {
+        id: "REQ-2024-011",
+        name: "ייעוץ אסטרטגי לשיפור תהליכים",
+        category: "SERV01",
+        estimatedCost: 650000,
+        specifications: {
+          deliverables: ["מיפוי תהליכים", "ניתוח פערים", "תכנית יישום", "הדרכה"],
+          duration: "6 חודשים",
+          consultantLevel: "senior",
+          complexity: "גבוהה"
+        },
+        template: {
+          title: "ייעוץ עסקי אסטרטגי",
+          description: "ייעוץ לשיפור תהליכים עסקיים ויעילות ארגונית",
+          category: "שירותים",
+          department: "הנהלה"
+        }
+      },
+      {
+        id: "REQ-2024-012",
+        name: "שירותי אבטחת מידע ו-SOC",
+        category: "SERV01",
+        estimatedCost: 2500000,
+        specifications: {
+          serviceLevel: "24/7",
+          coverage: "מלא",
+          responseTime: "15 דקות",
+          duration: "12 חודשים",
+          businessValue: "הגנה על נכסי מידע קריטיים"
+        },
+        template: {
+          title: "שירותי SOC ואבטחה",
+          description: "שירותי ניטור אבטחה 24/7 ותגובה לאירועים",
+          category: "שירותים",
+          department: "IT"
+        }
+      },
+      {
+        id: "REQ-2024-013",
+        name: "תחזוקה שנתית למערכות IT",
+        category: "SERV01",
+        estimatedCost: 700000,
+        specifications: {
+          uncertainty: "גבוהה",
+          variableFactors: ["כמות תקלות", "זמינות טכנאים", "מורכבות תיקונים"],
+          duration: "12 חודשים",
+          systemsCount: 45
+        },
+        template: {
+          title: "תחזוקת מערכות IT",
+          description: "תחזוקה מונעת ותיקונית למערכות IT, שרתים, רשת ותוכנות",
+          category: "שירותים",
+          department: "IT"
+        }
+      },
+      {
+        id: "REQ-2024-014",
+        name: "50 מחשבי עבודה",
+        category: "PROD01",
+        estimatedCost: 250000,
+        specifications: {
+          processor: "Intel i7 או AMD Ryzen 7",
+          ram: "16GB",
+          storage: "512GB SSD",
+          graphics: "מובנה",
+          warranty: "3 שנים",
+          quantity: 50
+        },
+        template: {
+          title: "רכש מחשבי עבודה",
+          description: "רכש 50 מחשבי עבודה למשרדי החברה החדשים",
+          category: "מוצרים",
+          department: "משאבי אנוש"
+        }
+      }
+    ];
+
+    templates.forEach(template => this.documentTemplates.set(template.id, template));
   }
 
   // Users
@@ -1494,6 +2226,70 @@ export class MemStorage implements IStorage {
       clearedDocumentAnalysis,
       updatedRequests
     };
+  }
+
+  // New v2.0 Methods Implementation
+  
+  // Procurement Categories Methods
+  async getProcurementCategories(): Promise<ProcurementCategory[]> {
+    return Array.from(this.procurementCategories.values());
+  }
+
+  async getProcurementCategory(id: string): Promise<ProcurementCategory | undefined> {
+    return this.procurementCategories.get(id);
+  }
+
+  async getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]> {
+    return Array.from(this.procurementCategories.values()).filter(
+      category => category.name.includes(name)
+    );
+  }
+
+  // Historical Procurements Methods
+  async getHistoricalProcurements(): Promise<HistoricalProcurement[]> {
+    return Array.from(this.historicalProcurements.values());
+  }
+
+  async getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]> {
+    return Array.from(this.historicalProcurements.values()).filter(
+      procurement => procurement.category === category
+    );
+  }
+
+  async getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]> {
+    return Array.from(this.historicalProcurements.values()).filter(
+      procurement => procurement.supplierId === supplierId
+    );
+  }
+
+  // Supplier Performance Methods
+  async getSupplierPerformance(): Promise<SupplierPerformance[]> {
+    return Array.from(this.supplierPerformance.values());
+  }
+
+  async getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined> {
+    return this.supplierPerformance.get(supplierId);
+  }
+
+  async getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]> {
+    return Array.from(this.supplierPerformance.values())
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, limit);
+  }
+
+  // Document Templates Methods
+  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
+    return Array.from(this.documentTemplates.values());
+  }
+
+  async getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined> {
+    return this.documentTemplates.get(id);
+  }
+
+  async getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]> {
+    return Array.from(this.documentTemplates.values()).filter(
+      template => template.category === category
+    );
   }
 }
 
