@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal, ArrowRight, ExternalLink, AlertTriangle, Target, Zap, MapPin, Calendar } from "lucide-react";
+import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain, Calculator, Cog, Medal, ArrowRight, ExternalLink, AlertTriangle, Target, Zap, MapPin, Calendar, Star, Save, Search, Filter, Plus, Sparkles } from "lucide-react";
 import SupplierChart from "@/components/charts/supplier-chart";
 import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
