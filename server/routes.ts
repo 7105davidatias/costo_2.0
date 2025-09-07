@@ -585,11 +585,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Procurement Categories endpoints
+  app.get("/api/procurement-categories", async (req, res) => {
+    try {
+      const categories = await storage.getProcurementCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch procurement categories" });
+    }
+  });
+
+  app.get("/api/procurement-categories/:code", async (req, res) => {
+    try {
+      const code = req.params.code;
+      const category = await storage.getProcurementCategoryByCode(code);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+
+  // Historical Procurements endpoints
+  app.get("/api/historical-procurements", async (req, res) => {
+    try {
+      const categoryCode = req.query.categoryCode as string;
+      let historicals;
+      
+      if (categoryCode) {
+        historicals = await storage.getHistoricalProcurementsByCategoryCode(categoryCode);
+      } else {
+        historicals = await storage.getHistoricalProcurements();
+      }
+      
+      res.json(historicals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch historical procurements" });
+    }
+  });
+
+  app.get("/api/historical-procurements/analytics", async (req, res) => {
+    try {
+      const categoryCode = req.query.categoryCode as string;
+      const analytics = await storage.getHistoricalProcurementsAnalytics(categoryCode);
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch procurement analytics" });
+    }
+  });
+
+  // Enhanced AI Analysis with historical data
+  app.get("/api/ai-analysis/:requestId/enhanced", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const request = await storage.getProcurementRequest(requestId);
+
+      if (!request) {
+        return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
+      }
+
+      // Get category data
+      const categoryCode = getCategoryCodeFromRequest(request);
+      const category = await storage.getProcurementCategoryByCode(categoryCode);
+      const historicals = await storage.getHistoricalProcurementsByCategoryCode(categoryCode);
+      const analytics = await storage.getHistoricalProcurementsAnalytics(categoryCode);
+
+      // Enhanced AI analysis with historical context
+      const enhancedAnalysis = {
+        request: {
+          id: requestId,
+          title: request.itemName,
+          category: request.category,
+          quantity: request.quantity
+        },
+        categoryData: category,
+        historicalContext: {
+          totalSimilarProcurements: historicals.length,
+          averageCostVariance: analytics.averageCostVariance,
+          successRate: analytics.successRate,
+          topPerformingSuppliers: analytics.topSuppliers.slice(0, 3),
+          recentSimilarProcurements: historicals
+            .sort((a, b) => new Date(b.completionDate!).getTime() - new Date(a.completionDate!).getTime())
+            .slice(0, 5)
+        },
+        aiRecommendations: generateEnhancedAIRecommendations(request, category, analytics),
+        riskAssessment: generateEnhancedRiskAssessment(request, analytics),
+        costPrediction: generateEnhancedCostPrediction(request, category, historicals)
+      };
+
+      res.json(enhancedAnalysis);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate enhanced AI analysis" });
+    }
+  });
+
   // Dashboard statistics
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
       const requests = await storage.getProcurementRequests();
       const estimations = await storage.getCostEstimations();
+      const analytics = await storage.getHistoricalProcurementsAnalytics();
 
       const totalEstimatedCosts = estimations.reduce((sum, est) => sum + parseFloat(est.totalCost), 0);
       const totalSavings = estimations.reduce((sum, est) => sum + (est.potentialSavings ? parseFloat(est.potentialSavings) : 0), 0);
@@ -606,6 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         risingCosts: risingCosts * 25000, // Mock calculation
         accuracyScore: avgConfidence,
         recentRequests: requests.slice(-5),
+        historicalAccuracy: analytics.successRate,
         costTrends: [
           { month: "ינואר", cost: 1800000 },
           { month: "פברואר", cost: 2100000 },
@@ -2131,6 +2229,121 @@ function generateConsultingMarketResearch(request: any) {
         description: 'בחר יועץ עם ניסיון ספציפי בתחום הפעילות שלך',
         priority: 'גבוהה'
       }
+    ]
+  };
+}
+
+// Helper functions for enhanced AI analysis
+function getCategoryCodeFromRequest(request: any): string {
+  const itemName = request.itemName?.toLowerCase() || '';
+  const category = request.category?.toLowerCase() || '';
+  
+  if (itemName.includes('מחשב') || itemName.includes('שרת') || category.includes('חומרה')) {
+    return 'IT-HW';
+  } else if (itemName.includes('רישיון') || itemName.includes('תוכנה') || category.includes('תוכנה')) {
+    return 'IT-SW';
+  } else if (itemName.includes('כסא') || itemName.includes('ריהוט') || category.includes('ריהוט')) {
+    return 'OFFICE';
+  } else if (itemName.includes('רכב') || itemName.includes('משאית') || category.includes('רכב')) {
+    return 'VEHICLE';
+  } else if (itemName.includes('בני') || itemName.includes('מחסן') || category.includes('בני')) {
+    return 'CONSTRUCT';
+  } else if (itemName.includes('אבטחה') || itemName.includes('SOC') || category.includes('אבטחה')) {
+    return 'SECURITY';
+  } else if (itemName.includes('פיתוח') || itemName.includes('ייעוץ') || category.includes('שירות')) {
+    return 'SERVICES';
+  } else if (itemName.includes('חומרי גלם') || itemName.includes('פלדה') || itemName.includes('אלומיניום')) {
+    return 'MATERIALS';
+  }
+  
+  return 'IT-HW'; // Default fallback
+}
+
+function generateEnhancedAIRecommendations(request: any, category: any, analytics: any) {
+  const recommendations = [];
+
+  if (analytics.averageCostVariance < -2) {
+    recommendations.push({
+      type: 'cost_optimization',
+      priority: 'high',
+      title: 'הזדמנות לחיסכון',
+      description: `על בסיס נתונים היסטוריים, קטגוריה זו מציגה חיסכון ממוצע של ${Math.abs(analytics.averageCostVariance).toFixed(1)}%`,
+      action: 'שקול משא ומתן אגרסיבי יותר'
+    });
+  }
+
+  if (analytics.successRate > 90) {
+    recommendations.push({
+      type: 'supplier_selection',
+      priority: 'medium',
+      title: 'ספקים מומלצים',
+      description: `ספקים בקטגוריה זו מציגים שיעור הצלחה גבוה של ${analytics.successRate.toFixed(1)}%`,
+      action: `מומלץ לפנות ל-${analytics.topSuppliers[0]?.supplier || 'ספק מוביל'}`
+    });
+  }
+
+  if (request.quantity > 10) {
+    recommendations.push({
+      type: 'bulk_discount',
+      priority: 'medium',
+      title: 'הנחת כמות',
+      description: 'כמות גדולה מאפשרת משא ומתן על הנחות כמות',
+      action: 'בקש הנחה של לפחות 5-8% עבור הכמות הגדולה'
+    });
+  }
+
+  return recommendations;
+}
+
+function generateEnhancedRiskAssessment(request: any, analytics: any) {
+  let riskLevel = 'נמוך';
+  const riskFactors = [];
+
+  if (analytics.averageCostVariance > 5) {
+    riskLevel = 'גבוה';
+    riskFactors.push('תנודתיות עלויות גבוהה בקטגוריה');
+  }
+
+  if (analytics.successRate < 80) {
+    riskLevel = 'בינוני';
+    riskFactors.push('שיעור הצלחה נמוך יחסית בקטגוריה');
+  }
+
+  if (request.quantity > 50) {
+    riskFactors.push('כמות גדולה - סיכון אספקה');
+  }
+
+  return {
+    overallRisk: riskLevel,
+    riskFactors,
+    mitigation: [
+      'קבל הצעות מחיר ממספר ספקים',
+      'בדוק זמינות מלאי מראש',
+      'הכן תוכנית חלופית'
+    ]
+  };
+}
+
+function generateEnhancedCostPrediction(request: any, category: any, historicals: any[]) {
+  const baseMultiplier = parseFloat(category?.baseMultiplier || "1.0");
+  const complexityFactor = parseFloat(category?.complexityFactor || "1.0");
+  const averageUnitCost = parseFloat(category?.averageUnitCost || "1000");
+
+  const predictedUnitCost = averageUnitCost * baseMultiplier * complexityFactor;
+  const totalPredicted = predictedUnitCost * request.quantity;
+
+  // Calculate confidence based on historical data availability
+  const confidence = Math.min(95, 60 + (historicals.length * 5));
+
+  return {
+    predictedUnitCost,
+    totalPredicted,
+    confidence,
+    basis: 'נתונים היסטוריים ומודל AI מתקדם',
+    factors: [
+      `מכפיל בסיס קטגוריה: ${baseMultiplier}`,
+      `מקדם מורכבות: ${complexityFactor}`,
+      `מחיר יחידה ממוצע: ₪${averageUnitCost.toLocaleString()}`
     ]
   };
 }
