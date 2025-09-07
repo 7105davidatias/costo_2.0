@@ -166,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         }
       });
-      
+
       res.status(201).json(estimation);
     } catch (error) {
       res.status(400).json({ message: "Invalid estimation data", error });
@@ -199,23 +199,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.id);
       const request = await storage.getProcurementRequest(requestId);
-      
+
       if (!request) {
         return res.status(404).json({ message: 'Procurement request not found' });
       }
-      
+
       // Helper function to determine request type
       const determineRequestType = (request: any) => {
         const description = request.itemName?.toLowerCase() || '';
         const category = request.category?.toLowerCase() || '';
-        
+
         // Check if it's services based on keywords
         if (description.includes('שירות') || description.includes('יעוץ') || 
             description.includes('תמיכה') || description.includes('פיתוח') ||
             category.includes('שירות') || category.includes('יעוץ')) {
           return 'services';
         }
-        
+
         return 'products';
       };
 
@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const getComplexityScore = (request: any) => {
         const quantity = parseInt(request.quantity) || 1;
         const descLength = request.itemName?.length || 0;
-        
+
         if (quantity > 100 || descLength > 100) return 'high';
         if (quantity > 10 || descLength > 50) return 'medium';
         return 'low';
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const getDataAvailability = (request: any) => {
         const hasCategory = request.category && request.category.length > 0;
         const hasSpecs = request.specifications && request.specifications.length > 0;
-        
+
         if (hasCategory && hasSpecs) return 'high';
         if (hasCategory || hasSpecs) return 'medium';
         return 'low';
@@ -245,9 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Determine request type based on category or item description
       const requestType = determineRequestType(request);
-      
+
       let methods = [];
-      
+
       if (requestType === 'services') {
         methods = [
           {
@@ -311,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         ];
       }
-      
+
       res.json({
         requestId: requestId,
         requestType: requestType,
@@ -332,25 +332,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { requestId, selectedMethods } = req.body;
       const request = await storage.getProcurementRequest(requestId);
-      
+
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-      
+
       let methodResults = [];
       let totalWeightedEstimate = 0;
       let totalWeight = 0;
-      
+
       for (const methodId of selectedMethods) {
         const result = calculateByMethod(methodId, request);
         methodResults.push(result);
         totalWeightedEstimate += result.estimate * result.weight;
         totalWeight += result.weight;
       }
-      
+
       const finalEstimate = totalWeightedEstimate / totalWeight;
       const overallConfidence = calculateOverallConfidence(methodResults);
-      
+
       res.json({
         requestId: requestId,
         requestDetails: {
@@ -409,7 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const document = await storage.createDocument(documentData);
-      
+
       // Simulate AI analysis after a delay
       setTimeout(async () => {
         await storage.updateDocument(document.id, {
@@ -444,14 +444,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-      
+
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-      
+
       // Generate contextual market research
       const marketResearch = generateContextualMarketResearch(request);
-      
+
       res.json({
         requestId: requestId,
         requestDetails: {
@@ -499,17 +499,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-      
+
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-      
+
       // Simulate AI processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Generate contextual AI analysis based on request type
       const contextualAnalysis = generateContextualAIAnalysis(request);
-      
+
       const analysisResults = {
         status: "completed",
         confidence: contextualAnalysis.confidence || 94,
@@ -543,7 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const extractedData = await storage.getExtractedData(id);
-      
+
       if (extractedData) {
         res.json({
           success: true,
@@ -572,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.clearExtractedData(id);
-      
+
       res.json({
         success: true,
         message: "נתונים שחולצו נמחקו בהצלחה"
@@ -590,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requests = await storage.getProcurementRequests();
       const estimations = await storage.getCostEstimations();
-      
+
       const totalEstimatedCosts = estimations.reduce((sum, est) => sum + parseFloat(est.totalCost), 0);
       const totalSavings = estimations.reduce((sum, est) => sum + (est.potentialSavings ? parseFloat(est.potentialSavings) : 0), 0);
       const avgConfidence = estimations.length > 0 ? 
@@ -632,20 +632,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-      
+
       if (!request) {
         return res.status(404).json({ message: "Procurement request not found" });
       }
 
       // Simulate AI cost estimation calculation
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       const basePrice = request.quantity * 55000; // Base price per unit
       const tax = Math.round(basePrice * 0.17); // 17% VAT
       const shippingCost = 2400;
       const discountAmount = Math.round(basePrice * 0.08); // 8% volume discount
       const totalCost = basePrice + tax + shippingCost - discountAmount;
-      
+
       const estimationData = {
         procurementRequestId: requestId,
         totalCost: totalCost.toString(),
@@ -702,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const estimation = await storage.createCostEstimation(estimationData);
-      
+
       // Update request with estimated cost
       await storage.updateProcurementRequest(requestId, {
         estimatedCost: totalCost.toString(),
@@ -721,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin reset endpoint called');
       const result = await storage.resetAllRequestsStatus();
       console.log('Reset result:', result);
-      
+
       res.json({
         success: true,
         message: 'סטטוס דרישות אופס בהצלחה לצורך הדגמה',
@@ -742,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requests = await storage.getProcurementRequests();
       const statusSummary: { [key: string]: number } = {};
-      
+
       requests.forEach(request => {
         statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
       });
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin reset cost estimations endpoint called');
       const result = await storage.resetAllCostEstimations();
       console.log('Reset cost estimations result:', result);
-      
+
       res.json({
         success: true,
         message: 'אומדני עלויות אופסו בהצלחה לצורך הדגמה',
@@ -786,11 +786,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/reset-all-demo-data", async (req, res) => {
     try {
       console.log('Admin reset all demo data endpoint called');
-      
+
       // Reset both requests status and cost estimations
       const requestsResult = await storage.resetAllRequestsStatus();
       const estimationsResult = await storage.resetAllCostEstimations();
-      
+
       res.json({
         success: true,
         message: 'כל נתוני ההדגמה אופסו בהצלחה',
@@ -818,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const estimationId = parseInt(req.params.id);
       const estimation = await storage.getCostEstimation(estimationId);
-      
+
       if (!estimation) {
         return res.status(404).json({ 
           success: false, 
@@ -833,7 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           request.estimatedCost = estimation.totalCost;
           request.status = 'completed';
           request.updatedAt = new Date();
-          
+
           await storage.updateProcurementRequest(estimation.procurementRequestId, request);
         }
       }
@@ -855,9 +855,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/reset-all-ai-data", async (req, res) => {
     try {
       console.log('Admin reset all AI data endpoint called');
-      
+
       const result = await storage.resetAllAIData();
-      
+
       res.json({
         success: true,
         message: 'כל נתוני ה-AI ואומדני העלויות אופסו בהצלחה',
@@ -873,6 +873,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: 'שגיאה באיפוס נתוני AI'
+      });
+    }
+  });
+
+  // SQL Runner for development (only works with memory storage simulation)
+  app.post("/api/sql-runner", async (req, res) => {
+    try {
+      const { query } = req.body;
+
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "שאילתה לא תקינה" 
+        });
+      }
+
+      // פונקציה פשוטה להדמיה של שאילתות SQL על הנתונים בזיכרון
+      const simulateSQL = async (sqlQuery: string) => {
+        const lowerQuery = sqlQuery.toLowerCase().trim();
+
+        if (lowerQuery.includes('select') && lowerQuery.includes('procurement_requests')) {
+          const requests = await storage.getProcurementRequests();
+          if (lowerQuery.includes('count(*)')) {
+            return { count: requests.length };
+          }
+          return requests;
+        }
+
+        if (lowerQuery.includes('select') && lowerQuery.includes('cost_estimations')) {
+          const estimations = await storage.getCostEstimations();
+          if (lowerQuery.includes('confidencelevel > 90')) {
+            return estimations.filter(e => e.confidenceLevel > 90);
+          }
+          return estimations;
+        }
+
+        if (lowerQuery.includes('select') && lowerQuery.includes('suppliers')) {
+          return await storage.getSuppliers();
+        }
+
+        if (lowerQuery.includes('group by category')) {
+          const requests = await storage.getProcurementRequests();
+          const grouped = requests.reduce((acc, req) => {
+            acc[req.category] = (acc[req.category] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+          return Object.entries(grouped).map(([category, count]) => ({
+            category,
+            count
+          }));
+        }
+
+        throw new Error('שאילתה לא נתמכת. נסה שאילתות SELECT פשוטות על הטבלאות הזמינות.');
+      };
+
+      const results = await simulateSQL(query);
+
+      res.json({
+        success: true,
+        data: results,
+        query: query,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('SQL Runner error:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'שגיאה בביצוע השאילתה',
+        query: req.body.query
       });
     }
   });
@@ -909,21 +980,21 @@ function calculateByMethod(methodId: string, request: any) {
 function calculateTimeBased(request: any) {
   const estimatedHours = request.specifications?.estimatedHours || 2400;
   const teamSize = request.specifications?.teamSize || 6;
-  
+
   const seniorHours = estimatedHours * 0.3;
   const midHours = estimatedHours * 0.5;  
   const juniorHours = estimatedHours * 0.2;
-  
+
   const seniorRate = 450;
   const midRate = 350;
   const juniorRate = 250;
-  
+
   const seniorCost = seniorHours * seniorRate;
   const midCost = midHours * midRate;
   const juniorCost = juniorHours * juniorRate;
-  
+
   const totalCost = seniorCost + midCost + juniorCost;
-  
+
   return {
     methodName: 'אומדן מבוסס זמן עבודה',
     estimate: totalCost,
@@ -935,7 +1006,7 @@ function calculateTimeBased(request: any) {
       { component: 'מפתח זוטר', hours: juniorHours, rate: juniorRate, cost: juniorCost }
     ],
     reasoning: 'האומדן מבוסס על הערכת שעות עבודה נדרשות וכפלתן בתעריפי שוק נוכחיים',
-    sources: ['תעריفי שוק 2024', 'ניסיון פרויקטים דומים'],
+    sources: ['תעריף שוק 2024', 'ניסיון פרויקטים דומים'],
     assumptions: ['זמינות צוות מלאה', 'ללא שינויי דרישות משמעותיים']
   };
 }
@@ -947,11 +1018,11 @@ function calculateDeliverableBased(request: any) {
     'תכנית יישום מפורטת',
     'הדרכה וליווי יישום'
   ];
-  
+
   const deliverableCosts = [150000, 200000, 100000, 180000];
   let totalCost = 0;
   let breakdown = [];
-  
+
   deliverables.forEach((deliverable, index) => {
     const cost = deliverableCosts[index] || 100000;
     totalCost += cost;
@@ -961,7 +1032,7 @@ function calculateDeliverableBased(request: any) {
       description: 'תוצר מוגדר עם מחיר קבוע'
     });
   });
-  
+
   return {
     methodName: 'אומדן מבוסס תוצרים',
     estimate: totalCost,
@@ -977,12 +1048,12 @@ function calculateDeliverableBased(request: any) {
 function calculateValueBased(request: any) {
   const businessValue = request.specifications?.businessValue || 'הגנה על נכסי מידע קריטיים';
   const serviceLevel = request.specifications?.serviceLevel || '24/7';
-  
+
   // Calculate based on business value - typically 20-30% of protected value
   const monthlyService = 150000;
   const duration = 12;
   const totalCost = monthlyService * duration;
-  
+
   return {
     methodName: 'אומדן מבוסס ערך',
     estimate: totalCost,
@@ -1005,10 +1076,10 @@ function calculateThreePoint(request: any) {
     mostLikely: 650000,
     pessimistic: 950000
   };
-  
+
   // PERT formula: (optimistic + 4*mostLikely + pessimistic) / 6
   const pertEstimate = (estimates.optimistic + 4 * estimates.mostLikely + estimates.pessimistic) / 6;
-  
+
   return {
     methodName: 'אומדן שלוש נקודות',
     estimate: pertEstimate,
@@ -1030,7 +1101,7 @@ function calculateAnalogous(request: any) {
   const quantity = request.quantity || 50;
   const unitPrice = 4500; // Based on historical data
   const totalCost = quantity * unitPrice;
-  
+
   return {
     methodName: 'אומדן אנלוגי',
     estimate: totalCost,
@@ -1051,10 +1122,10 @@ function calculateParametric(request: any) {
   const baseCost = 85000;
   const engineFactor = 1500; // Per 1600cc
   const capacityFactor = 2500; // Per 800kg capacity
-  
+
   const unitCost = baseCost + engineFactor + capacityFactor;
   const totalCost = unitCost * quantity;
-  
+
   return {
     methodName: 'אומדן פרמטרי',
     estimate: totalCost,
@@ -1080,11 +1151,11 @@ function calculateBottomUp(request: any) {
     { name: 'מערכות חשמל', quantity: 1, unit: 'פרויקט', unitCost: 150000, totalCost: 150000 },
     { name: 'מערכות אוורור', quantity: 1, unit: 'פרויקט', unitCost: 80000, totalCost: 80000 }
   ];
-  
+
   const baseCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
   const contingency = baseCost * 0.15; // 15% contingency
   const totalCost = baseCost + contingency;
-  
+
   return {
     methodName: 'אומדן מלמטה למעלה',
     estimate: totalCost,
@@ -1101,7 +1172,7 @@ function calculateMarketBased(request: any) {
   const category = request.category?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
   const quantity = request.quantity || 1;
-  
+
   // Generate contextual breakdown based on request type
   if (itemName.includes('מחשב') || itemName.includes('laptop') || category.includes('חומרה')) {
     // Computer/Hardware breakdown
@@ -1111,9 +1182,9 @@ function calculateMarketBased(request: any) {
       { name: 'רישיון Windows Pro', quantity: quantity, unit: 'רישיונות', unitPrice: 800, totalCost: quantity * 800 },
       { name: 'אחריות מורחבת', quantity: quantity, unit: 'שנים', unitPrice: 400, totalCost: quantity * 400 }
     ];
-    
+
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1128,13 +1199,13 @@ function calculateMarketBased(request: any) {
     // Furniture breakdown
     const unitPrice = 1800;
     const components = [
-      { name: 'כסא משרד ארגונומי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
+      { name: 'כסא משרדי ארגונומי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
       { name: 'משלוח והרכבה', quantity: 1, unit: 'שירות', unitPrice: 500, totalCost: 500 },
       { name: 'אחריות 5 שנים', quantity: quantity, unit: 'יחידות', unitPrice: 200, totalCost: quantity * 200 }
     ];
-    
+
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1153,9 +1224,9 @@ function calculateMarketBased(request: any) {
       { name: 'ביטוח חובה ומקיף', quantity: quantity, unit: 'שנה', unitPrice: 8000, totalCost: quantity * 8000 },
       { name: 'בדיקות ורישוי', quantity: quantity, unit: 'יחידות', unitPrice: 1000, totalCost: quantity * 1000 }
     ];
-    
+
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1174,9 +1245,9 @@ function calculateMarketBased(request: any) {
       { name: 'מבנה פלדה וקירות', quantity: area, unit: 'מ"ר', unitPrice: 800, totalCost: area * 800 },
       { name: 'גג ומערכות', quantity: area, unit: 'מ"ר', unitPrice: 450, totalCost: area * 450 }
     ];
-    
+
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1194,9 +1265,9 @@ function calculateMarketBased(request: any) {
       { name: 'אלומיניום 6061', quantity: 20, unit: 'טון', unitPrice: 8500, totalCost: 170000 },
       { name: 'פלסטיק PVC', quantity: 10, unit: 'טון', unitPrice: 4200, totalCost: 42000 }
     ];
-    
+
     const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1215,9 +1286,9 @@ function calculateMarketBased(request: any) {
       { name: 'שירותים נלווים', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.1, totalCost: estimatedValue * 0.1 },
       { name: 'אחריות ותמיכה', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.05, totalCost: estimatedValue * 0.05 }
     ];
-    
+
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-    
+
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -1261,18 +1332,18 @@ function generateBreakdown(methodResults: any[]) {
 
 function generateRecommendations(methodResults: any[], request: any) {
   const recommendations = [];
-  
+
   if (methodResults.length > 1) {
     recommendations.push('השילוב של מספר שיטות אומדן מעלה את דירוג הביטחון');
   }
-  
+
   const avgConfidence = calculateOverallConfidence(methodResults);
   if (avgConfidence < 80) {
     recommendations.push('מומלץ לאסוף מידע נוסף לשיפור דירוג הביטחון');
   }
-  
+
   recommendations.push('מומלץ לקבל הצעות מחיר מספק נוסף לוודא תחרותיות');
-  
+
   return recommendations;
 }
 
@@ -1290,7 +1361,7 @@ function calculatePotentialSavings(finalEstimate: number, request: any) {
 function determinePricePosition(finalEstimate: number, request: any) {
   const marketPrice = calculateMarketPrice(request);
   const ratio = finalEstimate / marketPrice;
-  
+
   if (ratio < 0.9) return 'מחיר מעולה';
   if (ratio < 1.0) return 'מחיר טוב';  
   if (ratio < 1.1) return 'מחיר סביר';
@@ -1302,7 +1373,7 @@ function generateContextualAIAnalysis(request: any) {
   const category = request.category?.toLowerCase() || '';
   const subcategory = request.subcategory?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
-  
+
   // Determine analysis type based on request characteristics
   if (subcategory.includes('בנייה') || itemName.includes('מחסן') || itemName.includes('בניית')) {
     return generateConstructionAnalysis(request);
@@ -1552,9 +1623,9 @@ function generateContextualMarketResearch(request: any) {
   const category = request.category?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
   const description = request.description?.toLowerCase() || '';
-  
+
   console.log(`Market research detection - Category: ${category}, Item: ${itemName}, Desc: ${description}`);
-  
+
   // Detect request type based on category and content
   if (itemName.includes('רכב') || itemName.includes('צי') || description.includes('רכב')) {
     return generateVehicleMarketResearch(request);

@@ -123,7 +123,7 @@ export default function ProcurementRequestsList() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -137,7 +137,7 @@ export default function ProcurementRequestsList() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -151,7 +151,7 @@ export default function ProcurementRequestsList() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="procurement-kpi-card">
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -182,12 +182,12 @@ export default function ProcurementRequestsList() {
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {request.description}
               </p>
-              
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center text-muted-foreground">
                   <Building className="h-4 w-4 ml-1" />
@@ -207,7 +207,7 @@ export default function ProcurementRequestsList() {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="pt-3 border-t space-y-2">
                 {/* EMF Display */}
                 <div className="flex justify-between items-center">
@@ -216,7 +216,7 @@ export default function ProcurementRequestsList() {
                     {formatCurrency(request.emf)}
                   </span>
                 </div>
-                
+
                 {/* Estimated Cost Display */}
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">אומדן עלות</span>
@@ -229,10 +229,10 @@ export default function ProcurementRequestsList() {
                   )}
                 </div>
               </div>
-              
+
               <div className="pt-3 border-t">
                 <div className="pb-3"></div>
-                
+
                 <div className="flex gap-2">
                   <Link href={`/procurement-request/${request.id}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
