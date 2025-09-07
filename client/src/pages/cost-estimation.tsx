@@ -9,149 +9,6 @@ import { CostEstimation as CostEstimationType, ProcurementRequest } from "@share
 import { apiRequest } from "@/lib/queryClient";
 import { useEffect, useState } from "react";
 
-// נתוני מחיר ממוצע לפי קטגוריה מהמסמכים שיצרתי
-const categoryPricing = {
-  "IT001": { // ציוד IT
-    averageUnitCost: 75000, // שרתים
-    multiplier: 1.15,
-    standardDeviation: 0.25
-  },
-  "OF001": { // ציוד משרדי
-    averageUnitCost: 1500, // כסאות
-    multiplier: 1.00,
-    standardDeviation: 0.15
-  },
-  "VH001": { // רכב
-    averageUnitCost: 300000, // משאיות
-    multiplier: 1.20,
-    standardDeviation: 0.18
-  },
-  "MATERIALS": { // חומרי גלם
-    averageUnitCost: 4000, // לטון
-    multiplier: 1.10,
-    standardDeviation: 0.20
-  },
-  "CONSTRUCTION": { // בניה
-    averageUnitCost: 1200, // למ"ר
-    multiplier: 1.25,
-    standardDeviation: 0.30
-  },
-  "SECURITY": { // אבטחה
-    averageUnitCost: 50000, // למערכת
-    multiplier: 1.35,
-    standardDeviation: 0.22
-  }
-};
-
-// 5 שיטות האומדן המפורטות
-const estimationMethods = [
-  {
-    id: "market_based",
-    name: "אומדן מבוסס מחיר שוק",
-    accuracy: 95,
-    description: "השוואה למחירי שוק עדכניים ונתונים היסטוריים",
-    dataSource: "historical_procurements",
-    icon: TrendingUp,
-    color: "text-success",
-    advantages: ["דיוק גבוה", "נתונים עדכניים", "מבוסס שוק"],
-    methodology: "ניתוח 500+ רכישות דומות מ-12 החודשים האחרונים"
-  },
-  {
-    id: "analogous",
-    name: "אומדן אנלוגי",
-    accuracy: 85,
-    description: "השוואה לפרויקטים דומים שבוצעו בעבר",
-    dataSource: "similar_projects",
-    icon: BarChart3,
-    color: "text-primary",
-    advantages: ["מהיר", "מבוסס ניסיון", "אמין"],
-    methodology: "השוואה ל-3 פרויקטים דומים עם התאמות פרמטריות"
-  },
-  {
-    id: "parametric",
-    name: "אומדן פרמטרי",
-    accuracy: 90,
-    description: "מודל מתמטי מבוסס פרמטרים טכניים",
-    dataSource: "technical_parameters",
-    icon: Calculator,
-    color: "text-warning",
-    advantages: ["מדעי", "מדויק", "ניתן לחזרה"],
-    methodology: "מודל רגרסיה מבוסס 15 פרמטרים טכניים"
-  },
-  {
-    id: "bottom_up",
-    name: "אומדן מלמטה למעלה",
-    accuracy: 92,
-    description: "חישוב מפורט של כל רכיב בנפרד",
-    dataSource: "detailed_breakdown",
-    icon: Database,
-    color: "text-info",
-    advantages: ["מפורט", "שקוף", "מדויק"],
-    methodology: "פירוק לרכיבים + עלויות עבודה + תקורות"
-  },
-  {
-    id: "monte_carlo",
-    name: "סימולציה מונטה קרלו",
-    accuracy: 88,
-    description: "ניתוח סטטיסטי של סיכונים ואי ודאויות",
-    dataSource: "risk_analysis",
-    icon: TriangleAlert,
-    color: "text-destructive",
-    advantages: ["ניהול סיכונים", "טווח ביטחון", "הסתברויות"],
-    methodology: "10,000 סימולציות עם 95% רמת ביטחון"
-  }
-];
-
-// פונקציית זיהוי קטגוריה
-const detectCategory = (specs: any): string => {
-  if (!specs) return "OF001"; // ברירת מחדל
-  
-  const description = (specs.itemName || specs.description || "").toLowerCase();
-  
-  if (description.includes("שרת") || description.includes("מחשב") || description.includes("it")) {
-    return "IT001";
-  } else if (description.includes("רכב") || description.includes("משאית")) {
-    return "VH001";
-  } else if (description.includes("חומר") || description.includes("פלדה") || description.includes("אלומיניום")) {
-    return "MATERIALS";
-  } else if (description.includes("בניה") || description.includes("מבנה")) {
-    return "CONSTRUCTION";
-  } else if (description.includes("אבטחה") || description.includes("מצלמה")) {
-    return "SECURITY";
-  }
-  
-  return "OF001";
-};
-
-// פונקציית חישוב אומדן משופרת
-const calculateEnhancedEstimate = (specs: any, quantity: number) => {
-  const category = detectCategory(specs);
-  const pricing = categoryPricing[category] || categoryPricing["OF001"];
-  const basePrice = pricing.averageUnitCost;
-  const multiplier = pricing.multiplier;
-  const stdDev = pricing.standardDeviation;
-  
-  const estimatedCost = basePrice * quantity * multiplier;
-  const confidenceRange = estimatedCost * stdDev;
-  
-  return {
-    estimatedCost,
-    confidenceLevel: Math.max(70, Math.min(95, 100 - (stdDev * 100))),
-    methodology: `מבוסס נתונים היסטוריים מ-${Math.floor(Math.random() * 50 + 20)} רכישות דומות`,
-    priceRange: {
-      min: estimatedCost - confidenceRange,
-      max: estimatedCost + confidenceRange
-    },
-    category,
-    factors: {
-      basePrice,
-      multiplier,
-      quantity,
-      standardDeviation: stdDev
-    }
-  };
-};
-
 export default function CostEstimation() {
   const { id } = useParams();
   const [location] = useLocation();
@@ -400,121 +257,63 @@ export default function CostEstimation() {
         </Card>
       </div>
 
-      {/* Enhanced Estimation Methods */}
+      {/* Estimation Methods Breakdown */}
       <Card className="bg-card border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center space-x-reverse space-x-2">
             <Calculator className="text-primary w-5 h-5" />
-            <span>שיטות אומדן זמינות</span>
+            <span>פירוט שיטות האומדן</span>
           </CardTitle>
-          <p className="text-muted-foreground text-sm">
-            בחר את שיטות האומדן המתאימות ביותר עבור הפריט הזה
-          </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Methods Selection Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {estimationMethods.map((method) => {
-              const IconComponent = method.icon;
-              return (
-                <div key={method.id} className="border border-muted/20 rounded-lg p-4 hover:bg-muted/5 transition-colors">
-                  <div className="flex items-start space-x-reverse space-x-3 mb-3">
-                    <IconComponent className={`w-6 h-6 ${method.color} flex-shrink-0 mt-1`} />
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-foreground mb-1">{method.name}</h4>
-                      <p className="text-sm text-muted-foreground mb-2">{method.description}</p>
-                      <div className="flex items-center space-x-reverse space-x-2 mb-2">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                          דיוק: {method.accuracy}%
-                        </Badge>
-                        <Progress value={method.accuracy} className="h-2 flex-1" />
-                      </div>
-                      <p className="text-xs text-muted-foreground italic">{method.methodology}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {method.advantages.map((advantage, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {advantage}
-                      </Badge>
-                    ))}
-                  </div>
+          {estimation.breakdown.map((method: any, index: number) => (
+            <div key={index} className="border border-muted/20 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">{method.method}</h4>
+                <div className="flex items-center space-x-reverse space-x-3">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    ביטחון: {method.confidence}%
+                  </Badge>
+                  <span className="text-lg font-bold text-primary">
+                    {formatCurrency(method.estimate)}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Applied Methods Results */}
-          {estimation.breakdown && estimation.breakdown.length > 0 && (
-            <div className="border-t border-muted/20 pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center space-x-reverse space-x-2">
-                <CheckCircle className="w-5 h-5 text-success" />
-                <span>תוצאות שיטות האומדן שיושמו</span>
-              </h3>
-              <div className="space-y-4">
-                {estimation.breakdown.map((method: any, index: number) => {
-                  // Find matching method info
-                  const methodInfo = estimationMethods.find(m => 
-                    m.name.includes(method.method.split(' ')[2]) || // match by key word
-                    method.method.includes(m.name.split(' ')[2])
-                  ) || estimationMethods[0];
-                  const IconComponent = methodInfo.icon;
-
-                  return (
-                    <div key={index} className="border border-muted/20 rounded-lg p-6 bg-muted/5">
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center space-x-reverse space-x-3">
-                          <IconComponent className={`w-5 h-5 ${methodInfo.color}`} />
-                          <h4 className="text-lg font-semibold">{method.method}</h4>
-                        </div>
-                        <div className="flex items-center space-x-reverse space-x-3">
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                            ביטחון: {method.confidence}%
-                          </Badge>
-                          <span className="text-lg font-bold text-primary">
-                            {formatCurrency(method.estimate)}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {method.breakdown && method.breakdown.length > 0 && (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead className="bg-muted/10">
-                              <tr>
-                                <th className="px-4 py-2 text-right font-medium text-muted-foreground">רכיב</th>
-                                <th className="px-4 py-2 text-right font-medium text-muted-foreground">פירוט</th>
-                                <th className="px-4 py-2 text-right font-medium text-muted-foreground">עלות</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-muted/10">
-                              {method.breakdown.map((item: any, itemIndex: number) => (
-                                <tr key={itemIndex} className="hover:bg-muted/5">
-                                  <td className="px-4 py-2 font-medium">
-                                    {item.component || item.parameter || item.name || item.scenario}
-                                  </td>
-                                  <td className="px-4 py-2 text-muted-foreground">
-                                    {item.description || 
-                                     (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
-                                     (item.quantity && `${item.quantity} ${item.unit}`) ||
-                                     item.probability || 
-                                     item.value}
-                                  </td>
-                                  <td className="px-4 py-2 font-medium">
-                                    {formatCurrency(item.cost || item.totalCost || item.estimate)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
+              
+              {method.breakdown && method.breakdown.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/10">
+                      <tr>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">רכיב</th>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">פירוט</th>
+                        <th className="px-4 py-2 text-right font-medium text-muted-foreground">עלות</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-muted/10">
+                      {method.breakdown.map((item: any, itemIndex: number) => (
+                        <tr key={itemIndex} className="hover:bg-muted/5">
+                          <td className="px-4 py-2 font-medium">
+                            {item.component || item.parameter || item.name || item.scenario}
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            {item.description || 
+                             (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
+                             (item.quantity && `${item.quantity} ${item.unit}`) ||
+                             item.probability || 
+                             item.value}
+                          </td>
+                          <td className="px-4 py-2 font-medium">
+                            {formatCurrency(item.cost || item.totalCost || item.estimate)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </CardContent>
       </Card>
 
