@@ -291,7 +291,7 @@ export default function Dashboard() {
             <div className="h-96 flex items-center justify-center relative">
               {/* Background Glass Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-cyan-900/20 backdrop-blur-sm rounded-lg"></div>
-              
+
               {/* Pie Chart Container */}
               <div className="relative w-80 h-80 flex items-center justify-center">
                 <ResponsiveContainer width="60%" height="60%">
@@ -359,7 +359,7 @@ export default function Dashboard() {
                   const radius = 140;
                   const x = Math.cos(radian) * radius;
                   const y = Math.sin(radian) * radius;
-                  
+
                   return (
                     <div
                       key={entry.category}
@@ -400,7 +400,7 @@ export default function Dashboard() {
           <CardContent className="relative">
             {/* Background Glass Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/20 via-transparent to-blue-900/20 backdrop-blur-sm rounded-lg"></div>
-            
+
             <div className="h-80 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
@@ -421,7 +421,7 @@ export default function Dashboard() {
                       <stop offset="50%" stopColor="#0891B2" stopOpacity={0.7} />
                       <stop offset="100%" stopColor="#0E7490" stopOpacity={0.8} />
                     </linearGradient>
-                    
+
                     {/* Glass Reflection Effect */}
                     <linearGradient id="reflectionGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
@@ -445,7 +445,7 @@ export default function Dashboard() {
                     stroke="rgba(6, 182, 212, 0.3)" 
                     strokeWidth={1}
                   />
-                  
+
                   <XAxis 
                     dataKey="month" 
                     tick={{ 
@@ -456,7 +456,7 @@ export default function Dashboard() {
                     stroke="rgba(226, 232, 240, 0.4)"
                     axisLine={{ stroke: 'rgba(6, 182, 212, 0.5)' }}
                   />
-                  
+
                   <YAxis 
                     domain={[80, 100]} 
                     tick={{ 
@@ -468,7 +468,7 @@ export default function Dashboard() {
                     axisLine={{ stroke: 'rgba(6, 182, 212, 0.5)' }}
                     tickFormatter={(value) => `${value}%`}
                   />
-                  
+
                   <Tooltip 
                     contentStyle={{
                       backgroundColor: 'rgba(15, 23, 42, 0.9)',
@@ -482,7 +482,7 @@ export default function Dashboard() {
                     formatter={(value) => [`${value}%`, 'דיוק']}
                     labelStyle={{ color: '#06B6D4', fontWeight: 600 }}
                   />
-                  
+
                   <Bar 
                     dataKey="accuracy" 
                     fill="url(#columnGradient)"
@@ -491,7 +491,7 @@ export default function Dashboard() {
                     strokeWidth={1}
                     filter="url(#glow)"
                   />
-                  
+
                   {/* Glass Reflection Overlay */}
                   <Bar 
                     dataKey="accuracy" 
@@ -515,12 +515,12 @@ export default function Dashboard() {
             <span>ביצועי ספקים מובילים</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="relative">
+        <CardContent className="relative flex items-center justify-center">
           {/* Multi-layer Background Glass Effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-emerald-900/20 backdrop-blur-sm rounded-lg"></div>
           <div className="absolute inset-0 bg-gradient-to-tl from-blue-800/10 via-transparent to-cyan-800/10 backdrop-blur-sm rounded-lg"></div>
-          
-          <div className="h-80 relative">
+
+          <div className="h-80 w-full relative flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={dashboardStats?.supplierPerformance.length > 0 ? dashboardStats.supplierPerformance : [
@@ -539,7 +539,7 @@ export default function Dashboard() {
                     <stop offset="50%" stopColor="#1D4ED8" stopOpacity={0.7} />
                     <stop offset="100%" stopColor="#1E3A8A" stopOpacity={0.8} />
                   </linearGradient>
-                  
+
                   {/* Orders Columns Gradient */}
                   <linearGradient id="ordersGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
@@ -569,7 +569,7 @@ export default function Dashboard() {
                   stroke="rgba(59, 130, 246, 0.3)" 
                   strokeWidth={1}
                 />
-                
+
                 <XAxis 
                   dataKey="supplier" 
                   angle={-45} 
@@ -583,7 +583,7 @@ export default function Dashboard() {
                   stroke="rgba(226, 232, 240, 0.4)"
                   axisLine={{ stroke: 'rgba(59, 130, 246, 0.5)' }}
                 />
-                
+
                 <YAxis 
                   yAxisId="rating" 
                   orientation="left" 
@@ -596,7 +596,7 @@ export default function Dashboard() {
                   stroke="rgba(59, 130, 246, 0.6)"
                   axisLine={{ stroke: 'rgba(59, 130, 246, 0.5)' }}
                 />
-                
+
                 <YAxis 
                   yAxisId="orders" 
                   orientation="right"
@@ -608,7 +608,7 @@ export default function Dashboard() {
                   stroke="rgba(16, 185, 129, 0.6)"
                   axisLine={{ stroke: 'rgba(16, 185, 129, 0.5)' }}
                 />
-                
+
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: 'rgba(15, 23, 42, 0.95)',
@@ -626,7 +626,7 @@ export default function Dashboard() {
                   ]}
                   labelStyle={{ color: '#06B6D4', fontWeight: 600, marginBottom: '8px' }}
                 />
-                
+
                 <Legend 
                   wrapperStyle={{
                     direction: 'rtl',
@@ -634,7 +634,7 @@ export default function Dashboard() {
                     color: '#E2E8F0'
                   }}
                 />
-                
+
                 {/* Rating Bars with Glass Effect */}
                 <Bar 
                   yAxisId="rating" 
@@ -646,7 +646,7 @@ export default function Dashboard() {
                   strokeWidth={1.5}
                   filter="url(#supplierGlow)"
                 />
-                
+
                 {/* Orders Bars with Glass Effect */}
                 <Bar 
                   yAxisId="orders" 
