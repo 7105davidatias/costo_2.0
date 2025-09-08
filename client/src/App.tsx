@@ -14,6 +14,7 @@ import NotFound from "@/pages/not-found";
 import Templates from "@/pages/templates";
 import SqlRunner from "@/pages/sql-runner";
 import EstimationMethods from "@/pages/estimation-methods";
+import DatabaseAdmin from './pages/database-admin';
 
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/templates" component={Templates} />
           <Route path="/sql-runner" component={SqlRunner} />
+          <Route path="/database-admin" element={<DatabaseAdmin />} />
           <Route path="/estimation-methods" component={EstimationMethods} />
           <Route component={NotFound} />
         </Switch>

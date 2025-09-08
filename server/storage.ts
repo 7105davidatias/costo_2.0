@@ -1,5 +1,5 @@
-import { 
-  users, suppliers, procurementRequests, costEstimations, 
+import {
+  users, suppliers, procurementRequests, costEstimations,
   supplierQuotes, documents, marketInsights,
   type User, type InsertUser, type ProcurementRequest, type InsertProcurementRequest,
   type Supplier, type InsertSupplier, type CostEstimation, type InsertCostEstimation,
@@ -128,6 +128,9 @@ export interface IStorage {
     clearedDocumentAnalysis: number;
     updatedRequests: number;
   }>;
+
+  // Method to execute raw SQL queries (for production database operations)
+  executeSQL(query: string, params?: any[]): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -340,7 +343,7 @@ export class MemStorage implements IStorage {
         specifications: {
           deliverables: [
             "מיפוי תהליכים נוכחיים",
-            "ניתוח פערים וזיהוי הזדמנויות", 
+            "ניתוח פערים וזיהוי הזדמנויות",
             "תכנית יישום מפורטת",
             "הדרכה וליווי יישום"
           ],
@@ -603,7 +606,7 @@ export class MemStorage implements IStorage {
       {
         id: this.currentId++,
         procurementRequestId: 5, // REQ-2024-001 - מחשבים ניידים
-        fileName: "תרשים רשת ותשתיות.pdf", 
+        fileName: "תרשים רשת ותשתיות.pdf",
         fileType: "pdf",
         fileSize: 1887436, // 1.8 MB
         filePath: "/documents/network_diagram.pdf",
@@ -628,7 +631,7 @@ export class MemStorage implements IStorage {
         id: this.currentId++,
         procurementRequestId: 7, // שרתי Dell PowerEdge
         fileName: "מפרט שרתי Dell PowerEdge R750.pdf",
-        fileType: "pdf", 
+        fileType: "pdf",
         fileSize: 3145728, // 3 MB
         filePath: "/documents/dell_r750_spec.pdf",
         isAnalyzed: true,
@@ -965,7 +968,7 @@ export class MemStorage implements IStorage {
         aiAnalysisResults: {
           reasoning: [
             { factor: "אי-ודאות גבוהה", impact: "מורכב", description: "קשה לחזות כמות תקלות עתידיות" },
-            { factor: "ניסיון היסטורי", impact: "חיובי", description: "נתונים מ-3 שנים אחורנית" },
+            { factor: "ניסיון היסטורי", impact: "חיובי", description: "נתונים מ-3 שנים אחרונית" },
             { factor: "גיוון סיכונים", impact: "בינוני", description: "שיטת 3 נקודות מפחיתה סיכון תקציבי" }
           ],
           sources: [
@@ -1925,11 +1928,11 @@ export class MemStorage implements IStorage {
   async createProcurementRequest(insertRequest: InsertProcurementRequest): Promise<ProcurementRequest> {
     const id = this.currentId++;
     const now = new Date();
-    const request: ProcurementRequest = { 
-      ...insertRequest, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
+    const request: ProcurementRequest = {
+      ...insertRequest,
+      id,
+      createdAt: now,
+      updatedAt: now
     };
     this.procurementRequests.set(id, request);
     return request;
@@ -1938,11 +1941,11 @@ export class MemStorage implements IStorage {
   async updateProcurementRequest(id: number, updateData: Partial<InsertProcurementRequest>): Promise<ProcurementRequest | undefined> {
     const existing = this.procurementRequests.get(id);
     if (!existing) return undefined;
-    
-    const updated: ProcurementRequest = { 
-      ...existing, 
-      ...updateData, 
-      updatedAt: new Date() 
+
+    const updated: ProcurementRequest = {
+      ...existing,
+      ...updateData,
+      updatedAt: new Date()
     };
     this.procurementRequests.set(id, updated);
     return updated;
@@ -2021,7 +2024,7 @@ export class MemStorage implements IStorage {
   async updateDocument(id: number, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
     const existing = this.documents.get(id);
     if (!existing) return undefined;
-    
+
     const updated: Document = { ...existing, ...updateData };
     this.documents.set(id, updated);
     return updated;
@@ -2101,7 +2104,7 @@ export class MemStorage implements IStorage {
     // Manually update each request status to "new"
     const allRequests = Array.from(this.procurementRequests.values());
     console.log(`Starting reset of ${totalRequests} requests...`);
-    
+
     for (const request of allRequests) {
       if (request.status !== "new") {
         console.log(`Updating request ${request.id} from ${request.status} to new`);
@@ -2113,14 +2116,14 @@ export class MemStorage implements IStorage {
     }
 
     console.log(`Demo reset completed: ${updatedRequests} requests updated out of ${totalRequests} total`);
-    
+
     // Verify the changes
     const statusSummary: { [key: string]: number } = {};
     for (const request of this.procurementRequests.values()) {
       statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
     }
     console.log('Status summary after reset:', statusSummary);
-    
+
     return { totalRequests, updatedRequests };
   }
 
@@ -2128,10 +2131,10 @@ export class MemStorage implements IStorage {
   async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
     const totalEstimations = this.costEstimations.size;
     console.log(`Starting reset of ${totalEstimations} cost estimations...`);
-    
+
     // Clear all cost estimations
     this.costEstimations.clear();
-    
+
     // Also clear estimated costs from procurement requests
     let updatedRequests = 0;
     for (const [id, request] of this.procurementRequests.entries()) {
@@ -2148,88 +2151,59 @@ export class MemStorage implements IStorage {
   }
 
   // אפס את כל נתוני ה-AI והאומדנים במערכת
-  async resetAllAIData(): Promise<{
-    clearedEstimations: number;
-    clearedExtractedData: number;
-    clearedDocumentAnalysis: number;
-    updatedRequests: number;
-  }> {
-    console.log('Starting comprehensive AI data reset...');
-    
-    // 1. נקה את כל האומדנים
-    const totalEstimations = this.costEstimations.size;
-    this.costEstimations.clear();
-    
-    // 2. נקה נתוני ניתוח AI מדרישות רכש
-    let clearedExtractedData = 0;
-    let updatedRequests = 0;
-    
-    for (const [id, request] of this.procurementRequests.entries()) {
-      let updated = false;
-      
-      // נקה את הנתונים שחולצו
-      if (request.extractedData) {
-        request.extractedData = null;
-        request.extractionDate = null;
-        request.extractionStatus = 'not_extracted';
-        clearedExtractedData++;
-        updated = true;
-      }
-      
-      // נקה את האומדן המחושב
-      if (request.estimatedCost) {
-        request.estimatedCost = null;
-        updated = true;
-      }
-      
-      // החזר את הסטטוס ל"חדש" אם הדרישה הושלמה או בעיבוד
-      if (request.status === 'completed' || request.status === 'in_progress' || request.status === 'processing') {
-        request.status = 'new';
-        updated = true;
-      }
-      
-      if (updated) {
-        request.updatedAt = new Date();
-        this.procurementRequests.set(id, request);
-        updatedRequests++;
-      }
+  async resetAllAIData() {
+    console.log('Resetting all AI data and cost estimations...');
+
+    try {
+      // Clear all cost estimations
+      const clearedEstimations = await this.resetAllCostEstimations();
+
+      // Clear all extracted data from procurement requests
+      const clearedExtractedData = await this.clearAllExtractedData();
+
+      // Clear all document analysis
+      const clearedDocumentAnalysis = await this.clearAllDocumentAnalysis();
+
+      // Reset all request statuses to 'new'
+      const updatedRequests = await this.resetAllRequestsStatus();
+
+      return {
+        clearedEstimations: clearedEstimations.clearedEstimations,
+        clearedExtractedData,
+        clearedDocumentAnalysis,
+        updatedRequests: updatedRequests.updatedRequests
+      };
+    } catch (error) {
+      console.error('Error resetting AI data:', error);
+      throw error;
     }
-    
-    // 3. נקה נתוני ניתוח מסמכים
-    let clearedDocumentAnalysis = 0;
-    
-    for (const [id, document] of this.documents.entries()) {
-      if (document.isAnalyzed || document.analysisResults || document.extractedSpecs) {
-        document.isAnalyzed = false;
-        document.analysisResults = null;
-        document.extractedSpecs = null;
-        this.documents.set(id, document);
-        clearedDocumentAnalysis++;
+  }
+
+  async executeSQL(query: string, params: any[] = []) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    try {
+      // For safety, allow only SELECT, INSERT, UPDATE, DELETE
+      const normalizedQuery = query.trim().toLowerCase();
+      const allowedCommands = ['select', 'insert', 'update', 'delete'];
+      const isAllowed = allowedCommands.some(cmd => normalizedQuery.startsWith(cmd));
+
+      if (!isAllowed) {
+        throw new Error('רק שאילתות SELECT, INSERT, UPDATE, DELETE מותרות');
       }
+
+      const result = await this.db.execute(query);
+      return result;
+    } catch (error) {
+      console.error('SQL execution error:', error);
+      throw error;
     }
-    
-    console.log(`AI data reset completed:`);
-    console.log(`- ${totalEstimations} cost estimations cleared`);
-    console.log(`- ${clearedExtractedData} extracted data entries cleared`);
-    console.log(`- ${clearedDocumentAnalysis} document analyses cleared`);
-    console.log(`- ${updatedRequests} procurement requests updated`);
-    
-    // הדפס סטטוסים של כל הדרישות לצורך ניפוי באגים
-    console.log('Current request statuses:');
-    for (const [id, request] of this.procurementRequests.entries()) {
-      console.log(`  Request ${id}: ${request.status}`);
-    }
-    
-    return {
-      clearedEstimations: totalEstimations,
-      clearedExtractedData,
-      clearedDocumentAnalysis,
-      updatedRequests
-    };
   }
 
   // New v2.0 Methods Implementation
-  
+
   // Procurement Categories Methods
   async getProcurementCategories(): Promise<ProcurementCategory[]> {
     return Array.from(this.procurementCategories.values());
@@ -2290,6 +2264,35 @@ export class MemStorage implements IStorage {
     return Array.from(this.documentTemplates.values()).filter(
       template => template.category === category
     );
+  }
+
+  // Helper methods for resetAllAIData (assuming they exist and are implemented similarly to the others)
+  private async clearAllExtractedData(): Promise<number> {
+    let count = 0;
+    for (const req of this.procurementRequests.values()) {
+      if (req.extractedData) {
+        req.extractedData = null;
+        req.extractionDate = null;
+        req.extractionStatus = 'not_extracted';
+        count++;
+      }
+    }
+    console.log(`Cleared extracted data from ${count} requests.`);
+    return count;
+  }
+
+  private async clearAllDocumentAnalysis(): Promise<number> {
+    let count = 0;
+    for (const doc of this.documents.values()) {
+      if (doc.isAnalyzed || doc.analysisResults || doc.extractedSpecs) {
+        doc.isAnalyzed = false;
+        doc.analysisResults = null;
+        doc.extractedSpecs = null;
+        count++;
+      }
+    }
+    console.log(`Cleared document analysis from ${count} documents.`);
+    return count;
   }
 }
 

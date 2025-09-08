@@ -1260,6 +1260,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Management - Execute direct SQL commands
+  app.post("/api/admin/execute-sql", async (req, res) => {
+    try {
+      const { query, params = [] } = req.body;
+
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "שאילתה לא תקינה" 
+        });
+      }
+
+      // Execute SQL directly on database
+      const result = await storage.executeSQL(query, params);
+
+      res.json({
+        success: true,
+        data: result,
+        query: query,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('SQL execution error:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'שגיאה בביצוע השאילתה',
+        query: req.body.query
+      });
+    }
+  });
+
   // SQL Runner for development (only works with memory storage simulation)
   app.post("/api/sql-runner", async (req, res) => {
     try {
