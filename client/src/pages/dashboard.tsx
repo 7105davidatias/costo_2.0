@@ -1,687 +1,624 @@
-import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DraggableWidget } from "@/components/ui/draggable-widget";
-import { RealTimeTimeline } from "@/components/ui/real-time-timeline";
-import { useDashboardLayout } from "@/hooks/use-dashboard-layout";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import CostTrendsChart from '@/components/charts/cost-trends-chart';
+import AccuracyChart from '@/components/charts/accuracy-chart';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { 
   TrendingUp, 
-  PiggyBank, 
-  TrendingDown, 
-  Bot, 
-  Plus, 
-  Eye, 
-  Calculator, 
-  Coins, 
-  TriangleAlert, 
-  CheckCircle, 
-  Clock, 
-  Users, 
-  Package, 
-  FileText, 
   Target, 
-  RefreshCw, 
-  Download, 
-  Brain,
-  Layout,
-  Grid3X3,
-  List,
+  DollarSign, 
+  ShoppingCart, 
+  Calendar,
+  Zap,
+  BarChart3,
+  PieChart,
+  Activity,
+  Clock,
+  Users,
+  Package,
+  Settings,
   Maximize2,
+  Minimize2,
+  Move,
+  RotateCcw,
   Sun,
   Moon,
-  ChevronLeft,
-  ChevronRight,
-  Settings
-} from "lucide-react";
-import CostTrendsChart from "@/components/charts/cost-trends-chart";
-import AccuracyChart from "@/components/charts/accuracy-chart";
-import { Link } from "wouter";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { DashboardSkeleton } from '@/components/ui/enhanced-skeleton';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { cn } from "@/lib/utils";
+  Menu,
+  X,
+  Eye,
+  EyeOff,
+  Filter,
+  Search,
+  AlertTriangle,
+  CheckCircle,
+  TrendingDown
+} from 'lucide-react';
 
-interface DashboardStats {
-  totalEstimatedCosts: number;
-  totalSavings: number;
-  risingCosts: number;
-  accuracyScore: number;
-  recentRequests: any[];
-  costTrends: { month: string; cost: number }[];
-  accuracyBreakdown: { label: string; value: number }[];
-  avgSavingsPercentage: number;
-  avgDeliveryTime: number;
-  supplierSatisfactionScore: number;
-  categoryBreakdown: { category: string; amount: number; color: string }[];
-  accuracyTrends: { month: string; accuracy: number }[];
-  supplierPerformance: { supplier: string; rating: number; orders: number; avgDeliveryTime: number }[];
-  requestsCount?: number;
-  avgConfidence?: number;
+// Hook מותאם לניהול layout
+function useDashboardLayout() {
+  const [layout, setLayout] = useState(() => {
+    const saved = localStorage.getItem('dashboard-layout');
+    return saved ? JSON.parse(saved) : {
+      kpiCards: [
+        { id: 'total-cost', x: 0, y: 0, width: 1, height: 1, visible: true },
+        { id: 'accuracy', x: 1, y: 0, width: 1, height: 1, visible: true },
+        { id: 'requests', x: 2, y: 0, width: 1, height: 1, visible: true },
+        { id: 'savings', x: 3, y: 0, width: 1, height: 1, visible: true }
+      ],
+      modules: [
+        { id: 'cost-trends', x: 0, y: 1, width: 2, height: 2, visible: true },
+        { id: 'accuracy-chart', x: 2, y: 1, width: 2, height: 2, visible: true },
+        { id: 'timeline', x: 0, y: 3, width: 4, height: 1, visible: true },
+        { id: 'requests-table', x: 0, y: 4, width: 4, height: 2, visible: true }
+      ]
+    };
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItem, setDraggedItem] = useState(null);
+
+  const updateLayout = useCallback((newLayout) => {
+    setLayout(newLayout);
+    localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+  }, []);
+
+  const resetLayout = useCallback(() => {
+    const defaultLayout = {
+      kpiCards: [
+        { id: 'total-cost', x: 0, y: 0, width: 1, height: 1, visible: true },
+        { id: 'accuracy', x: 1, y: 0, width: 1, height: 1, visible: true },
+        { id: 'requests', x: 2, y: 0, width: 1, height: 1, visible: true },
+        { id: 'savings', x: 3, y: 0, width: 1, height: 1, visible: true }
+      ],
+      modules: [
+        { id: 'cost-trends', x: 0, y: 1, width: 2, height: 2, visible: true },
+        { id: 'accuracy-chart', x: 2, y: 1, width: 2, height: 2, visible: true },
+        { id: 'timeline', x: 0, y: 3, width: 4, height: 1, visible: true },
+        { id: 'requests-table', x: 0, y: 4, width: 4, height: 2, visible: true }
+      ]
+    };
+    updateLayout(defaultLayout);
+  }, [updateLayout]);
+
+  return {
+    layout,
+    updateLayout,
+    resetLayout,
+    isDragging,
+    setIsDragging,
+    draggedItem,
+    setDraggedItem
+  };
 }
 
-interface RealTimeStats {
-  totalBudget: number;
-  completedProcurements: number;
-  activeProcurements: number;
-  pendingApprovals: number;
-  totalSuppliers: number;
-  avgResponseTime: number;
-}
-
-// Enhanced KPI Card Component
-const KPICard = ({ 
+// רכיב KPI Card צף
+function FloatingKPICard({ 
   title, 
   value, 
-  subtitle, 
   icon: Icon, 
   trend, 
-  color = "cyan", 
-  isFloating = false,
-  onClick 
-}: {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: any;
-  trend?: { value: number; label: string };
-  color?: string;
-  isFloating?: boolean;
-  onClick?: () => void;
-}) => (
-  <Card 
-    className={cn(
-      "kpi-card-enhanced cursor-pointer transition-all duration-300 hover:scale-105",
-      "bg-gradient-to-br from-slate-900/90 to-slate-800/80 backdrop-blur-20",
-      "border border-cyan-500/30 hover:border-cyan-400/60",
-      "hover:shadow-[0_0_30px_rgba(0,255,255,0.4)]",
-      isFloating && "fixed z-40"
-    )}
-    onClick={onClick}
-  >
-    <CardContent className="p-6 text-center relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-blue-500/20" />
+  description, 
+  color = 'cyan',
+  onToggleVisibility,
+  isVisible = true,
+  isDraggable = false,
+  ...props 
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  const colorClasses = {
+    cyan: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/40 text-cyan-400',
+    green: 'from-green-500/20 to-emerald-500/20 border-green-500/40 text-green-400',
+    pink: 'from-pink-500/20 to-rose-500/20 border-pink-500/40 text-pink-400',
+    purple: 'from-purple-500/20 to-violet-500/20 border-purple-500/40 text-purple-400'
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <Card
+      className={cn(
+        "card-glass transition-all duration-500 group relative overflow-hidden cursor-pointer",
+        "hover:shadow-[0_0_30px_rgba(0,255,255,0.3)] hover:scale-105",
+        "animate-glass-float",
+        isMaximized && "fixed inset-4 z-50",
+        isDraggable && "cursor-move",
+        colorClasses[color]
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      {...props}
+    >
+      {/* Neon glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+      {/* Header controls */}
+      <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        {isDraggable && <Move className="w-4 h-4 text-cyan-400/60 cursor-grab" />}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-6 h-6 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMaximized(!isMaximized);
+          }}
+        >
+          {isMaximized ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-6 h-6 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVisibility?.();
+          }}
+        >
+          {isVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+        </Button>
       </div>
 
-      <div className="relative z-10 space-y-4">
-        {/* Icon */}
-        <div className={cn(
-          "w-16 h-16 mx-auto rounded-full flex items-center justify-center",
-          "bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/40",
-          "shadow-[0_0_20px_rgba(0,255,255,0.3)]",
-          "animate-pulse"
-        )}>
-          <Icon className="w-8 h-8 text-cyan-400" />
-        </div>
-
-        {/* Content */}
-        <div className="space-y-2">
-          <p className="text-sm text-slate-400 font-medium">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Icon className={cn("w-5 h-5", `text-${color}-400`)} />
             {title}
-          </p>
-          <p className="text-3xl font-bold text-slate-200 neon-text-primary">
-            {value}
-          </p>
+          </CardTitle>
           {trend && (
-            <div className="flex items-center justify-center text-sm">
-              <span className={cn(
-                "flex items-center",
-                trend.value > 0 ? "text-green-400" : "text-red-400"
-              )}>
-                {trend.value > 0 ? <TrendingUp className="w-3 h-3 ml-1" /> : <TrendingDown className="w-3 h-3 ml-1" />}
-                {trend.label}
-              </span>
-            </div>
+            <Badge 
+              variant={trend > 0 ? "default" : "destructive"}
+              className="animate-pulse"
+            >
+              {trend > 0 ? <TrendingUp className="w-3 h-3 ml-1" /> : <TrendingDown className="w-3 h-3 ml-1" />}
+              {Math.abs(trend)}%
+            </Badge>
           )}
-          <p className="text-xs text-slate-500">
-            {subtitle}
-          </p>
+        </div>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <div className="text-3xl font-bold neon-text-primary mb-2">
+          {value}
+        </div>
+
+        {isHovered && (
+          <div className="animate-slide-in-up space-y-2">
+            <Separator className="bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="text-cyan-400/80">היום:</div>
+              <div className="text-cyan-300 font-medium">₪{(Math.random() * 10000).toFixed(0)}</div>
+              <div className="text-cyan-400/80">השבוע:</div>
+              <div className="text-cyan-300 font-medium">₪{(Math.random() * 50000).toFixed(0)}</div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// רכיב Timeline בזמן אמת
+function RealTimeTimeline() {
+  const [events, setEvents] = useState([
+    { id: 1, time: '10:30', title: 'בקשת רכש חדשה', type: 'info', icon: ShoppingCart },
+    { id: 2, time: '11:15', title: 'ניתוח AI הושלם', type: 'success', icon: CheckCircle },
+    { id: 3, time: '12:00', title: 'אזהרת תקציב', type: 'warning', icon: AlertTriangle },
+  ]);
+
+  // סימולציית עדכונים בזמן אמת
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newEvent = {
+        id: Date.now(),
+        time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+        title: `עדכון בזמן אמת - ${Math.random() > 0.5 ? 'בקשה חדשה' : 'עדכון מחיר'}`,
+        type: Math.random() > 0.7 ? 'warning' : 'info',
+        icon: Math.random() > 0.5 ? ShoppingCart : Activity
+      };
+
+      setEvents(prev => [newEvent, ...prev.slice(0, 9)]);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getEventStyles = (type) => {
+    switch (type) {
+      case 'success':
+        return 'text-green-400 bg-green-500/20 border-green-500/40';
+      case 'warning':
+        return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/40';
+      case 'error':
+        return 'text-red-400 bg-red-500/20 border-red-500/40';
+      default:
+        return 'text-cyan-400 bg-cyan-500/20 border-cyan-500/40';
+    }
+  };
+
+  return (
+    <Card className="card-glass h-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-cyan-400" />
+          ציר זמן בזמן אמת
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {events.map((event, index) => (
+            <div
+              key={event.id}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-glass border transition-all duration-300",
+                "hover:scale-105 hover:shadow-lg",
+                "animate-slide-in-right",
+                getEventStyles(event.type)
+              )}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <event.icon className="w-4 h-4 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="font-medium text-sm">{event.title}</div>
+                <div className="text-xs opacity-70">{event.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// רכיב טבלת דרישות מודרני
+function ModernRequestsTable() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  const requests = [
+    { id: 1, title: 'מחשבים ניידים', status: 'בעיבוד', amount: '₪50,000', date: '2024-01-15' },
+    { id: 2, title: 'ציוד משרדי', status: 'הושלם', amount: '₪12,000', date: '2024-01-14' },
+    { id: 3, title: 'תוכנות רישוי', status: 'ממתין', amount: '₪25,000', date: '2024-01-13' },
+  ];
+
+  const filteredRequests = requests.filter(req => 
+    req.title.includes(searchTerm) && 
+    (filter === 'all' || req.status === filter)
+  );
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'הושלם': return 'bg-green-500/20 text-green-400 border-green-500/40';
+      case 'בעיבוד': return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+      case 'ממתין': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/40';
+    }
+  };
+
+  return (
+    <Card className="card-glass h-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-cyan-400" />
+            דרישות רכש אחרונות
+          </CardTitle>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-cyan-400/60" />
+              <input
+                type="text"
+                placeholder="חיפוש דרישות..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input-glass pr-10 w-48"
+              />
+            </div>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="input-glass"
+            >
+              <option value="all">כל הסטטוסים</option>
+              <option value="בעיבוד">בעיבוד</option>
+              <option value="הושלם">הושלם</option>
+              <option value="ממתין">ממתין</option>
+            </select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {filteredRequests.map((request, index) => (
+            <div
+              key={request.id}
+              className={cn(
+                "p-4 rounded-glass border border-cyan-500/20 transition-all duration-300",
+                "hover:border-cyan-400/40 hover:shadow-lg hover:scale-102",
+                "bg-gradient-to-r from-cyan-500/5 to-blue-500/5",
+                "animate-slide-in-up"
+              )}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-cyan-300 mb-1">{request.title}</h4>
+                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                    <span>#{request.id}</span>
+                    <span>{request.date}</span>
+                    <span className="font-medium text-cyan-400">{request.amount}</span>
+                  </div>
+                </div>
+                <Badge className={cn("border", getStatusColor(request.status))}>
+                  {request.status}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// רכיב Sidebar מתכווץ
+function CollapsibleSidebar({ isCollapsed, onToggle, isDark, onThemeToggle }) {
+  const menuItems = [
+    { icon: BarChart3, label: 'דשבורד', active: true },
+    { icon: ShoppingCart, label: 'בקשות רכש' },
+    { icon: PieChart, label: 'מחקר שוק' },
+    { icon: DollarSign, label: 'הערכת עלויות' },
+    { icon: Users, label: 'ספקים' },
+    { icon: Settings, label: 'הגדרות' }
+  ];
+
+  return (
+    <div className={cn(
+      "fixed right-0 top-0 h-full bg-black/40 backdrop-blur-xl border-l border-cyan-500/30",
+      "transition-all duration-500 z-40",
+      isCollapsed ? "w-16" : "w-64"
+    )}>
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-8">
+          {!isCollapsed && (
+            <h2 className="text-xl font-bold text-cyan-400 neon-text-primary">
+              Procurement AI
+            </h2>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="hover:bg-cyan-500/20"
+          >
+            {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+          </Button>
+        </div>
+
+        <nav className="space-y-2">
+          {menuItems.map((item, index) => (
+            <div
+              key={index}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-glass transition-all duration-300",
+                "hover:bg-cyan-500/20 hover:border-cyan-400/40 cursor-pointer",
+                "border border-transparent",
+                item.active && "bg-cyan-500/20 border-cyan-500/40"
+              )}
+            >
+              <item.icon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+              {!isCollapsed && (
+                <span className="text-cyan-300 font-medium">{item.label}</span>
+              )}
+            </div>
+          ))}
+        </nav>
+
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="flex items-center gap-2">
+            {!isCollapsed && <Sun className="w-4 h-4 text-yellow-400" />}
+            <Switch
+              checked={isDark}
+              onCheckedChange={onThemeToggle}
+              className="data-[state=checked]:bg-cyan-500"
+            />
+            {!isCollapsed && <Moon className="w-4 h-4 text-blue-400" />}
+          </div>
+          {!isCollapsed && (
+            <Label className="text-xs text-slate-400 mt-2 block">
+              מצב {isDark ? 'כהה' : 'בהיר'}
+            </Label>
+          )}
         </div>
       </div>
-
-      {/* Glow Effect */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 pointer-events-none" />
-    </CardContent>
-  </Card>
-);
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const { 
-    layout, 
-    updateWidgetPosition, 
-    updateWidgetSize, 
-    toggleWidgetVisibility, 
-    toggleSidebar, 
-    toggleTheme,
-    changeViewMode,
-    resetLayout 
-  } = useDashboardLayout();
+  const [isDark, setIsDark] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { layout, updateLayout, resetLayout } = useDashboardLayout();
 
-  const [showFloatingWidgets, setShowFloatingWidgets] = useState(false);
-
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["dashboard/stats"],
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time data
+  // שליפת נתונים
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      // Simulate fetching data
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        totalCost: 2847000,
+        accuracy: 94.2,
+        activeRequests: 47,
+        savings: 341000,
+        costTrends: [
+          { month: 'ינואר', cost: 2847000 }, { month: 'פברואר', cost: 2900000 },
+          { month: 'מרץ', cost: 2880000 }, { month: 'אפריל', cost: 3000000 },
+          { month: 'מאי', cost: 3100000 }, { month: 'יוני', cost: 3050000 }
+        ],
+        accuracyBreakdown: [
+          { label: 'דיוק אומדן', value: 94.2 }, { label: 'דיוק מחיר', value: 91.5 },
+          { label: 'דיוק אספקה', value: 96.0 }
+        ]
+      };
+    },
+    refetchInterval: 30000 // עדכון כל 30 שניות
   });
 
-  const { data: realTimeStats } = useQuery<RealTimeStats>({
-    queryKey: ["dashboard/realtime"],
-    refetchInterval: 5000, // Refresh every 5 seconds
-  });
+  // עדכון theme
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+  }, [isDark]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('he-IL', {
-      style: 'currency',
-      currency: 'ILS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const dashboardStats = stats || {
-    totalEstimatedCosts: 4250000,
-    totalSavings: 361250,
-    risingCosts: 150000,
-    accuracyScore: 91.2,
-    recentRequests: [],
-    costTrends: [],
-    accuracyBreakdown: [],
-    avgSavingsPercentage: 8.5,
-    avgDeliveryTime: 45,
-    supplierSatisfactionScore: 4.6,
-    categoryBreakdown: [],
-    accuracyTrends: [],
-    supplierPerformance: [],
-    requestsCount: 50,
-    avgConfidence: 92.5
-  };
-
-  // KPI Data
   const kpiData = useMemo(() => [
     {
-      id: 'total-costs',
-      title: 'סה"כ עלויות מוערכות',
-      value: formatCurrency(dashboardStats.totalEstimatedCosts),
-      subtitle: 'מעודכן לפני 5 דקות',
-      icon: Calculator,
-      trend: { value: 12.5, label: '+12.5% מהחודש הקודם' },
+      id: 'total-cost',
+      title: 'סה"כ עלויות',
+      value: `₪${stats?.totalCost?.toLocaleString() || '2,847,000'}`,
+      icon: DollarSign,
+      trend: 12.5,
+      description: 'עלויות חודש זה',
       color: 'cyan'
     },
     {
-      id: 'total-savings',
-      title: 'חיסכון כולל',
-      value: formatCurrency(dashboardStats.totalSavings),
-      subtitle: `${dashboardStats.avgSavingsPercentage.toFixed(1)}% חיסכון ממוצע`,
-      icon: PiggyBank,
-      trend: { value: 8.5, label: 'חיסכון משמעותי' },
+      id: 'accuracy',
+      title: 'דיוק AI',
+      value: `${stats?.accuracy || '94.2'}%`,
+      icon: Target,
+      trend: 3.2,
+      description: 'דיוק ניתוח אחרון',
       color: 'green'
     },
     {
-      id: 'avg-delivery',
-      title: 'זמן אספקה ממוצע',
-      value: `${dashboardStats.avgDeliveryTime} ימים`,
-      subtitle: 'שיפור של 3 ימים',
-      icon: Clock,
-      trend: { value: -6.5, label: 'שיפור בזמנים' },
-      color: 'blue'
+      id: 'requests',
+      title: 'בקשות פעילות',
+      value: stats?.activeRequests || '47',
+      icon: ShoppingCart,
+      trend: -8.1,
+      description: 'בקשות בעיבוד',
+      color: 'pink'
     },
     {
-      id: 'supplier-satisfaction',
-      title: 'שביעות רצון ספקים',
-      value: `${dashboardStats.supplierSatisfactionScore.toFixed(1)}/5`,
-      subtitle: 'מעל הממוצע התעשייתי',
-      icon: Users,
-      trend: { value: 4.2, label: 'ביצועים מעולים' },
+      id: 'savings',
+      title: 'חיסכון חודשי',
+      value: `₪${stats?.savings?.toLocaleString() || '341,000'}`,
+      icon: TrendingUp,
+      trend: 15.7,
+      description: 'חיסכון מול תקציב',
       color: 'purple'
-    },
-    {
-      id: 'accuracy-score',
-      title: 'דיוק אומדנים',
-      value: `${dashboardStats.accuracyScore.toFixed(1)}%`,
-      subtitle: 'מערכת AI מתקדמת',
-      icon: Bot,
-      color: 'yellow'
-    },
-    {
-      id: 'active-requests',
-      title: 'דרישות פעילות',
-      value: realTimeStats?.activeProcurements || 12,
-      subtitle: 'בתהליך עיבוד',
-      icon: Package,
-      color: 'orange'
     }
-  ], [dashboardStats, realTimeStats]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center space-x-3 mb-6">
-          <LoadingSpinner type="calculation" />
-        </div>
-        <DashboardSkeleton />
-      </div>
-    );
-  }
+  ], [stats]);
 
   return (
-    <div className="dashboard-container min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Enhanced Header */}
-      <div className="dashboard-header sticky top-0 z-30 backdrop-blur-20 bg-slate-900/80 border-b border-cyan-500/20">
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center space-x-reverse space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="text-cyan-400"
-            >
-              {layout.sidebarCollapsed ? 
-                <ChevronRight className="w-4 h-4" /> : 
-                <ChevronLeft className="w-4 h-4" />
-              }
-            </Button>
-
-            <div>
-              <h1 className="text-2xl font-bold text-cyan-400 neon-text-primary">
-                מערכת ניהול רכש AI
-              </h1>
-              <p className="text-sm text-slate-400">
-                ניתוח ואומדן עלויות בזמן אמת
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-reverse space-x-3">
-            {/* View Mode Controls */}
-            <div className="flex bg-slate-800/50 rounded-lg p-1">
-              <Button
-                variant={layout.viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => changeViewMode('grid')}
-                className="px-3"
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={layout.viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => changeViewMode('list')}
-                className="px-3"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={layout.viewMode === 'compact' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => changeViewMode('compact')}
-                className="px-3"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-cyan-400"
-            >
-              {layout.activeTheme === 'dark' ? 
-                <Sun className="w-4 h-4" /> : 
-                <Moon className="w-4 h-4" />
-              }
-            </Button>
-
-            {/* Layout Controls */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFloatingWidgets(!showFloatingWidgets)}
-              className="border-cyan-500/30 text-cyan-400"
-            >
-              <Layout className="w-4 h-4 ml-2" />
-              {showFloatingWidgets ? 'נעל רכיבים' : 'רכיבים צפים'}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetLayout}
-              className="text-slate-400"
-            >
-              <RefreshCw className="w-4 h-4 ml-2" />
-              אפס פריסה
-            </Button>
-
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-cyan-500/20 text-cyan-400 border-cyan-500/40"
-            >
-              <Download className="w-4 h-4 ml-2" />
-              ייצא דוח
-            </Button>
-          </div>
-        </div>
+    <div className={cn("min-h-screen transition-all duration-500", isDark ? "dark" : "")}>
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,0,128,0.05),transparent_50%)]" />
       </div>
 
+      {/* Sidebar */}
+      <CollapsibleSidebar 
+        isCollapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        isDark={isDark}
+        onThemeToggle={setIsDark}
+      />
+
       {/* Main Content */}
-      <div className="dashboard-content p-6 space-y-8">
-        {/* Floating KPI Cards */}
-        {showFloatingWidgets && (
-          <div className="floating-widgets">
-            {kpiData.slice(0, 4).map((kpi, index) => (
-              <DraggableWidget
-                key={kpi.id}
-                id={kpi.id}
-                title={kpi.title}
-                position={{ x: 100 + index * 20, y: 100 + index * 20 }}
-                size={{ width: 300, height: 200 }}
-                isVisible={true}
-                isFloating={true}
-                onPositionChange={(pos) => updateWidgetPosition(kpi.id, pos)}
-                onSizeChange={(size) => updateWidgetSize(kpi.id, size)}
-                onVisibilityToggle={() => toggleWidgetVisibility(kpi.id)}
+      <div className={cn(
+        "transition-all duration-500 relative z-10",
+        sidebarCollapsed ? "mr-16" : "mr-64"
+      )}>
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-cyan-400 neon-text-primary mb-2">
+                דשבורד מתקדם
+              </h1>
+              <p className="text-slate-400">
+                ניהול רכש חכם עם AI • עדכון אחרון: {new Date().toLocaleTimeString('he-IL')}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={resetLayout}
+                className="gap-2"
               >
-                <KPICard {...kpi} isFloating={true} />
-              </DraggableWidget>
-            ))}
-          </div>
-        )}
+                <RotateCcw className="w-4 h-4" />
+                איפוס Layout
+              </Button>
 
-        {/* Grid Layout KPI Cards */}
-        {!showFloatingWidgets && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-400" />
+                <span className="text-cyan-300 font-mono">
+                  {new Date().toLocaleTimeString('he-IL')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* KPI Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {kpiData.map((kpi) => (
-              <KPICard key={kpi.id} {...kpi} />
+              <FloatingKPICard
+                key={kpi.id}
+                {...kpi}
+                isDraggable={true}
+              />
             ))}
           </div>
-        )}
 
-        {/* Real-time Timeline and Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Real-time Timeline */}
-          <div className="lg:col-span-1">
-            <DraggableWidget
-              id="real-time-timeline"
-              title="ציר זמן בזמן אמת"
-              position={{ x: 0, y: 0 }}
-              size={{ width: 400, height: 600 }}
-              isVisible={true}
-              canDrag={showFloatingWidgets}
-              canResize={showFloatingWidgets}
-              onPositionChange={(pos) => updateWidgetPosition('real-time-timeline', pos)}
-              onSizeChange={(size) => updateWidgetSize('real-time-timeline', size)}
-              className="h-[600px]"
-            >
-              <RealTimeTimeline />
-            </DraggableWidget>
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            {/* Cost Trends - עיצוב cyberpunk */}
+            <Card className="lg:col-span-2 card-glass">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-cyan-400" />
+                  מגמות עלויות
+                  <Badge variant="outline" className="bg-cyan-500/20 text-cyan-400 border-cyan-500/40">
+                    Live
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CostTrendsChart />
+              </CardContent>
+            </Card>
+
+            {/* Accuracy Chart - אנימציות מתקדמות */}
+            <Card className="card-glass">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-400" />
+                  דיוק AI
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AccuracyChart />
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Enhanced Charts */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Cost Trends - Enhanced */}
-            <Card className="chart-container-enhanced relative overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-cyan-400 text-xl flex items-center space-x-reverse space-x-3">
-                  <TrendingUp className="text-primary w-5 h-5" />
-                  <span>מגמות עלויות מתקדמות</span>
-                  <Badge variant="outline" className="border-cyan-500/30">
-                    עדכון חי
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative">
-                {/* Multi-layer glass effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-transparent to-blue-900/10 backdrop-blur-sm rounded-lg" />
-                <div className="absolute inset-0 bg-gradient-to-tl from-purple-900/5 via-transparent to-pink-900/5 backdrop-blur-sm rounded-lg" />
-
-                <div className="h-80 relative z-10">
-                  <CostTrendsChart />
-                </div>
-
-                {/* Interactive overlay */}
-                <div className="absolute top-4 left-4 space-y-2">
-                  <Badge className="bg-cyan-500/20 text-cyan-300">
-                    דיוק: 94.2%
-                  </Badge>
-                  <Badge className="bg-green-500/20 text-green-300">
-                    חיסכון: +15.3%
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Accuracy Chart - Enhanced */}
-            <Card className="chart-container-enhanced relative overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-cyan-400 text-xl flex items-center space-x-reverse space-x-3">
-                  <Bot className="text-secondary w-5 h-5" />
-                  <span>ניתוח דיוק AI מתקדם</span>
-                  <div className="flex space-x-reverse space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-xs text-green-400">פעיל</span>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative">
-                {/* Enhanced glass backdrop */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-900/10 via-transparent to-emerald-900/10 backdrop-blur-sm rounded-lg" />
-
-                <div className="h-80 relative z-10">
-                  <AccuracyChart />
-                </div>
-
-                {/* AI Insights Overlay */}
-                <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-10 border border-green-500/30 rounded-lg p-3">
-                  <div className="flex items-center space-x-reverse space-x-2 text-xs">
-                    <Brain className="w-3 h-3 text-green-400" />
-                    <span className="text-green-400">AI Insight:</span>
-                  </div>
-                  <p className="text-slate-300 text-xs mt-1">
-                    דיוק משתפר ב-3.2% השבוע
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Timeline & Requests */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <RealTimeTimeline />
+            <ModernRequestsTable />
           </div>
         </div>
-
-        {/* Enhanced Supplier Performance */}
-        <Card className="chart-container-enhanced relative overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-cyan-400 text-xl flex items-center space-x-reverse space-x-3">
-              <Users className="text-info w-5 h-5" />
-              <span>ביצועי ספקים - ניתוח מתקדם</span>
-              <Button variant="ghost" size="sm" className="text-xs">
-                <Settings className="w-3 h-3 ml-1" />
-                הגדרות
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            {/* Multi-layer glass effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-900/10 via-transparent to-indigo-900/10 backdrop-blur-sm rounded-lg" />
-            <div className="absolute inset-0 bg-gradient-to-tl from-blue-800/5 via-transparent to-cyan-800/5 backdrop-blur-sm rounded-lg" />
-
-            <div className="h-80 relative z-10 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart 
-                  data={dashboardStats?.supplierPerformance.length > 0 ? dashboardStats.supplierPerformance : [
-                    { supplier: 'Dell Technologies', rating: 4.7, orders: 15, avgDeliveryTime: 12 },
-                    { supplier: 'TechSource', rating: 4.8, orders: 12, avgDeliveryTime: 8 },
-                    { supplier: 'אלקטרה', rating: 4.5, orders: 8, avgDeliveryTime: 35 },
-                    { supplier: 'ריהוט ישראלי', rating: 4.6, orders: 6, avgDeliveryTime: 21 },
-                    { supplier: 'מטריקס IT', rating: 4.4, orders: 10, avgDeliveryTime: 7 }
-                  ]}
-                  margin={{ top: 20, right: 60, left: 20, bottom: 100 }}
-                >
-                  <defs>
-                    <linearGradient id="ratingGradientEnhanced" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#06B6D4" stopOpacity={1} />
-                      <stop offset="50%" stopColor="#0891B2" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#0E7490" stopOpacity={0.9} />
-                    </linearGradient>
-                    <linearGradient id="ordersGradientEnhanced" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
-                      <stop offset="50%" stopColor="#059669" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#047857" stopOpacity={0.9} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="2 6" stroke="rgba(6, 182, 212, 0.2)" />
-                  <XAxis 
-                    dataKey="supplier" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={100}
-                    tick={{ fill: '#E2E8F0', fontSize: 11, fontWeight: 500 }}
-                    stroke="rgba(226, 232, 240, 0.3)"
-                  />
-                  <YAxis 
-                    yAxisId="rating" 
-                    orientation="left" 
-                    domain={[0, 5]}
-                    tick={{ fill: '#06B6D4', fontSize: 12, fontWeight: 500 }}
-                    stroke="rgba(6, 182, 212, 0.4)"
-                  />
-                  <YAxis 
-                    yAxisId="orders" 
-                    orientation="right"
-                    tick={{ fill: '#10B981', fontSize: 12, fontWeight: 500 }}
-                    stroke="rgba(16, 185, 129, 0.4)"
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(6, 182, 212, 0.3)',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                      color: '#E2E8F0',
-                      direction: 'rtl'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ direction: 'rtl', paddingTop: '20px' }} />
-                  <Bar 
-                    yAxisId="rating" 
-                    dataKey="rating" 
-                    fill="url(#ratingGradientEnhanced)"
-                    name="דירוג"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    yAxisId="orders" 
-                    dataKey="orders" 
-                    fill="url(#ordersGradientEnhanced)"
-                    name="הזמנות"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Performance Insights */}
-            <div className="absolute top-4 right-4 space-y-2">
-              <div className="bg-slate-900/80 backdrop-blur-10 border border-cyan-500/30 rounded-lg p-2">
-                <div className="text-xs text-cyan-400 font-medium">ביצועים מובילים</div>
-                <div className="text-xs text-slate-300">TechSource - 4.8/5</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced Recent Requests Table */}
-        <Card className="enhanced-table-card relative overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-reverse space-x-3">
-                <FileText className="text-primary w-5 h-5" />
-                <span className="text-cyan-400">דרישות רכש אחרונות</span>
-                <Badge variant="outline" className="border-cyan-500/30">
-                  {dashboardStats.recentRequests?.length || 0} דרישות
-                </Badge>
-              </div>
-              <div className="flex space-x-reverse space-x-2">
-                <Button variant="ghost" size="sm">
-                  <RefreshCw className="w-4 h-4 ml-1" />
-                  רענן
-                </Button>
-                <Button variant="outline" size="sm" className="border-cyan-500/30">
-                  <Plus className="w-4 h-4 ml-1" />
-                  דרישה חדשה
-                </Button>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full enhanced-table">
-                <thead className="bg-gradient-to-r from-slate-800/80 to-slate-700/80">
-                  <tr>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">מספר בקשה</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">תיאור פריט</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">עלות מוערכת</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">סטטוס</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">תאריך</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-cyan-400">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-700/30">
-                  {(stats?.recentRequests || []).slice(0, 8).map((request, index) => (
-                    <tr 
-                      key={request.id} 
-                      className="hover:bg-slate-800/30 transition-colors duration-200 group"
-                    >
-                      <td className="px-6 py-4 text-sm text-cyan-300 font-medium group-hover:text-cyan-200">
-                        {request.requestNumber}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-300 group-hover:text-slate-200">
-                        {request.itemName}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-200 font-medium">
-                        {request.estimatedCost ? formatCurrency(parseFloat(request.estimatedCost)) : (
-                          <span className="text-slate-500">בעיבוד...</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge 
-                          variant={request.status === 'completed' ? 'default' : 'secondary'}
-                          className={cn(
-                            request.status === 'completed' && 'bg-green-500/20 text-green-400',
-                            request.status === 'processing' && 'bg-yellow-500/20 text-yellow-400',
-                            request.status === 'new' && 'bg-cyan-500/20 text-cyan-400'
-                          )}
-                        >
-                          {request.status === 'completed' && 'הושלם'}
-                          {request.status === 'processing' && 'בעיבוד'}
-                          {request.status === 'new' && 'חדש'}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-400">
-                        {new Date(request.createdAt).toLocaleDateString('he-IL')}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/procurement-request/${request.id}`}>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="hover:bg-cyan-500/10 hover:text-cyan-300"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

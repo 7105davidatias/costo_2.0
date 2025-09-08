@@ -161,3 +161,110 @@ export function useDashboardLayout() {
     resetLayout
   };
 }
+import { useState, useCallback } from 'react';
+
+export interface LayoutItem {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+}
+
+export interface DashboardLayout {
+  kpiCards: LayoutItem[];
+  modules: LayoutItem[];
+}
+
+export function useDashboardLayout() {
+  const [layout, setLayout] = useState<DashboardLayout>(() => {
+    const saved = localStorage.getItem('dashboard-layout');
+    return saved ? JSON.parse(saved) : {
+      kpiCards: [
+        { id: 'total-cost', x: 0, y: 0, width: 1, height: 1, visible: true },
+        { id: 'accuracy', x: 1, y: 0, width: 1, height: 1, visible: true },
+        { id: 'requests', x: 2, y: 0, width: 1, height: 1, visible: true },
+        { id: 'savings', x: 3, y: 0, width: 1, height: 1, visible: true }
+      ],
+      modules: [
+        { id: 'cost-trends', x: 0, y: 1, width: 2, height: 2, visible: true },
+        { id: 'accuracy-chart', x: 2, y: 1, width: 2, height: 2, visible: true },
+        { id: 'timeline', x: 0, y: 3, width: 4, height: 1, visible: true },
+        { id: 'requests-table', x: 0, y: 4, width: 4, height: 2, visible: true }
+      ]
+    };
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
+  const updateLayout = useCallback((newLayout: DashboardLayout) => {
+    setLayout(newLayout);
+    localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+  }, []);
+
+  const resetLayout = useCallback(() => {
+    const defaultLayout: DashboardLayout = {
+      kpiCards: [
+        { id: 'total-cost', x: 0, y: 0, width: 1, height: 1, visible: true },
+        { id: 'accuracy', x: 1, y: 0, width: 1, height: 1, visible: true },
+        { id: 'requests', x: 2, y: 0, width: 1, height: 1, visible: true },
+        { id: 'savings', x: 3, y: 0, width: 1, height: 1, visible: true }
+      ],
+      modules: [
+        { id: 'cost-trends', x: 0, y: 1, width: 2, height: 2, visible: true },
+        { id: 'accuracy-chart', x: 2, y: 1, width: 2, height: 2, visible: true },
+        { id: 'timeline', x: 0, y: 3, width: 4, height: 1, visible: true },
+        { id: 'requests-table', x: 0, y: 4, width: 4, height: 2, visible: true }
+      ]
+    };
+    updateLayout(defaultLayout);
+  }, [updateLayout]);
+
+  const toggleItemVisibility = useCallback((type: 'kpiCards' | 'modules', id: string) => {
+    setLayout(prevLayout => {
+      const newLayout = { ...prevLayout };
+      newLayout[type] = newLayout[type].map(item =>
+        item.id === id ? { ...item, visible: !item.visible } : item
+      );
+      localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+      return newLayout;
+    });
+  }, []);
+
+  const moveItem = useCallback((type: 'kpiCards' | 'modules', id: string, newX: number, newY: number) => {
+    setLayout(prevLayout => {
+      const newLayout = { ...prevLayout };
+      newLayout[type] = newLayout[type].map(item =>
+        item.id === id ? { ...item, x: newX, y: newY } : item
+      );
+      localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+      return newLayout;
+    });
+  }, []);
+
+  const resizeItem = useCallback((type: 'kpiCards' | 'modules', id: string, newWidth: number, newHeight: number) => {
+    setLayout(prevLayout => {
+      const newLayout = { ...prevLayout };
+      newLayout[type] = newLayout[type].map(item =>
+        item.id === id ? { ...item, width: newWidth, height: newHeight } : item
+      );
+      localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+      return newLayout;
+    });
+  }, []);
+
+  return {
+    layout,
+    updateLayout,
+    resetLayout,
+    toggleItemVisibility,
+    moveItem,
+    resizeItem,
+    isDragging,
+    setIsDragging,
+    draggedItem,
+    setDraggedItem
+  };
+}
