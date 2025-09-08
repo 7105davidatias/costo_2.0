@@ -28,18 +28,18 @@ export default function Header() {
         <div className="flex items-center space-x-6">
           <Link
             href="/"
-            className="flex items-center space-x-3 neon-text-primary hover:animate-neon-glow transition-all duration-300"
+            className="flex items-center space-x-3 text-slate-200 hover:text-blue-400 transition-all duration-300"
           >
             <Calculator className="h-8 w-8" />
-            <span className="font-bold text-xl neon-text-primary">מערכת רכש</span>
+            <span className="font-bold text-xl text-slate-200">מערכת רכש</span>
           </Link>
         </div>
         <nav className="hidden md:flex items-center space-x-8">
           <Link
             href="/dashboard"
             className={cn(
-              "text-base font-medium transition-all duration-300 hover:neon-text-primary hover:shadow-neon px-3 py-2 rounded-lg",
-              pathname === "/dashboard" ? "neon-text-primary bg-procurement-primary-neon/10 border border-procurement-primary-neon/30" : "neon-text-muted hover:bg-procurement-background-glass"
+              "text-base font-medium transition-all duration-300 hover:text-blue-400 px-3 py-2 rounded-lg",
+              pathname === "/dashboard" ? "text-blue-400 bg-blue-500/10 border border-blue-500/30" : "text-slate-400 hover:bg-slate-800"
             )}
           >
             לוח בקרה

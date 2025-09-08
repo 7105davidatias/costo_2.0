@@ -351,7 +351,7 @@ export default function Dashboard() {
       {/* Supplier Performance Chart */}
       <Card className="chart-container">
         <CardHeader>
-          <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+          <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
             <Users className="text-info w-5 h-5" />
             <span>ביצועי ספקים מובילים</span>
           </CardTitle>
@@ -383,7 +383,7 @@ export default function Dashboard() {
       {/* Cost Trends Chart */}
       <Card className="chart-container">
         <CardHeader>
-          <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+          <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
             <TrendingUp className="text-primary w-5 h-5" />
             <span>מגמת עלות חזויה לאורך זמן</span>
           </CardTitle>
