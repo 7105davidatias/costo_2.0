@@ -311,6 +311,7 @@ export default function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
                   <FormControl>
                     <Textarea
                       {...field}
+                      value={field.value || ''}
                       placeholder="תיאור מפורט של הפריט או השירות הנדרש"
                       className="min-h-[100px]"
                     />
