@@ -32,6 +32,18 @@ const EstimationMethods: React.FC<EstimationMethodsProps> = ({
 }) => {
   const selectedCount = methods.filter(method => method.selected).length;
   
+  // מיפוי מזהי השיטות לפורמט הנכון של השרת
+  const mapMethodId = (methodId: string): string => {
+    const methodMapping: { [key: string]: string } = {
+      'analogical': 'analogous',
+      'parametric': 'parametric',
+      'market-based': 'market-based',
+      'bottom-up': 'bottom-up',
+      'expert-judgment': 'expert-judgment'
+    };
+    return methodMapping[methodId] || methodId;
+  };
+  
   const getMethodIcon = (type: EstimationMethod['type']) => {
     const iconMap = {
       analogical: TrendingUp,
@@ -51,7 +63,8 @@ const EstimationMethods: React.FC<EstimationMethodsProps> = ({
   };
 
   const handleMethodClick = useCallback((methodId: string) => {
-    onMethodToggle(methodId);
+    const mappedMethodId = mapMethodId(methodId);
+    onMethodToggle(mappedMethodId);
   }, [onMethodToggle]);
 
   const handleKeyDown = useCallback((event: React.KeyboardEvent, methodId: string) => {

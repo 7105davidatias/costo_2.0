@@ -156,19 +156,22 @@ export default function ProcurementRequest() {
     try {
       console.log('Creating estimate with methods:', selectedMethods);
 
-      const response = await fetch('/api/cost-estimations', {
+      // שימוש ב-endpoint הנכון לחישוב אומדן מתקדם
+      const response = await fetch('/api/calculate-estimate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          procurementRequestId: parseInt(id),
-          methods: selectedMethods,
+          requestId: parseInt(id),
+          selectedMethods: selectedMethods,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create estimate: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to create estimate: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
@@ -179,12 +182,14 @@ export default function ProcurementRequest() {
         description: "האומדן נוצר וזמין לצפייה",
       });
 
-      window.location.href = `/cost-estimation/${id}`;
+      // הוספת פרמטרי שיטות לכתובת URL
+      const methodsParam = selectedMethods.join(',');
+      window.location.href = `/cost-estimation/${id}?methods=${methodsParam}`;
     } catch (error) {
       console.error('Error creating estimate:', error);
       toast({
         title: "שגיאה ביצירת אומדן",
-        description: "נכשל ביצירת האומדן. נסה שוב מאוחר יותר.",
+        description: error instanceof Error ? error.message : "נכשל ביצירת האומדן. נסה שוב מאוחר יותר.",
         variant: "destructive",
       });
     } finally {
@@ -305,10 +310,10 @@ export default function ProcurementRequest() {
     { id: '10', label: 'ספק כוח', value: '650W 80+ Gold', type: 'advanced' as const, category: 'power' as const, confidence: 80 }
   ];
 
-  // Estimation methods data
+  // Estimation methods data - מזהים תואמים לשרת
   const estimationMethods = [
     {
-      id: 'analogical',
+      id: 'analogous',
       title: 'אומדן אנלוגי',
       description: 'השוואה לרכישות דומות שבוצעו בעבר עם התאמה למפרטים הנוכחיים',
       compatibility: 92,
