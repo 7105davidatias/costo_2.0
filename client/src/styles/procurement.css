@@ -57,5 +57,5 @@
 }
 
 .procurement-text-muted {
-  @apply text-procurement-text-muted-improved; /* שיפור נגישות */
+  @apply text-procurement-text-muted;
 }
