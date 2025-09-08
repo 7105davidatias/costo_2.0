@@ -465,7 +465,7 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
 
             {/* Simplified Analysis Results */}
             {analysisCompleted && (
-
+              <div className="space-y-6">
                 {/* Original Extracted Specs */}
                 {extractedSpecs?.extractedSpecs && (
                   <Card className="bg-card border-muted/20">
