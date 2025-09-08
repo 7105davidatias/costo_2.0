@@ -561,6 +561,7 @@ export class MemStorage implements IStorage {
       confidenceLevel: 94,
       marketPrice: "205000",
       potentialSavings: "25000",
+      recommendedSupplierId: 1,
       justifications: [
         {
           variable: "מחיר יחידה בסיסי",
@@ -705,7 +706,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 96,
         marketPrice: "135000",
         potentialSavings: "10000",
-        estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        recommendedSupplierId: 1,
         aiAnalysisResults: {
           reasoning: [
             { factor: "מחיר יחידה", impact: "סטנדרט", description: "₪4,272 ליחידה - תחרותי" },
@@ -731,7 +732,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 89,
         marketPrice: "82000",
         potentialSavings: "7000",
-        estimatedDelivery: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
+        recommendedSupplierId: 2,
         aiAnalysisResults: {
           reasoning: [
             { factor: "מחיר יחידה", impact: "תחרותי", description: "₪1,282 ליחידה - מתחת לממוצע שוק" },
@@ -837,6 +838,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 88,
         marketPrice: "1100000",
         potentialSavings: "140000",
+        recommendedSupplierId: 3,
         justifications: [
           {
             variable: "עלות פיתוח (2400 שעות)",
@@ -877,6 +879,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 92,
         marketPrice: "720000",
         potentialSavings: "90000",
+        recommendedSupplierId: 4,
         justifications: [
           {
             variable: "מיפוי תהליכים",
@@ -931,6 +934,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 94,
         marketPrice: "2800000",
         potentialSavings: "400000",
+        recommendedSupplierId: 5,
         justifications: [
           {
             variable: "שירותי SOC 24/7",
@@ -978,6 +982,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 78,
         marketPrice: "750000",
         potentialSavings: "100000",
+        recommendedSupplierId: 6,
         justifications: [
           {
             variable: "אומדן אופטימי",
@@ -1025,6 +1030,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 95,
         marketPrice: "240000",
         potentialSavings: "15000",
+        recommendedSupplierId: 1,
         justifications: [
           {
             variable: "מחיר יחידה",
