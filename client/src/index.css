@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Enhanced UI Overrides */
+@import './styles/ui-overrides.css';
+
 /* Enhanced Glassmorphism Design with Neon Colors */
 @keyframes shimmer {
   0% {

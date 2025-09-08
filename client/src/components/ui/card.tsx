@@ -10,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "glass-panel animate-glass-float",
+      "card-glass animate-glass-float relative overflow-hidden",
       className
     )}
     {...props}
@@ -24,7 +24,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex flex-col space-y-1.5 p-6 relative", className)}
     {...props}
   />
 ))
@@ -37,7 +37,7 @@ const CardTitle = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight text-slate-200 text-right",
+      "text-2xl font-semibold leading-none tracking-tight text-cyan-400 text-right neon-text-primary",
       className
     )}
     {...props}
@@ -51,7 +51,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm text-muted text-right", className)}
+    className={cn("text-sm text-slate-400 text-right", className)}
     {...props}
   />
 ))
@@ -61,7 +61,11 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0 text-right", className)} {...props} />
+  <div 
+    ref={ref} 
+    className={cn("p-6 pt-0 text-right", className)} 
+    {...props} 
+  />
 ))
 CardContent.displayName = "CardContent"
 
@@ -71,7 +75,12 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0 justify-end", className)}
+    className={cn(
+      "flex items-center p-6 pt-0 justify-end relative",
+      "before:absolute before:top-0 before:left-4 before:right-4 before:h-px",
+      "before:bg-gradient-to-r before:from-transparent before:via-cyan-500/40 before:to-transparent",
+      className
+    )}
     {...props}
   />
 ))
