@@ -250,6 +250,9 @@ export class MemStorage implements IStorage {
           storage: "512GB SSD",
           display: "15.6 FHD"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-15"),
         updatedAt: new Date("2024-01-15"),
@@ -274,6 +277,9 @@ export class MemStorage implements IStorage {
           adjustable: true,
           warranty: "5 שנים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-18"),
         updatedAt: new Date("2024-01-18"),
@@ -298,6 +304,9 @@ export class MemStorage implements IStorage {
           storage: "2x 1TB NVMe SSD",
           network: "4x 1GbE + 2x 10GbE"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-20"),
         updatedAt: new Date("2024-01-20"),
@@ -325,6 +334,9 @@ export class MemStorage implements IStorage {
           complexity: "גבוהה",
           riskLevel: "בינוני"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-25"),
         updatedAt: new Date("2024-01-25"),
@@ -354,6 +366,9 @@ export class MemStorage implements IStorage {
           consultantLevel: "senior",
           complexity: "גבוהה"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-26"),
         updatedAt: new Date("2024-01-26"),
@@ -379,6 +394,9 @@ export class MemStorage implements IStorage {
           duration: "12 חודשים",
           businessValue: "הגנה על נכסי מידע קריטיים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-27"),
         updatedAt: new Date("2024-01-27"),
@@ -408,6 +426,9 @@ export class MemStorage implements IStorage {
             pessimistic: 950000
           }
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-28"),
         updatedAt: new Date("2024-01-28"),
@@ -433,6 +454,9 @@ export class MemStorage implements IStorage {
           graphics: "מובנה",
           warranty: "3 שנים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-29"),
         updatedAt: new Date("2024-01-29"),
@@ -459,6 +483,9 @@ export class MemStorage implements IStorage {
           seatingCapacity: 2,
           expectedMileage: 100000
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-30"),
         updatedAt: new Date("2024-01-30"),
@@ -483,6 +510,9 @@ export class MemStorage implements IStorage {
           components: "עבודות עפר, יציקת בטון, מבנה פלדה, קירות וגגות, מערכות חשמל ואוורור",
           contingency: "15%"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-31"),
         updatedAt: new Date("2024-01-31"),
@@ -508,6 +538,9 @@ export class MemStorage implements IStorage {
             { name: "פלסטיק PVC", quantity: 10, unit: "טון", grade: "רגיל" }
           ]
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-02-01"),
         updatedAt: new Date("2024-02-01"),
