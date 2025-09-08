@@ -279,68 +279,228 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Category Breakdown Pie Chart */}
-        <Card className="chart-container">
+        {/* Category Breakdown Pie Chart - Glassmorphism Style */}
+        <Card className="chart-container relative overflow-hidden">
           <CardHeader>
             <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <Package className="text-primary w-5 h-5" />
               <span>פילוח עלויות לפי קטגוריה</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
-                      { category: 'ציוד מחשוב', amount: 1200000, color: '#0088FE' },
-                      { category: 'שירותים', amount: 950000, color: '#00C49F' },
-                      { category: 'רכבים', amount: 850000, color: '#FFBB28' },
-                      { category: 'ריהוט', amount: 650000, color: '#FF8042' },
-                      { category: 'תחזוקה', amount: 600000, color: '#8884D8' }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="amount"
-                    label={({ category, amount }) => `${category}: ${formatCurrency(amount)}`}
-                  >
-                    {(dashboardStats?.categoryBreakdown || []).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => formatCurrency(value)} />
-                </PieChart>
-              </ResponsiveContainer>
+          <CardContent className="relative">
+            <div className="h-96 flex items-center justify-center relative">
+              {/* Background Glass Effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-cyan-900/20 backdrop-blur-sm rounded-lg"></div>
+              
+              {/* Pie Chart Container */}
+              <div className="relative w-80 h-80 flex items-center justify-center">
+                <ResponsiveContainer width="60%" height="60%">
+                  <PieChart>
+                    <defs>
+                      <linearGradient id="pieGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#1E40AF" stopOpacity={0.9} />
+                      </linearGradient>
+                      <linearGradient id="pieGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
+                      </linearGradient>
+                      <linearGradient id="pieGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#D97706" stopOpacity={0.9} />
+                      </linearGradient>
+                      <linearGradient id="pieGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#EF4444" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#DC2626" stopOpacity={0.9} />
+                      </linearGradient>
+                      <linearGradient id="pieGradient5" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.9} />
+                      </linearGradient>
+                    </defs>
+                    <Pie
+                      data={dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
+                        { category: 'ציוד מחשוב', amount: 3030000, color: 'url(#pieGradient1)' },
+                        { category: 'שירותים', amount: 1891000, color: 'url(#pieGradient2)' },
+                        { category: 'רכבים', amount: 750000, color: 'url(#pieGradient3)' },
+                        { category: 'ריהוט', amount: 125000, color: 'url(#pieGradient4)' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={0}
+                      outerRadius={90}
+                      dataKey="amount"
+                      stroke="rgba(255,255,255,0.2)"
+                      strokeWidth={2}
+                    >
+                      {(dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
+                        { category: 'ציוד מחשוב', amount: 3030000, color: 'url(#pieGradient1)' },
+                        { category: 'שירותים', amount: 1891000, color: 'url(#pieGradient2)' },
+                        { category: 'רכבים', amount: 750000, color: 'url(#pieGradient3)' },
+                        { category: 'ריהוט', amount: 125000, color: 'url(#pieGradient4)' }
+                      ]).map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color || `url(#pieGradient${index + 1})`}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {/* External Labels with Glass Effect */}
+                {(dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
+                  { category: 'ציוד מחשוב', amount: 3030000, color: '#3B82F6' },
+                  { category: 'שירותים', amount: 1891000, color: '#10B981' },
+                  { category: 'רכבים', amount: 750000, color: '#F59E0B' },
+                  { category: 'ריהוט', amount: 125000, color: '#EF4444' }
+                ]).map((entry, index, array) => {
+                  const angle = (index * 360) / array.length - 90;
+                  const radian = (angle * Math.PI) / 180;
+                  const radius = 140;
+                  const x = Math.cos(radian) * radius;
+                  const y = Math.sin(radian) * radius;
+                  
+                  return (
+                    <div
+                      key={entry.category}
+                      className="absolute backdrop-blur-md bg-white/10 border border-white/20 rounded-lg px-3 py-2 transform -translate-x-1/2 -translate-y-1/2 shadow-lg"
+                      style={{
+                        left: `calc(50% + ${x}px)`,
+                        top: `calc(50% + ${y}px)`,
+                        minWidth: '120px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div className="text-white text-sm font-medium mb-1">
+                        {entry.category}
+                      </div>
+                      <div className="text-white/80 text-xs">
+                        {formatCurrency(entry.amount)}
+                      </div>
+                      <div 
+                        className="w-3 h-3 rounded-full mx-auto mt-1"
+                        style={{ backgroundColor: entry.color }}
+                      ></div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Accuracy Trends Chart */}
-        <Card className="chart-container">
+        {/* Accuracy Trends Chart - Glassmorphism Columns */}
+        <Card className="chart-container relative overflow-hidden">
           <CardHeader>
             <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <TrendingUp className="text-secondary w-5 h-5" />
               <span>מגמות דיוק אומדנים</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-80">
+          <CardContent className="relative">
+            {/* Background Glass Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/20 via-transparent to-blue-900/20 backdrop-blur-sm rounded-lg"></div>
+            
+            <div className="h-80 relative">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dashboardStats?.accuracyTrends.length > 0 ? dashboardStats.accuracyTrends : [
-                  { month: 'ינואר', accuracy: 89 },
-                  { month: 'פברואר', accuracy: 91 },
-                  { month: 'מרץ', accuracy: 88 },
-                  { month: 'אפריל', accuracy: 93 },
-                  { month: 'מאי', accuracy: 90 },
-                  { month: 'יוני', accuracy: 95 }
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis domain={[80, 100]} />
-                  <Tooltip formatter={(value) => `${value}%`} />
-                  <Bar dataKey="accuracy" fill="#00C49F" radius={[4, 4, 0, 0]} />
+                <BarChart 
+                  data={dashboardStats?.accuracyTrends.length > 0 ? dashboardStats.accuracyTrends : [
+                    { month: 'ינואר', accuracy: 89 },
+                    { month: 'פברואר', accuracy: 91 },
+                    { month: 'מרץ', accuracy: 88 },
+                    { month: 'אפריל', accuracy: 93 },
+                    { month: 'מאי', accuracy: 90 },
+                    { month: 'יוני', accuracy: 95 }
+                  ]}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <defs>
+                    {/* Glass Column Gradients */}
+                    <linearGradient id="columnGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.9} />
+                      <stop offset="50%" stopColor="#0891B2" stopOpacity={0.7} />
+                      <stop offset="100%" stopColor="#0E7490" stopOpacity={0.8} />
+                    </linearGradient>
+                    
+                    {/* Glass Reflection Effect */}
+                    <linearGradient id="reflectionGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+                      <stop offset="30%" stopColor="rgba(255,255,255,0.2)" />
+                      <stop offset="70%" stopColor="rgba(255,255,255,0.1)" />
+                      <stop offset="100%" stopColor="rgba(255,255,255,0.05)" />
+                    </linearGradient>
+
+                    {/* Glow Filter */}
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <CartesianGrid 
+                    strokeDasharray="2 4" 
+                    stroke="rgba(6, 182, 212, 0.3)" 
+                    strokeWidth={1}
+                  />
+                  
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ 
+                      fill: '#E2E8F0', 
+                      fontSize: 12, 
+                      fontWeight: 500 
+                    }}
+                    stroke="rgba(226, 232, 240, 0.4)"
+                    axisLine={{ stroke: 'rgba(6, 182, 212, 0.5)' }}
+                  />
+                  
+                  <YAxis 
+                    domain={[80, 100]} 
+                    tick={{ 
+                      fill: '#E2E8F0', 
+                      fontSize: 12, 
+                      fontWeight: 500 
+                    }}
+                    stroke="rgba(226, 232, 240, 0.4)"
+                    axisLine={{ stroke: 'rgba(6, 182, 212, 0.5)' }}
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                      color: '#E2E8F0',
+                      direction: 'rtl'
+                    }}
+                    formatter={(value) => [`${value}%`, 'דיוק']}
+                    labelStyle={{ color: '#06B6D4', fontWeight: 600 }}
+                  />
+                  
+                  <Bar 
+                    dataKey="accuracy" 
+                    fill="url(#columnGradient)"
+                    radius={[6, 6, 0, 0]}
+                    stroke="rgba(255, 255, 255, 0.3)"
+                    strokeWidth={1}
+                    filter="url(#glow)"
+                  />
+                  
+                  {/* Glass Reflection Overlay */}
+                  <Bar 
+                    dataKey="accuracy" 
+                    fill="url(#reflectionGradient)"
+                    radius={[6, 6, 0, 0]}
+                    strokeWidth={0}
+                    opacity={0.6}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -348,32 +508,157 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Supplier Performance Chart */}
-      <Card className="chart-container">
+      {/* Supplier Performance Chart - Enhanced Glassmorphism */}
+      <Card className="chart-container relative overflow-hidden">
         <CardHeader>
           <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
             <Users className="text-info w-5 h-5" />
             <span>ביצועי ספקים מובילים</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-80">
+        <CardContent className="relative">
+          {/* Multi-layer Background Glass Effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-emerald-900/20 backdrop-blur-sm rounded-lg"></div>
+          <div className="absolute inset-0 bg-gradient-to-tl from-blue-800/10 via-transparent to-cyan-800/10 backdrop-blur-sm rounded-lg"></div>
+          
+          <div className="h-80 relative">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dashboardStats?.supplierPerformance.length > 0 ? dashboardStats.supplierPerformance : [
-                { supplier: 'Dell Technologies', rating: 4.7, orders: 15, avgDeliveryTime: 12 },
-                { supplier: 'TechSource', rating: 4.8, orders: 12, avgDeliveryTime: 8 },
-                { supplier: 'אלקטרה', rating: 4.5, orders: 8, avgDeliveryTime: 35 },
-                { supplier: 'ריהוט ישראלי', rating: 4.6, orders: 6, avgDeliveryTime: 21 },
-                { supplier: 'מטריקס IT', rating: 4.4, orders: 10, avgDeliveryTime: 7 }
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="supplier" angle={-45} textAnchor="end" height={100} />
-                <YAxis yAxisId="rating" orientation="left" domain={[0, 5]} />
-                <YAxis yAxisId="orders" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Bar yAxisId="rating" dataKey="rating" fill="#0088FE" name="דירוג (1-5)" />
-                <Bar yAxisId="orders" dataKey="orders" fill="#00C49F" name="מספר הזמנות" />
+              <BarChart 
+                data={dashboardStats?.supplierPerformance.length > 0 ? dashboardStats.supplierPerformance : [
+                  { supplier: 'Dell Technologies', rating: 4.7, orders: 15, avgDeliveryTime: 12 },
+                  { supplier: 'TechSource', rating: 4.8, orders: 12, avgDeliveryTime: 8 },
+                  { supplier: 'אלקטרה', rating: 4.5, orders: 8, avgDeliveryTime: 35 },
+                  { supplier: 'ריהוט ישראלי', rating: 4.6, orders: 6, avgDeliveryTime: 21 },
+                  { supplier: 'מטריקס IT', rating: 4.4, orders: 10, avgDeliveryTime: 7 }
+                ]}
+                margin={{ top: 20, right: 60, left: 20, bottom: 100 }}
+              >
+                <defs>
+                  {/* Rating Columns Gradient */}
+                  <linearGradient id="ratingGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9} />
+                    <stop offset="50%" stopColor="#1D4ED8" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#1E3A8A" stopOpacity={0.8} />
+                  </linearGradient>
+                  
+                  {/* Orders Columns Gradient */}
+                  <linearGradient id="ordersGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
+                    <stop offset="50%" stopColor="#059669" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#047857" stopOpacity={0.8} />
+                  </linearGradient>
+
+                  {/* Enhanced Glow Filter */}
+                  <filter id="supplierGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge> 
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+
+                  {/* Glass Reflection */}
+                  <linearGradient id="supplierReflection" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
+                    <stop offset="40%" stopColor="rgba(255,255,255,0.2)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0.05)" />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid 
+                  strokeDasharray="2 6" 
+                  stroke="rgba(59, 130, 246, 0.3)" 
+                  strokeWidth={1}
+                />
+                
+                <XAxis 
+                  dataKey="supplier" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                  tick={{ 
+                    fill: '#E2E8F0', 
+                    fontSize: 11, 
+                    fontWeight: 500 
+                  }}
+                  stroke="rgba(226, 232, 240, 0.4)"
+                  axisLine={{ stroke: 'rgba(59, 130, 246, 0.5)' }}
+                />
+                
+                <YAxis 
+                  yAxisId="rating" 
+                  orientation="left" 
+                  domain={[0, 5]}
+                  tick={{ 
+                    fill: '#3B82F6', 
+                    fontSize: 12, 
+                    fontWeight: 500 
+                  }}
+                  stroke="rgba(59, 130, 246, 0.6)"
+                  axisLine={{ stroke: 'rgba(59, 130, 246, 0.5)' }}
+                />
+                
+                <YAxis 
+                  yAxisId="orders" 
+                  orientation="right"
+                  tick={{ 
+                    fill: '#10B981', 
+                    fontSize: 12, 
+                    fontWeight: 500 
+                  }}
+                  stroke="rgba(16, 185, 129, 0.6)"
+                  axisLine={{ stroke: 'rgba(16, 185, 129, 0.5)' }}
+                />
+                
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    backdropFilter: 'blur(25px)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    borderRadius: '16px',
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                    color: '#E2E8F0',
+                    direction: 'rtl',
+                    padding: '12px'
+                  }}
+                  formatter={(value, name) => [
+                    name === 'rating' ? `${value}/5` : value,
+                    name === 'rating' ? 'דירוג' : 'הזמנות'
+                  ]}
+                  labelStyle={{ color: '#06B6D4', fontWeight: 600, marginBottom: '8px' }}
+                />
+                
+                <Legend 
+                  wrapperStyle={{
+                    direction: 'rtl',
+                    paddingTop: '20px',
+                    color: '#E2E8F0'
+                  }}
+                />
+                
+                {/* Rating Bars with Glass Effect */}
+                <Bar 
+                  yAxisId="rating" 
+                  dataKey="rating" 
+                  fill="url(#ratingGradient)"
+                  name="דירוג (1-5)"
+                  radius={[4, 4, 0, 0]}
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  strokeWidth={1.5}
+                  filter="url(#supplierGlow)"
+                />
+                
+                {/* Orders Bars with Glass Effect */}
+                <Bar 
+                  yAxisId="orders" 
+                  dataKey="orders" 
+                  fill="url(#ordersGradient)"
+                  name="מספר הזמנות"
+                  radius={[4, 4, 0, 0]}
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  strokeWidth={1.5}
+                  filter="url(#supplierGlow)"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
