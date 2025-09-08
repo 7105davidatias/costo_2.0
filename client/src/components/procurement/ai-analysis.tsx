@@ -414,18 +414,6 @@ export default function AIAnalysis({ requestId, specifications }: AIAnalysisProp
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            variant="outline"
-                            className="border-secondary text-secondary hover:bg-secondary/10"
-                            onClick={() => {
-                              console.log('Market Research button clicked from AI Analysis with ID:', requestId);
-                              localStorage.setItem('currentRequestId', requestId.toString());
-                              window.location.href = `/market-research/${requestId}`;
-                            }}
-                          >
-                            <Bot className="w-4 h-4 ml-2" />
-                            מחקר שוק
-                          </Button>
                           <Link href={`/cost-estimation/${requestId}?methods=${selectedMethods.join(',')}`}>
                             <Button 
                               disabled={selectedMethods.length === 0}
