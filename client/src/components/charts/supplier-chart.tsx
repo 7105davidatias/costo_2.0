@@ -68,7 +68,14 @@ export default function SupplierChart({ data }: SupplierChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-        <PolarGrid stroke="hsl(var(--muted))" />
+        <defs>
+          <linearGradient id="radarBackground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.95)" />
+            <stop offset="100%" stopColor="rgba(30, 41, 59, 0.85)" />
+          </linearGradient>
+        </defs>
+        <circle cx="50%" cy="50%" r="45%" fill="url(#radarBackground)" />
+        <PolarGrid stroke="rgba(100, 116, 139, 0.3)" />
         <PolarAngleAxis 
           dataKey="category" 
           tick={{ fill: '#cbd5e1', fontSize: 14, fontWeight: 600 }}

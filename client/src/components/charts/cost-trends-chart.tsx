@@ -36,11 +36,16 @@ export default function CostTrendsChart() {
       >
         <defs>
           <pattern id="glassGrid" patternUnits="userSpaceOnUse" width="20" height="20">
-            <rect width="20" height="20" fill="transparent"/>
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="0.5"/>
+            <rect width="20" height="20" fill="rgba(15, 23, 42, 0.4)"/>
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.5"/>
           </pattern>
+          <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.95)" />
+            <stop offset="100%" stopColor="rgba(30, 41, 59, 0.85)" />
+          </linearGradient>
         </defs>
-        <CartesianGrid stroke="url(#glassGrid)" />
+        <rect width="100%" height="100%" fill="url(#chartBackground)" rx="8" />
+        <CartesianGrid stroke="rgba(100, 116, 139, 0.2)" strokeDasharray="2 2" />
         <XAxis 
           dataKey="month" 
           tick={{ 
