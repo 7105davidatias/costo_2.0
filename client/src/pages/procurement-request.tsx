@@ -8,14 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Info, Upload, Bot, Play, Download, Share, FileText, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import FileUpload from "@/components/ui/file-upload";
 import AIAnalysis from "@/components/procurement/ai-analysis";
-import WorkflowProgress from "@/components/ui/workflow-progress";
-import SpecsDisplay from "@/components/procurement/specs-display";
-import EstimationMethods from "@/components/procurement/estimation-methods";
-import { useMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 import { ProcurementRequest as ProcurementRequestType } from "@shared/schema";
 
 export default function ProcurementRequest() {
@@ -24,11 +19,8 @@ export default function ProcurementRequest() {
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
-  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const isMobile = useMobile();
 
-  const { data: request, isLoading: requestLoading } = useQuery<ProcurementRequestType>({
+  const { data: request, isLoading } = useQuery<ProcurementRequestType>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
   });
@@ -74,104 +66,6 @@ export default function ProcurementRequest() {
     setSelectedDocument(doc);
     setDocumentDialogOpen(true);
   };
-
-  const handleMethodToggle = useCallback((methodId: string) => {
-    setSelectedMethods(prev => 
-      prev.includes(methodId) 
-        ? prev.filter(id => id !== methodId)
-        : [...prev, methodId]
-    );
-  }, []);
-
-  const handleCreateEstimate = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // כאן תהיה הלוגיקה ליצירת אומדן
-      console.log('Creating estimate with methods:', selectedMethods);
-      
-      // סימולציה של תהליך
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // ניווט לדף אומדן עלות
-      window.location.href = `/cost-estimation/${id}`;
-    } catch (error) {
-      console.error('Error creating estimate:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedMethods, id]);
-
-  // נתוני שלבי התהליך
-  const workflowSteps = [
-    { id: 1, title: 'בקשה נוצרה', status: 'completed' as const, description: request?.createdAt ? new Date(request.createdAt).toLocaleDateString('he-IL') : '' },
-    { id: 2, title: 'מסמכים הועלו', status: (documents && Array.isArray(documents) && (documents as any[]).length > 0) ? 'completed' as const : 'pending' as const, description: documents && Array.isArray(documents) ? `${(documents as any[]).length} קבצים` : 'ממתין' },
-    { id: 3, title: 'ניתוח AI', status: (request?.status === 'processing' ? 'active' as const : (request?.status === 'completed' ? 'completed' as const : 'pending' as const)), description: request?.status === 'processing' ? 'בתהליך' : (request?.status === 'completed' ? 'הושלם' : 'ממתין') },
-    { id: 4, title: 'הערכת עלות', status: (request?.status === 'completed' ? 'completed' as const : 'pending' as const), description: request?.status === 'completed' ? 'הושלם' : 'ממתין' }
-  ];
-
-  // חישוב אחוז התקדמות
-  const completedSteps = workflowSteps.filter(step => step.status === 'completed').length;
-  const activeSteps = workflowSteps.filter(step => step.status === 'active').length;
-  const workflowProgress = ((completedSteps + (activeSteps * 0.5)) / workflowSteps.length) * 100;
-
-  // נתוני מפרטים לדוגמה
-  const procurementSpecs = [
-    { id: '1', label: 'כמות', value: '25 יחידות', type: 'essential' as const, category: 'quantity' as const, confidence: 100 },
-    { id: '2', label: 'מעבד', value: 'Intel Core i7-13700 (16 cores)', type: 'essential' as const, category: 'processor' as const, confidence: 95 },
-    { id: '3', label: 'זיכרון RAM', value: '32GB DDR4', type: 'essential' as const, category: 'memory' as const, confidence: 90 },
-    { id: '4', label: 'אחסון', value: '1TB NVMe SSD', type: 'essential' as const, category: 'storage' as const, confidence: 92 },
-    { id: '5', label: 'כרטיס גרפי', value: 'Intel UHD Graphics', type: 'advanced' as const, category: 'graphics' as const, confidence: 85 },
-    { id: '6', label: 'כרטיס רשת', value: 'Gigabit Ethernet', type: 'advanced' as const, category: 'network' as const, confidence: 88 },
-    { id: '7', label: 'אחריות', value: '3 שנות אחריות', type: 'advanced' as const, category: 'warranty' as const, confidence: 95 },
-    { id: '8', label: 'מערכת הפעלה', value: 'Windows 11 Pro', type: 'advanced' as const, category: 'os' as const, confidence: 93 },
-    { id: '9', label: 'גורם צורה', value: 'Desktop Tower', type: 'advanced' as const, category: 'form-factor' as const, confidence: 87 },
-    { id: '10', label: 'ספק כוח', value: '650W 80+ Gold', type: 'advanced' as const, category: 'power' as const, confidence: 80 }
-  ];
-
-  // נתוני שיטות אומדן
-  const estimationMethods = [
-    {
-      id: 'analogical',
-      title: 'אומדן אנלוגי',
-      description: 'השוואה לרכישות דומות שבוצעו בעבר עם התאמה למפרטים הנוכחיים',
-      compatibility: 92,
-      type: 'analogical' as const
-    },
-    {
-      id: 'parametric',
-      title: 'אומדן פרמטרי',
-      description: 'חישוב מבוסס נוסחאות מתמטיות ומאגר מחירים עדכני',
-      compatibility: 88,
-      type: 'parametric' as const
-    },
-    {
-      id: 'market-based',
-      title: 'אומדן מבוסס מחיר שוק',
-      description: 'ניתוח מחירי שוק נוכחיים מספקים מובילים וממוצעי תעשייה',
-      compatibility: 95,
-      type: 'market-based' as const
-    },
-    {
-      id: 'bottom-up',
-      title: 'אומדן מלמטה למעלה',
-      description: 'פירוק המוצר לרכיבים בסיסיים וחישוב עלות כל רכיב בנפרד',
-      compatibility: 75,
-      type: 'bottom-up' as const
-    },
-    {
-      id: 'expert-judgment',
-      title: 'שיפוט מומחה',
-      description: 'הערכה מבוססת ניסיון של מומחים בתחום ומאגר ידע מקצועי',
-      compatibility: 85,
-      type: 'expert-judgment' as const
-    }
-  ];
-
-  // עדכון השיטות עם סטטוס הבחירה
-  const estimationMethodsWithSelection = estimationMethods.map(method => ({
-    ...method,
-    selected: selectedMethods.includes(method.id)
-  }));
 
   const getDocumentContent = (doc: any) => {
     // Sample document content based on the document from the requirements
@@ -421,15 +315,12 @@ export default function ProcurementRequest() {
     return documentContents[doc.fileName] || "תוכן המסמך לא זמין להצגה";
   };
 
-  if (requestLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className={cn(
-          "grid gap-4 md:gap-8",
-          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
-        )}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div className="h-64 bg-muted rounded"></div>
               <div className="h-48 bg-muted rounded"></div>
@@ -474,13 +365,9 @@ export default function ProcurementRequest() {
   const statusConfig = getStatusBadge(request.status);
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
-        {/* Page Header */}
-        <div className={cn(
-          "flex items-center justify-between",
-          isMobile ? "flex-col space-y-2" : "flex-row"
-        )}>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="flex justify-between items-center">
         <div>
           <div className="flex items-center gap-4 mb-2">
             <Link href="/dashboard">
@@ -489,7 +376,7 @@ export default function ProcurementRequest() {
                 חזרה
               </Button>
             </Link>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center md:text-right">
+            <h1 className="text-3xl font-bold text-foreground">
               פרטי דרישת רכש - {request.requestNumber}
             </h1>
           </div>
@@ -511,18 +398,9 @@ export default function ProcurementRequest() {
         </div>
       </div>
 
-      {/* Workflow Progress */}
-      <WorkflowProgress 
-        steps={workflowSteps}
-        currentProgress={workflowProgress}
-      />
-
-        <div className={cn(
-          "grid gap-4 md:gap-8",
-          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
-        )}>
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
           <Card className="bg-card border-primary/20">
             <CardHeader>
@@ -581,7 +459,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && documents.length > 0 ? (
+              {documents && Array.isArray(documents) && documents.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -612,24 +490,9 @@ export default function ProcurementRequest() {
                     </div>
                   ))}
                 </div>
-              ) : null}
+              )}
             </CardContent>
           </Card>
-
-          {/* Specifications Display */}
-          <SpecsDisplay 
-            specs={procurementSpecs}
-            className="mb-6"
-          />
-
-          {/* Estimation Methods */}
-          <EstimationMethods
-            methods={estimationMethodsWithSelection}
-            onMethodToggle={handleMethodToggle}
-            onCreateEstimate={handleCreateEstimate}
-            isLoading={isLoading}
-            className="mb-6"
-          />
 
           {/* AI Analysis Results */}
           <AIAnalysis requestId={request.id} specifications={request.specifications} />
@@ -690,9 +553,9 @@ export default function ProcurementRequest() {
                 onClick={() => {
                   console.log('Market Research button clicked with ID:', id);
                   // Store the request ID in localStorage for context
-                  localStorage.setItem('currentRequestId', (id || '').toString());
+                  localStorage.setItem('currentRequestId', id.toString());
                   // Navigate directly with the ID in the URL
-                  window.location.href = `/market-research/${id || ''}`;
+                  window.location.href = `/market-research/${id}`;
                 }}
               >
                 <Bot className="w-4 h-4 ml-2" />
@@ -726,7 +589,7 @@ export default function ProcurementRequest() {
                   </div>
                 </div>
                 
-                {documents && Array.isArray(documents) && documents.length > 0 ? (
+                {documents && Array.isArray(documents) && documents.length > 0 && (
                   <div className="flex items-center space-x-reverse space-x-3">
                     <div className="w-3 h-3 bg-success rounded-full"></div>
                     <div>
@@ -736,7 +599,7 @@ export default function ProcurementRequest() {
                       </p>
                     </div>
                   </div>
-                ) : null}
+                )}
 
                 <div className="flex items-center space-x-reverse space-x-3">
                   <div className={`w-3 h-3 rounded-full ${request.status === 'processing' ? 'bg-warning animate-pulse' : 'bg-muted'}`}></div>
@@ -813,7 +676,6 @@ export default function ProcurementRequest() {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 }

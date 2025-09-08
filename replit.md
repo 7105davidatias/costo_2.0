@@ -132,16 +132,6 @@ The application uses a monorepo structure with shared TypeScript definitions, en
 
 ## Recent Changes (January 2024)
 
-### Latest Updates - שלב ב' ו-ג' (Progressive Disclosure + Mobile Optimization)
-✓ הוספת שיטת אומדן "מבוסס מחיר שוק" עם 95% התאמה
-✓ שיפור קומפוננט EstimationMethods עם 5 שיטות אומדן מקיפות
-✓ אופטימיזציה מלאה למובייל עם hook use-mobile ורספונסיביות מתקדמת
-✓ שיפור קומפוננט FileUpload עם אנימציות ופידבק חזותי משופר
-✓ הוספת Progressive Disclosure לקומפוננט SpecsDisplay
-✓ כל הקומפוננטים פועלים ללא שגיאות TypeScript
-
-## Recent Changes (January 2024)
-
 ✓ Complete MVP implementation with all four main modules functional
 ✓ Fixed all critical API endpoints and data loading issues
 ✓ Implemented comprehensive Hebrew RTL support with terminology preferences
@@ -149,5 +139,4 @@ The application uses a monorepo structure with shared TypeScript definitions, en
 ✓ Fixed chart colors for dark theme compatibility using bright colors: #60a5fa, #34d399, #fbbf24, #f87171
 ✓ Updated system title and terminology per user feedback
 ✓ Complete cost estimation results page with justification tables and action buttons
-✓ **Fixed cost estimation display bug** - Cost estimation page now properly loads existing estimations from procurement request cards instead of showing error message
 ✓ All critical bugs resolved and system ready for deployment
