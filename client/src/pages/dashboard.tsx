@@ -135,10 +135,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   סה"כ עלויות מוערכות
                 </p>
-                <p className="text-3xl font-bold neon-text-primary">
+                <p className="text-3xl font-bold text-slate-200">
                   {formatCurrency(dashboardStats.totalEstimatedCosts)}
                 </p>
                 <p className="text-success text-sm mt-2 flex items-center">
@@ -157,10 +157,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   חיסכון כולל
                 </p>
-                <p className="text-3xl font-bold neon-text-secondary">
+                <p className="text-3xl font-bold text-slate-200">
                   {formatCurrency(dashboardStats.totalSavings)}
                 </p>
                 <p className="text-success text-sm mt-2 flex items-center">
@@ -179,10 +179,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   זמן אספקה ממוצע
                 </p>
-                <p className="text-3xl font-bold neon-text-info">
+                <p className="text-3xl font-bold text-slate-200">
                   {dashboardStats.avgDeliveryTime} ימים
                 </p>
                 <p className="text-info text-sm mt-2 flex items-center">
@@ -201,10 +201,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   שביעות רצון ספקים
                 </p>
-                <p className="text-3xl font-bold neon-text-success">
+                <p className="text-3xl font-bold text-slate-200">
                   {dashboardStats.supplierSatisfactionScore.toFixed(1)}/5
                 </p>
                 <p className="text-success text-sm mt-2 flex items-center">
@@ -226,10 +226,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   דיוק אומדנים
                 </p>
-                <p className="text-3xl font-bold neon-text-warning">
+                <p className="text-3xl font-bold text-slate-200">
                   {dashboardStats.accuracyScore.toFixed(1)}%
                 </p>
               </div>
@@ -244,10 +244,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   דרישות פעילות
                 </p>
-                <p className="text-3xl font-bold neon-text-primary">
+                <p className="text-3xl font-bold text-slate-200">
                   {realTimeStats?.activeProcurements || 12}
                 </p>
               </div>
@@ -262,10 +262,10 @@ export default function Dashboard() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium neon-text-muted mb-2">
+                <p className="text-sm font-medium text-slate-400 mb-2">
                   ספקים פעילים
                 </p>
-                <p className="text-3xl font-bold neon-text-secondary">
+                <p className="text-3xl font-bold text-slate-200">
                   {realTimeStats?.totalSuppliers || 23}
                 </p>
               </div>
@@ -282,7 +282,7 @@ export default function Dashboard() {
         {/* Category Breakdown Pie Chart */}
         <Card className="chart-container">
           <CardHeader>
-            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+            <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <Package className="text-primary w-5 h-5" />
               <span>פילוח עלויות לפי קטגוריה</span>
             </CardTitle>
@@ -320,7 +320,7 @@ export default function Dashboard() {
         {/* Accuracy Trends Chart */}
         <Card className="chart-container">
           <CardHeader>
-            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+            <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <TrendingUp className="text-secondary w-5 h-5" />
               <span>מגמות דיוק אומדנים</span>
             </CardTitle>
@@ -466,7 +466,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <Card className="chart-container glass-panel">
           <CardHeader>
-            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+            <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <Bot className="text-primary w-5 h-5" />
               <span>ניתוח AI חכם</span>
             </CardTitle>
@@ -475,7 +475,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground mb-4">
               ניתוח נתונים מתקדם לצורך אופטימיזציה של תהליכי רכש.
             </p>
-            <Button variant="outline" className="neon-text-primary border-procurement-primary-neon/40">
+            <Button variant="outline" className="text-slate-200 border-blue-500/40">
               <Bot className="w-4 h-4 ml-2" />
               הפעל ניתוח AI
             </Button>
@@ -484,7 +484,7 @@ export default function Dashboard() {
 
         <Card className="chart-container glass-panel">
           <CardHeader>
-            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+            <CardTitle className="text-slate-200 text-xl flex items-center space-x-reverse space-x-2">
               <Target className="text-secondary w-5 h-5" />
               <span>שיטות אומדן מומלצות</span>
             </CardTitle>
@@ -494,7 +494,7 @@ export default function Dashboard() {
               הצגת שיטות אומדן יעילות בהתאם לנתוני השוק והדרישות.
             </p>
             <Link href="/estimation-methods">
-              <Button variant="outline" className="neon-text-secondary border-procurement-secondary-neon/40">
+              <Button variant="outline" className="text-slate-200 border-blue-500/40">
                 <FileText className="w-4 h-4 ml-2" />
                 לצפייה בשיטות
               </Button>
