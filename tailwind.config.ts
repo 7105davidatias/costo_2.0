@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -13,39 +14,61 @@ export default {
         'xl': '1280px',
         '2xl': '1536px',
       },
-      // צבעים מותאמים למערכת רכש
+      // צבעים מותאמים למערכת רכש עם glassmorphism
       colors: {
         procurement: {
           background: {
-            primary: '#1e293b',    // slate-800
-            card: '#334155',       // slate-700
-            hover: '#475569',      // slate-600
+            primary: 'hsl(220, 50%, 6%)',
+            card: 'rgba(15, 23, 42, 0.7)',
+            hover: 'rgba(15, 23, 42, 0.8)',
+            glass: 'rgba(15, 23, 42, 0.7)',
           },
           primary: {
-            blue: '#3b82f6',       // blue-500
-            'blue-hover': '#2563eb', // blue-600
-            'blue-light': '#60a5fa', // blue-400
+            neon: '#00ffff',
+            'neon-hover': '#00e6e6',
+            'neon-light': '#33ffff',
+            blue: '#3b82f6',
+            'blue-hover': '#2563eb',
+            'blue-light': '#60a5fa',
           },
           secondary: {
-            pink: '#ec4899',       // pink-500
-            'pink-hover': '#db2777', // pink-600
-            'pink-light': '#f472b6', // pink-400
+            neon: '#00ff88',
+            'neon-hover': '#00e673',
+            'neon-light': '#33ff99',
+            pink: '#ff0080',
+            'pink-hover': '#e6006b',
+            'pink-light': '#ff3399',
+          },
+          accent: {
+            yellow: '#ffaa00',
+            'yellow-hover': '#e69900',
+            'yellow-light': '#ffbb33',
           },
           success: {
-            green: '#10b981',      // emerald-500
-            'green-hover': '#059669', // emerald-600
-            'green-light': '#34d399', // emerald-400
+            green: '#10b981',
+            'green-hover': '#059669',
+            'green-light': '#34d399',
+            neon: '#00ff88',
           },
           warning: {
-            amber: '#f59e0b',      // amber-500
-            'amber-hover': '#d97706', // amber-600
-            'amber-light': '#fbbf24', // amber-400
+            amber: '#f59e0b',
+            'amber-hover': '#d97706',
+            'amber-light': '#fbbf24',
+            neon: '#ffaa00',
           },
           text: {
-            primary: '#ffffff',    // white
-            secondary: '#cbd5e1',  // slate-300
-            muted: '#94a3b8',      // slate-400
-            'muted-improved': '#cbd5e1', // slate-300 - שיפור נגישות
+            primary: '#e2e8f0',
+            secondary: '#cbd5e1',
+            muted: '#8892b0',
+            'neon-cyan': '#00ffff',
+            'neon-green': '#00ff88',
+            'neon-pink': '#ff0080',
+            'neon-yellow': '#ffaa00',
+          },
+          border: {
+            glass: 'rgba(59, 130, 246, 0.3)',
+            'glass-hover': 'rgba(0, 255, 255, 0.6)',
+            neon: '#00ffff',
           }
         },
         background: "var(--background)",
@@ -99,15 +122,15 @@ export default {
           ring: "var(--sidebar-ring)",
         },
       },
-      // גדלי טקסט עקביים
+      // גדלי טקסט עקביים עם נגישות משופרת
       fontSize: {
-        'procurement-xs': ['0.75rem', { lineHeight: '1rem' }],
-        'procurement-sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'procurement-base': ['1rem', { lineHeight: '1.5rem' }],
-        'procurement-lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'procurement-xl': ['1.25rem', { lineHeight: '1.75rem' }],
-        'procurement-2xl': ['1.5rem', { lineHeight: '2rem' }],
-        'procurement-3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        'procurement-xs': ['0.75rem', { lineHeight: '1.2rem' }],
+        'procurement-sm': ['0.875rem', { lineHeight: '1.35rem' }],
+        'procurement-base': ['1rem', { lineHeight: '1.6rem' }],
+        'procurement-lg': ['1.125rem', { lineHeight: '1.8rem' }],
+        'procurement-xl': ['1.25rem', { lineHeight: '1.9rem' }],
+        'procurement-2xl': ['1.5rem', { lineHeight: '2.2rem' }],
+        'procurement-3xl': ['1.875rem', { lineHeight: '2.5rem' }],
       },
       // מרווחים עקביים
       spacing: {
@@ -118,14 +141,26 @@ export default {
         'procurement-xl': '2rem',
         'procurement-2xl': '3rem',
       },
-      // רדיוסים
+      // רדיוסים לגלאסומורפיזם
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        'procurement-sm': '0.375rem',
-        'procurement-md': '0.5rem',
-        'procurement-lg': '0.75rem',
+        'procurement-sm': '0.5rem',
+        'procurement-md': '0.75rem',
+        'procurement-lg': '1rem',
+        'glass': '16px',
+      },
+      // אפקטי זכוכית
+      backdropBlur: {
+        'glass': '20px',
+        'glass-heavy': '25px',
+      },
+      boxShadow: {
+        'glass': '0 8px 32px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        'glass-hover': '0 12px 40px rgba(15, 23, 42, 0.6), 0 0 20px rgba(0, 255, 255, 0.3)',
+        'neon': '0 0 20px rgba(0, 255, 255, 0.3)',
+        'neon-strong': '0 0 30px rgba(0, 255, 255, 0.5)',
       },
       keyframes: {
         "accordion-down": {
@@ -144,10 +179,39 @@ export default {
             height: "0",
           },
         },
+        "glass-float": {
+          "0%, 100%": {
+            transform: "translateY(0px)",
+          },
+          "50%": {
+            transform: "translateY(-5px)",
+          },
+        },
+        "neon-glow": {
+          "0%, 100%": {
+            textShadow: "0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff",
+          },
+          "50%": {
+            textShadow: "0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff",
+          },
+        },
+        "pulse-glow": {
+          "0%, 100%": {
+            opacity: "1",
+            boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)",
+          },
+          "50%": {
+            opacity: "0.8",
+            boxShadow: "0 0 30px rgba(0, 255, 255, 0.5)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "glass-float": "glass-float 6s ease-in-out infinite",
+        "neon-glow": "neon-glow 3s ease-in-out infinite alternate",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
     },
   },

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle, Clock, Users, Package } from "lucide-react";
+import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle, Clock, Users, Package, FileText, Target } from "lucide-react";
 import CostTrendsChart from "@/components/charts/cost-trends-chart";
 import AccuracyChart from "@/components/charts/accuracy-chart";
 import { Link } from "wouter";
@@ -26,6 +26,8 @@ interface DashboardStats {
   categoryBreakdown: { category: string; amount: number; color: string }[];
   accuracyTrends: { month: string; accuracy: number }[];
   supplierPerformance: { supplier: string; rating: number; orders: number; avgDeliveryTime: number }[];
+  requestsCount?: number; // Added for new KPI
+  avgConfidence?: number; // Added for new KPI
 }
 
 interface RealTimeStats {
@@ -36,6 +38,11 @@ interface RealTimeStats {
   totalSuppliers: number;
   avgResponseTime: number;
 }
+
+// Placeholder components for charts that were not provided
+const PriceTrackingChart = () => <div className="text-center text-muted-foreground">Price Tracking Chart Placeholder</div>;
+const SupplierChart = () => <div className="text-center text-muted-foreground">Supplier Chart Placeholder</div>;
+
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
@@ -78,100 +85,123 @@ export default function Dashboard() {
   };
 
   // Category colors for pie chart
-  const CATEGORY_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
+  const CATEGORY_COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#0088FE', '#82CA9D', '#FFC658', '#FF7C7C'];
+
+  // Mock data for KPIs if stats is not yet available
+  const dashboardStats = stats || {
+    totalEstimatedCosts: 4250000,
+    totalSavings: 361250,
+    risingCosts: 150000,
+    accuracyScore: 91.2,
+    recentRequests: [],
+    costTrends: [],
+    accuracyBreakdown: [],
+    avgSavingsPercentage: 8.5,
+    avgDeliveryTime: 45,
+    supplierSatisfactionScore: 4.6,
+    categoryBreakdown: [],
+    accuracyTrends: [],
+    supplierPerformance: [],
+    requestsCount: 50, // Mock value
+    avgConfidence: 92.5 // Mock value
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-8">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">לוח בקרה מתקדם</h1>
-          <p className="text-muted-foreground">סקירה מקיפה של פעילות הרכש והערכות העלויות עם נתונים בזמן אמת</p>
-        </div>
-        <Link href="/procurement-request">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="w-4 h-4 ml-2" />
-            אומדן חדש
-          </Button>
-        </Link>
+      <div className="text-center glass-panel p-8 animate-glass-float">
+        <h1 className="text-4xl font-bold neon-text-primary mb-4 animate-neon-glow">
+          מערכת ניהול אומדני עלויות רכש
+        </h1>
+        <p className="text-lg neon-text-muted">
+          ניתוח ואומדן עלויות מתקדם עם בינה מלאכותית
+        </p>
       </div>
 
       {/* Primary KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-card border-primary/20 card-hover dashboard-kpi-card">
-          <CardContent className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">סכום כולל אומדנים</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {stats ? formatCurrency(stats.totalEstimatedCosts) : formatCurrency(4250000)}
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  סה"כ עלויות מוערכות
                 </p>
-                <p className="text-success text-sm mt-1 flex items-center">
+                <p className="text-3xl font-bold neon-text-primary">
+                  {formatCurrency(dashboardStats.totalEstimatedCosts)}
+                </p>
+                <p className="text-success text-sm mt-2 flex items-center">
                   <TrendingUp className="w-3 h-3 ml-1" />
                   +12.5% מהחודש הקודם
                 </p>
               </div>
-              <div className="bg-primary/20 p-3 rounded-lg">
-                <Calculator className="text-primary w-6 h-6" />
+              <div className="h-16 w-16 rounded-full bg-procurement-primary-neon/20 flex items-center justify-center border border-procurement-primary-neon/40 pulse-neon">
+                <Calculator className="h-8 w-8 text-procurement-primary-neon" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-secondary/20 card-hover dashboard-kpi-card">
-          <CardContent className="p-6">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">חיסכון ממוצע</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {stats?.avgSavingsPercentage ? `${stats.avgSavingsPercentage.toFixed(1)}%` : '8.5%'}
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  חיסכון כולל
                 </p>
-                <p className="text-success text-sm mt-1 flex items-center">
+                <p className="text-3xl font-bold neon-text-secondary">
+                  {formatCurrency(dashboardStats.totalSavings)}
+                </p>
+                <p className="text-success text-sm mt-2 flex items-center">
                   <PiggyBank className="w-3 h-3 ml-1" />
-                  {stats ? formatCurrency(stats.totalSavings) : formatCurrency(361250)}
+                  {dashboardStats.avgSavingsPercentage.toFixed(1)}%
                 </p>
               </div>
-              <div className="bg-secondary/20 p-3 rounded-lg">
+              <div className="h-16 w-16 rounded-full bg-procurement-secondary-neon/20 flex items-center justify-center border border-procurement-secondary-neon/40 pulse-neon">
                 <Coins className="text-secondary w-6 h-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-info/20 card-hover dashboard-kpi-card">
-          <CardContent className="p-6">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">זמן אספקה ממוצע</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {stats?.avgDeliveryTime ? `${stats.avgDeliveryTime} ימים` : '45 ימים'}
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  זמן אספקה ממוצע
                 </p>
-                <p className="text-info text-sm mt-1 flex items-center">
+                <p className="text-3xl font-bold neon-text-info">
+                  {dashboardStats.avgDeliveryTime} ימים
+                </p>
+                <p className="text-info text-sm mt-2 flex items-center">
                   <Clock className="w-3 h-3 ml-1" />
                   שיפור של 3 ימים
                 </p>
               </div>
-              <div className="bg-info/20 p-3 rounded-lg">
+              <div className="h-16 w-16 rounded-full bg-procurement-info-neon/20 flex items-center justify-center border border-procurement-info-neon/40 pulse-neon">
                 <Package className="text-info w-6 h-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-success/20 card-hover dashboard-kpi-card">
-          <CardContent className="p-6">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">שביעות רצון ספקים</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {stats?.supplierSatisfactionScore ? `${stats.supplierSatisfactionScore.toFixed(1)}/5` : '4.6/5'}
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  שביעות רצון ספקים
                 </p>
-                <p className="text-success text-sm mt-1 flex items-center">
+                <p className="text-3xl font-bold neon-text-success">
+                  {dashboardStats.supplierSatisfactionScore.toFixed(1)}/5
+                </p>
+                <p className="text-success text-sm mt-2 flex items-center">
                   <CheckCircle className="w-3 h-3 ml-1" />
                   מעל הממוצע התעשייתי
                 </p>
               </div>
-              <div className="bg-success/20 p-3 rounded-lg">
+              <div className="h-16 w-16 rounded-full bg-procurement-success-neon/20 flex items-center justify-center border border-procurement-success-neon/40 pulse-neon">
                 <Users className="text-success w-6 h-6" />
               </div>
             </div>
@@ -180,50 +210,56 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-card border-warning/20 card-hover">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">דיוק אומדנים</p>
-                <p className="text-xl font-bold text-foreground">
-                  {stats ? `${stats.accuracyScore.toFixed(1)}%` : '91.2%'}
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  דיוק אומדנים
+                </p>
+                <p className="text-3xl font-bold neon-text-warning">
+                  {dashboardStats.accuracyScore.toFixed(1)}%
                 </p>
               </div>
-              <div className="bg-warning/20 p-2 rounded-lg">
-                <Bot className="text-warning w-5 h-5" />
+              <div className="h-16 w-16 rounded-full bg-procurement-warning-neon/20 flex items-center justify-center border border-procurement-warning-neon/40 pulse-neon">
+                <Bot className="text-warning w-6 h-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-primary/20 card-hover">
-          <CardContent className="p-4">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">דרישות פעילות</p>
-                <p className="text-xl font-bold text-foreground">
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  דרישות פעילות
+                </p>
+                <p className="text-3xl font-bold neon-text-primary">
                   {realTimeStats?.activeProcurements || 12}
                 </p>
               </div>
-              <div className="bg-primary/20 p-2 rounded-lg">
-                <TrendingUp className="text-primary w-5 h-5" />
+              <div className="h-16 w-16 rounded-full bg-procurement-primary-neon/20 flex items-center justify-center border border-procurement-primary-neon/40 pulse-neon">
+                <TrendingUp className="text-primary w-6 h-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-secondary/20 card-hover">
-          <CardContent className="p-4">
+        <Card className="dashboard-kpi-card">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">ספקים פעילים</p>
-                <p className="text-xl font-bold text-foreground">
+                <p className="text-sm font-medium neon-text-muted mb-2">
+                  ספקים פעילים
+                </p>
+                <p className="text-3xl font-bold neon-text-secondary">
                   {realTimeStats?.totalSuppliers || 23}
                 </p>
               </div>
-              <div className="bg-secondary/20 p-2 rounded-lg">
-                <Users className="text-secondary w-5 h-5" />
+              <div className="h-16 w-16 rounded-full bg-procurement-secondary-neon/20 flex items-center justify-center border border-procurement-secondary-neon/40 pulse-neon">
+                <Users className="text-secondary w-6 h-6" />
               </div>
             </div>
           </CardContent>
@@ -233,19 +269,19 @@ export default function Dashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Category Breakdown Pie Chart */}
-        <Card className="bg-card border-primary/20">
+        <Card className="chart-container">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-reverse space-x-2">
+            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
               <Package className="text-primary w-5 h-5" />
               <span>פילוח עלויות לפי קטגוריה</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="chart-container" style={{ height: '300px' }}>
+            <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={stats?.categoryBreakdown || [
+                    data={dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
                       { category: 'ציוד מחשוב', amount: 1200000, color: '#0088FE' },
                       { category: 'שירותים', amount: 950000, color: '#00C49F' },
                       { category: 'רכבים', amount: 850000, color: '#FFBB28' },
@@ -259,7 +295,7 @@ export default function Dashboard() {
                     dataKey="amount"
                     label={({ category, amount }) => `${category}: ${formatCurrency(amount)}`}
                   >
-                    {(stats?.categoryBreakdown || []).map((entry, index) => (
+                    {(dashboardStats?.categoryBreakdown || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
                     ))}
                   </Pie>
@@ -271,17 +307,17 @@ export default function Dashboard() {
         </Card>
 
         {/* Accuracy Trends Chart */}
-        <Card className="bg-card border-secondary/20">
+        <Card className="chart-container">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-reverse space-x-2">
+            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
               <TrendingUp className="text-secondary w-5 h-5" />
               <span>מגמות דיוק אומדנים</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="chart-container" style={{ height: '300px' }}>
+            <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats?.accuracyTrends || [
+                <BarChart data={dashboardStats?.accuracyTrends.length > 0 ? dashboardStats.accuracyTrends : [
                   { month: 'ינואר', accuracy: 89 },
                   { month: 'פברואר', accuracy: 91 },
                   { month: 'מרץ', accuracy: 88 },
@@ -302,17 +338,17 @@ export default function Dashboard() {
       </div>
 
       {/* Supplier Performance Chart */}
-      <Card className="bg-card border-info/20">
+      <Card className="chart-container">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-reverse space-x-2">
+          <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
             <Users className="text-info w-5 h-5" />
             <span>ביצועי ספקים מובילים</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="chart-container" style={{ height: '300px' }}>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.supplierPerformance || [
+              <BarChart data={dashboardStats?.supplierPerformance.length > 0 ? dashboardStats.supplierPerformance : [
                 { supplier: 'Dell Technologies', rating: 4.7, orders: 15, avgDeliveryTime: 12 },
                 { supplier: 'TechSource', rating: 4.8, orders: 12, avgDeliveryTime: 8 },
                 { supplier: 'אלקטרה', rating: 4.5, orders: 8, avgDeliveryTime: 35 },
@@ -334,16 +370,16 @@ export default function Dashboard() {
       </Card>
 
       {/* Cost Trends Chart */}
-      <Card className="bg-card border-primary/20">
+      <Card className="chart-container">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-reverse space-x-2">
+          <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
             <TrendingUp className="text-primary w-5 h-5" />
             <span>מגמת עלות חזויה לאורך זמן</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="chart-container">
-            <CostTrendsChart data={stats?.costTrends || []} />
+          <div className="h-80">
+            <CostTrendsChart />
           </div>
         </CardContent>
       </Card>
@@ -372,7 +408,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted/20">
-                {stats?.recentRequests?.slice(0, 10).map((request) => {
+                {(stats?.recentRequests || []).slice(0, 10).map((request) => {
                   const statusConfig = getStatusBadge(request.status);
                   return (
                     <tr key={request.id} className="hover:bg-muted/10">

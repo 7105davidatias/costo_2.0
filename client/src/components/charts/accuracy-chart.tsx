@@ -1,63 +1,90 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-interface AccuracyChartProps {
-  data: { label: string; value: number }[];
-}
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function AccuracyChart({ data }: AccuracyChartProps) {
-  const COLORS = [
-    '#34d399',
-    '#fbbf24',
-    '#f87171',
-  ];
+const data = [
+  { method: 'תלת נקודות', accuracy: 85, requests: 12 },
+  { method: 'מבוסס זמן', accuracy: 92, requests: 8 },
+  { method: 'השוואתי', accuracy: 78, requests: 15 },
+  { method: 'מבוסס שוק', accuracy: 88, requests: 10 },
+  { method: 'AI משולב', accuracy: 94, requests: 6 },
+];
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
-          <p className="text-foreground font-medium">{payload[0].name}</p>
-          <p className="text-primary">{`${payload[0].value}%`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomLegend = ({ payload }: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
     return (
-      <div className="flex flex-col items-center space-y-2 mt-4" dir="rtl">
+      <div className="glass-panel p-4 border border-procurement-border-glass rounded-lg shadow-glass">
+        <p className="neon-text-primary font-semibold mb-2">{`${label}`}</p>
         {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center space-x-reverse space-x-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm text-white">{entry.value}</span>
-          </div>
+          <p key={index} className="text-procurement-text-primary text-sm" style={{ color: entry.color }}>
+            {entry.dataKey === 'accuracy' 
+              ? `דיוק: ${entry.value}%`
+              : `מספר דרישות: ${entry.value}`
+            }
+          </p>
         ))}
       </div>
     );
-  };
+  }
+  return null;
+};
 
+export default function AccuracyChart() {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={100}
-          paddingAngle={5}
-          dataKey="value"
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
+      <BarChart
+        data={data}
+        margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+        style={{ direction: 'rtl' }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.2)" />
+        <XAxis 
+          dataKey="method" 
+          tick={{ 
+            fill: '#8892b0', 
+            fontSize: 11,
+            fontWeight: 500,
+          }}
+          stroke="rgba(59, 130, 246, 0.3)"
+          angle={-45}
+          textAnchor="end"
+          height={60}
+          interval={0}
+        />
+        <YAxis 
+          tick={{ 
+            fill: '#8892b0', 
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+          stroke="rgba(59, 130, 246, 0.3)"
+          domain={[70, 100]}
+          tickFormatter={(value) => `${value}%`}
+        />
         <Tooltip content={<CustomTooltip />} />
-        <Legend content={<CustomLegend />} />
-      </PieChart>
+        <Legend 
+          wrapperStyle={{ 
+            direction: 'rtl', 
+            textAlign: 'right',
+            paddingTop: '15px'
+          }}
+        />
+        <Bar 
+          dataKey="accuracy" 
+          fill="#00ffff"
+          name="דיוק (%)"
+          radius={[4, 4, 0, 0]}
+          stroke="#00ffff"
+          strokeWidth={1}
+        />
+        <Bar 
+          dataKey="requests" 
+          fill="#ff0080"
+          name="מספר דרישות"
+          radius={[4, 4, 0, 0]}
+          stroke="#ff0080"
+          strokeWidth={1}
+        />
+      </BarChart>
     </ResponsiveContainer>
   );
 }
