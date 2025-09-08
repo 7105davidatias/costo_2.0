@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage, MemStorage } from "./storage";
+import { storage } from "./storage";
 import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema } from "@shared/schema";
-import { PricingEngine, initializePricingEngine, type EstimationRequest } from "@shared/pricing-engine";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -27,18 +26,6 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize pricing engine with data from storage
-  let pricingEngine: PricingEngine;
-
-  const initializePricingEngineData = async () => {
-    const categories = await storage.getProcurementCategories();
-    const historical = await storage.getHistoricalProcurements();
-    const suppliers = await storage.getSupplierPerformance();
-    pricingEngine = initializePricingEngine(categories, historical, suppliers);
-  };
-
-  await initializePricingEngineData();
-
   // Procurement Requests
   app.get("/api/procurement-requests", async (req, res) => {
     try {
@@ -179,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         }
       });
-
+      
       res.status(201).json(estimation);
     } catch (error) {
       res.status(400).json({ message: "Invalid estimation data", error });
@@ -212,23 +199,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.id);
       const request = await storage.getProcurementRequest(requestId);
-
+      
       if (!request) {
         return res.status(404).json({ message: 'Procurement request not found' });
       }
-
+      
       // Helper function to determine request type
       const determineRequestType = (request: any) => {
         const description = request.itemName?.toLowerCase() || '';
         const category = request.category?.toLowerCase() || '';
-
+        
         // Check if it's services based on keywords
         if (description.includes('שירות') || description.includes('יעוץ') || 
             description.includes('תמיכה') || description.includes('פיתוח') ||
             category.includes('שירות') || category.includes('יעוץ')) {
           return 'services';
         }
-
+        
         return 'products';
       };
 
@@ -236,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const getComplexityScore = (request: any) => {
         const quantity = parseInt(request.quantity) || 1;
         const descLength = request.itemName?.length || 0;
-
+        
         if (quantity > 100 || descLength > 100) return 'high';
         if (quantity > 10 || descLength > 50) return 'medium';
         return 'low';
@@ -250,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const getDataAvailability = (request: any) => {
         const hasCategory = request.category && request.category.length > 0;
         const hasSpecs = request.specifications && request.specifications.length > 0;
-
+        
         if (hasCategory && hasSpecs) return 'high';
         if (hasCategory || hasSpecs) return 'medium';
         return 'low';
@@ -258,64 +245,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Determine request type based on category or item description
       const requestType = determineRequestType(request);
-
-      // Unified estimation methods for all types with consistent naming
-      let methods = [
-        {
-          id: 'market-based',
-          method: 'אומדן מבוסס מחיר שוק',
-          suitability: 95,
-          description: 'מתאים לפריטים סטנדרטיים עם מחירי שוק זמינים',
-          explanation: 'שיטה זו מתבססת על מחירי שוק נוכחיים, הצעות ספקים ונתוני תמחור בזמן אמת',
-          accuracy: 95,
-          confidence: 95
-        },
-        {
-          id: 'bottom-up',
-          method: 'אומדן מלמטה למעלה',
-          suitability: 90,
-          description: 'מתאים לפריטים מורכבים הניתנים לפירוק לרכיבים',
-          explanation: 'שיטה זו מפרקת את הרכש לרכיבים קטנים ומעריכה כל רכיב בנפרד',
-          accuracy: 90,
-          confidence: 90
-        },
-        {
-          id: 'analogous',
-          method: 'אומדן אנלוגי',
-          suitability: 85,
-          description: 'מתאים לרכש דומה שבוצע בעבר',
-          explanation: 'שיטה זו מתבססת על נתוני עלות מרכישות דומות שבוצעו בעבר עם התאמות לתנאים נוכחיים',
-          accuracy: 85,
-          confidence: 85
-        },
-        {
-          id: 'parametric',
-          method: 'אומדן פרמטרי',
-          suitability: 80,
-          description: 'מתאים לרכש עם פרמטרים מדידים וקשר סטטיסטי ידוע',
-          explanation: 'שיטה זו משתמשת במודלים מתמטיים המבוססים על פרמטרים מדידים',
-          accuracy: 80,
-          confidence: 80
-        },
-        {
-          id: 'expert-judgment',
-          method: 'אומדן ממומחים',
-          suitability: 75,
-          description: 'מתאים לרכש חדש או מורכב ללא נתונים היסטוריים',
-          explanation: 'שיטה זו מתבססת על הערכת מומחים בתחום הרלוונטי ובנצ\'מרקים תעשייתיים',
-          accuracy: 75,
-          confidence: 75
-        }
-      ];
-
-      // Adjust suitability based on request characteristics
+      
+      let methods = [];
+      
       if (requestType === 'services') {
-        // For services, expert judgment and parametric are more suitable
-        methods.find(m => m.id === 'expert-judgment')!.suitability = 88;
-        methods.find(m => m.id === 'parametric')!.suitability = 85;
-        methods.find(m => m.id === 'market-based')!.suitability = 75;
+        methods = [
+          {
+            id: 'time_based',
+            method: 'אומדן מבוסס זמן עבודה',
+            suitability: 85,
+            description: 'מתאים לשירותים עם הגדרה ברורה של שעות עבודה',
+            explanation: 'שיטה זו מתבססת על הערכת כמות שעות העבודה הנדרשות וכפלתן בתעריף שעתי'
+          },
+          {
+            id: 'deliverable_based',
+            method: 'אומדן מבוסס תוצרים',
+            suitability: 70,
+            description: 'מתאים לשירותים עם תוצרים מוגדרים בבירור',
+            explanation: 'שיטה זו מתבססת על הגדרת תוצרים ספציפיים ותמחור כל תוצר בנפרד'
+          },
+          {
+            id: 'value_based',
+            method: 'אומדן מבוסס ערך',
+            suitability: 60,
+            description: 'מתאים לשירותים אסטרטגיים בעלי ערך עסקי גבוה',
+            explanation: 'שיטה זו מתבססת על הערך העסקי הצפוי מהשירות'
+          },
+          {
+            id: 'three_point',
+            method: 'אומדן שלוש נקודות',
+            suitability: 92,
+            description: 'מתאים לשירותים מורכבים עם רמת אי-ודאות גבוהה',
+            explanation: 'שיטה זו משתמשת בשלושה אומדנים: אופטימי, פסימי וסביר ביותר'
+          }
+        ];
+      } else {
+        methods = [
+          {
+            id: 'analogous',
+            method: 'אומדן אנלוגי',
+            suitability: 85,
+            description: 'מתאים לרכש דומה שבוצע בעבר',
+            explanation: 'שיטה זו מתבססת על נתוני עלות מרכישות דומות שבוצעו בעבר'
+          },
+          {
+            id: 'parametric',
+            method: 'אומדן פרמטרי',
+            suitability: 70,
+            description: 'מתאים לרכש עם פרמטרים מדידים וקשר סטטיסטי ידוע',
+            explanation: 'שיטה זו משתמשת במודלים מתמטיים המבוססים על פרמטרים מדידים'
+          },
+          {
+            id: 'bottom_up',
+            method: 'אומדן מלמטה למעלה',
+            suitability: 78,
+            description: 'מתאים לרכש מורכב הניתן לפירוק לרכיבים',
+            explanation: 'שיטה זו מפרקת את הרכש לרכיבים קטנים ומעריכה כל רכיב בנפרד'
+          },
+          {
+            id: 'market_based',
+            method: 'אומדן מבוסס מחיר שוק',
+            suitability: 88,
+            description: 'מתאים לרכש סטנדרטי עם מחירי שוק זמינים',
+            explanation: 'שיטה זו מתבססת על מחירי שוק נוכחיים ומגמות מחירים'
+          }
+        ];
       }
-
+      
       res.json({
         requestId: requestId,
         requestType: requestType,
@@ -336,25 +332,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { requestId, selectedMethods } = req.body;
       const request = await storage.getProcurementRequest(requestId);
-
+      
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-
+      
       let methodResults = [];
       let totalWeightedEstimate = 0;
       let totalWeight = 0;
-
+      
       for (const methodId of selectedMethods) {
         const result = calculateByMethod(methodId, request);
         methodResults.push(result);
         totalWeightedEstimate += result.estimate * result.weight;
         totalWeight += result.weight;
       }
-
+      
       const finalEstimate = totalWeightedEstimate / totalWeight;
       const overallConfidence = calculateOverallConfidence(methodResults);
-
+      
       res.json({
         requestId: requestId,
         requestDetails: {
@@ -413,7 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const document = await storage.createDocument(documentData);
-
+      
       // Simulate AI analysis after a delay
       setTimeout(async () => {
         await storage.updateDocument(document.id, {
@@ -448,14 +444,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-
+      
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-
+      
       // Generate contextual market research
       const marketResearch = generateContextualMarketResearch(request);
-
+      
       res.json({
         requestId: requestId,
         requestDetails: {
@@ -503,17 +499,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-
+      
       if (!request) {
         return res.status(404).json({ error: 'דרישת רכש לא נמצאה' });
       }
-
+      
       // Simulate AI processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
-
+      
       // Generate contextual AI analysis based on request type
       const contextualAnalysis = generateContextualAIAnalysis(request);
-
+      
       const analysisResults = {
         status: "completed",
         confidence: contextualAnalysis.confidence || 94,
@@ -547,7 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const extractedData = await storage.getExtractedData(id);
-
+      
       if (extractedData) {
         res.json({
           success: true,
@@ -576,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.clearExtractedData(id);
-
+      
       res.json({
         success: true,
         message: "נתונים שחולצו נמחקו בהצלחה"
@@ -594,8 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requests = await storage.getProcurementRequests();
       const estimations = await storage.getCostEstimations();
-      const suppliers = await storage.getSupplierPerformance();
-
+      
       const totalEstimatedCosts = estimations.reduce((sum, est) => sum + parseFloat(est.totalCost), 0);
       const totalSavings = estimations.reduce((sum, est) => sum + (est.potentialSavings ? parseFloat(est.potentialSavings) : 0), 0);
       const avgConfidence = estimations.length > 0 ? 
@@ -605,70 +600,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         est.marketPrice && parseFloat(est.totalCost) > parseFloat(est.marketPrice) * 0.9
       ).length;
 
-      // Calculate new KPIs
-      const avgSavingsPercentage = totalEstimatedCosts > 0 ? (totalSavings / totalEstimatedCosts) * 100 : 8.5;
-      const avgDeliveryTime = suppliers.length > 0 ? 
-        suppliers.reduce((sum, s) => sum + s.avgDeliveryTime, 0) / suppliers.length : 45;
-      const supplierSatisfactionScore = suppliers.length > 0 ?
-        suppliers.reduce((sum, s) => sum + s.rating, 0) / suppliers.length : 4.6;
-
-      // Category breakdown based on actual requests
-      const categoryBreakdown = requests.reduce((acc, req) => {
-        const category = req.category || 'אחר';
-        const cost = parseFloat(req.estimatedCost || '0');
-        const existing = acc.find(c => c.category === category);
-
-        if (existing) {
-          existing.amount += cost;
-        } else {
-          acc.push({
-            category,
-            amount: cost,
-            color: '#0088FE'
-          });
-        }
-        return acc;
-      }, [] as any[]).sort((a, b) => b.amount - a.amount).slice(0, 8);
-
-      // Supplier performance based on actual data
-      const supplierPerformance = suppliers.slice(0, 5).map(supplier => ({
-        supplier: supplier.supplierName,
-        rating: supplier.rating,
-        orders: 8 + Math.floor(Math.random() * 10), // Simulated order count
-        avgDeliveryTime: supplier.avgDeliveryTime
-      }));
-
       const stats = {
-        totalEstimatedCosts: totalEstimatedCosts || 4250000,
-        totalSavings: totalSavings || 361250,
-        risingCosts: risingCosts * 25000,
-        accuracyScore: avgConfidence || 91.2,
-        avgSavingsPercentage,
-        avgDeliveryTime,
-        supplierSatisfactionScore,
-        categoryBreakdown: categoryBreakdown.length > 0 ? categoryBreakdown : [
-          { category: 'ציוד מחשוב', amount: 1200000, color: '#0088FE' },
-          { category: 'שירותים', amount: 950000, color: '#00C49F' },
-          { category: 'רכבים', amount: 850000, color: '#FFBB28' },
-          { category: 'ריהוט', amount: 650000, color: '#FF8042' },
-          { category: 'תחזוקה', amount: 600000, color: '#8884D8' }
-        ],
-        supplierPerformance: supplierPerformance.length > 0 ? supplierPerformance : [
-          { supplier: 'Dell Technologies', rating: 4.7, orders: 15, avgDeliveryTime: 12 },
-          { supplier: 'TechSource', rating: 4.8, orders: 12, avgDeliveryTime: 8 },
-          { supplier: 'אלקטרה', rating: 4.5, orders: 8, avgDeliveryTime: 35 },
-          { supplier: 'ריהוט ישראלי', rating: 4.6, orders: 6, avgDeliveryTime: 21 },
-          { supplier: 'מטריקס IT', rating: 4.4, orders: 10, avgDeliveryTime: 7 }
-        ],
-        accuracyTrends: [
-          { month: 'ינואר', accuracy: 89 },
-          { month: 'פברואר', accuracy: 91 },
-          { month: 'מרץ', accuracy: 88 },
-          { month: 'אפריל', accuracy: 93 },
-          { month: 'מאי', accuracy: 90 },
-          { month: 'יוני', accuracy: 95 }
-        ],
-        recentRequests: requests.slice(-10).reverse(), // Show last 10 requests, most recent first
+        totalEstimatedCosts,
+        totalSavings,
+        risingCosts: risingCosts * 25000, // Mock calculation
+        accuracyScore: avgConfidence,
+        recentRequests: requests.slice(-5),
         costTrends: [
           { month: "ינואר", cost: 1800000 },
           { month: "פברואר", cost: 2100000 },
@@ -690,54 +627,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Real-time dashboard statistics
-  app.get("/api/dashboard/realtime", async (req, res) => {
-    try {
-      const requests = await storage.getProcurementRequests();
-      const estimations = await storage.getCostEstimations();
-      const suppliers = await storage.getSupplierPerformance();
-
-      const activeProcurements = requests.filter(r => r.status === 'processing' || r.status === 'new').length;
-      const completedProcurements = requests.filter(r => r.status === 'completed').length;
-      const pendingApprovals = requests.filter(r => r.status === 'new').length;
-      const totalBudget = estimations.reduce((sum, est) => sum + parseFloat(est.totalCost), 0);
-      const avgResponseTime = suppliers.length > 0 ? 
-        suppliers.reduce((sum, s) => sum + s.responseTime, 0) / suppliers.length : 18;
-
-      const realTimeStats = {
-        totalBudget: totalBudget || 4250000,
-        completedProcurements,
-        activeProcurements,
-        pendingApprovals,
-        totalSuppliers: suppliers.length || 23,
-        avgResponseTime: Math.round(avgResponseTime)
-      };
-
-      res.json(realTimeStats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch real-time statistics" });
-    }
-  });
-
   // Generate cost estimation endpoint
   app.post("/api/generate-cost-estimation/:requestId", async (req, res) => {
     try {
       const requestId = parseInt(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
-
+      
       if (!request) {
         return res.status(404).json({ message: "Procurement request not found" });
       }
 
       // Simulate AI cost estimation calculation
       await new Promise(resolve => setTimeout(resolve, 3000));
-
+      
       const basePrice = request.quantity * 55000; // Base price per unit
       const tax = Math.round(basePrice * 0.17); // 17% VAT
       const shippingCost = 2400;
       const discountAmount = Math.round(basePrice * 0.08); // 8% volume discount
       const totalCost = basePrice + tax + shippingCost - discountAmount;
-
+      
       const estimationData = {
         procurementRequestId: requestId,
         totalCost: totalCost.toString(),
@@ -794,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const estimation = await storage.createCostEstimation(estimationData);
-
+      
       // Update request with estimated cost
       await storage.updateProcurementRequest(requestId, {
         estimatedCost: totalCost.toString(),
@@ -813,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin reset endpoint called');
       const result = await storage.resetAllRequestsStatus();
       console.log('Reset result:', result);
-
+      
       res.json({
         success: true,
         message: 'סטטוס דרישות אופס בהצלחה לצורך הדגמה',
@@ -834,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requests = await storage.getProcurementRequests();
       const statusSummary: { [key: string]: number } = {};
-
+      
       requests.forEach(request => {
         statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
       });
@@ -858,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin reset cost estimations endpoint called');
       const result = await storage.resetAllCostEstimations();
       console.log('Reset cost estimations result:', result);
-
+      
       res.json({
         success: true,
         message: 'אומדני עלויות אופסו בהצלחה לצורך הדגמה',
@@ -878,11 +786,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/reset-all-demo-data", async (req, res) => {
     try {
       console.log('Admin reset all demo data endpoint called');
-
+      
       // Reset both requests status and cost estimations
       const requestsResult = await storage.resetAllRequestsStatus();
       const estimationsResult = await storage.resetAllCostEstimations();
-
+      
       res.json({
         success: true,
         message: 'כל נתוני ההדגמה אופסו בהצלחה',
@@ -910,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const estimationId = parseInt(req.params.id);
       const estimation = await storage.getCostEstimation(estimationId);
-
+      
       if (!estimation) {
         return res.status(404).json({ 
           success: false, 
@@ -925,7 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           request.estimatedCost = estimation.totalCost;
           request.status = 'completed';
           request.updatedAt = new Date();
-
+          
           await storage.updateProcurementRequest(estimation.procurementRequestId, request);
         }
       }
@@ -947,9 +855,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/reset-all-ai-data", async (req, res) => {
     try {
       console.log('Admin reset all AI data endpoint called');
-
+      
       const result = await storage.resetAllAIData();
-
+      
       res.json({
         success: true,
         message: 'כל נתוני ה-AI ואומדני העלויות אופסו בהצלחה',
@@ -969,876 +877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Advanced Estimation - 5 methods using PricingEngine
-  app.post("/api/advanced-estimation", async (req, res) => {
-    try {
-      const { requestId, methods = ['market-based', 'analogous', 'parametric', 'bottom-up', 'expert-judgment'] } = req.body;
-
-      if (!requestId) {
-        return res.status(400).json({
-          success: false,
-          error: 'מזהה דרישת רכש נדרש'
-        });
-      }
-
-      const procurementRequest = await storage.getProcurementRequest(requestId);
-      if (!procurementRequest) {
-        return res.status(404).json({
-          success: false,
-          error: 'דרישת רכש לא נמצאה'
-        });
-      }
-
-      // Prepare estimation request
-      const estimationRequest: EstimationRequest = {
-        requestId: procurementRequest.id,
-        itemName: procurementRequest.itemName,
-        description: procurementRequest.description || '',
-        category: procurementRequest.category,
-        quantity: procurementRequest.quantity,
-        specifications: procurementRequest.specifications || {},
-        targetDate: procurementRequest.targetDate,
-        emf: procurementRequest.emf
-      };
-
-      // Refresh pricing engine data
-      await initializePricingEngineData();
-
-      // Calculate comprehensive estimation
-      const comprehensiveEstimation = pricingEngine.calculateComprehensiveEstimation(
-        estimationRequest,
-        methods
-      );
-
-      res.json({
-        success: true,
-        data: comprehensiveEstimation,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('Advanced estimation error:', error);
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'שגיאה בחישוב אומדן מתקדם'
-      });
-    }
-  });
-
-  // Historical Data by Category
-  app.get("/api/historical-data/:category", async (req, res) => {
-    try {
-      const { category } = req.params;
-      const { limit = 20, sortBy = 'completedDate' } = req.query;
-
-      if (!category) {
-        return res.status(400).json({
-          success: false,
-          error: 'קטגוריה נדרשת'
-        });
-      }
-
-      // Get historical procurements for category
-      const historicalData = await storage.getHistoricalProcurementsByCategory(category);
-
-      // Sort and limit results
-      const sortedData = historicalData
-        .sort((a, b) => {
-          if (sortBy === 'completedDate') {
-            return new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime();
-          }
-          if (sortBy === 'variance') {
-            return Math.abs(b.variance) - Math.abs(a.variance);
-          }
-          if (sortBy === 'satisfaction') {
-            return b.satisfaction - a.satisfaction;
-          }
-          return 0;
-        })
-        .slice(0, parseInt(limit as string));
-
-      // Calculate statistics
-      const stats = {
-        totalProcurements: historicalData.length,
-        averageVariance: historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + p.variance, 0) / historicalData.length : 0,
-        averageSatisfaction: historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + p.satisfaction, 0) / historicalData.length : 0,
-        totalValue: historicalData.reduce((sum, p) => sum + p.actualCost, 0),
-        topSuppliers: getTopSuppliers(historicalData),
-        riskFactors: extractRiskFactors(historicalData)
-      };
-
-      res.json({
-        success: true,
-        data: {
-          category,
-          procurements: sortedData,
-          statistics: stats
-        },
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('Historical data error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'שגיאה בקבלת נתונים היסטוריים'
-      });
-    }
-  });
-
-  // Supplier Recommendations
-  app.get("/api/supplier-recommendations/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const procurementRequest = await storage.getProcurementRequest(requestId);
-
-      if (!procurementRequest) {
-        return res.status(404).json({
-          success: false,
-          error: 'דרישת רכש לא נמצאה'
-        });
-      }
-
-      // Get supplier performance data
-      const allSuppliers = await storage.getSupplierPerformance();
-
-      // Get historical data for this category
-      const categoryHistory = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
-
-      // Calculate supplier scores based on multiple factors
-      const supplierRecommendations = allSuppliers.map(supplier => {
-        const supplierHistory = categoryHistory.filter(h => h.supplierId === supplier.supplierId);
-
-        // Calculate comprehensive score
-        const performanceScore = (
-          supplier.rating * 0.25 +
-          supplier.reliabilityScore / 25 +  // Convert to 0-4 scale
-          supplier.costEfficiency * 0.25 +
-          supplier.qualityScore * 0.25
-        );
-
-        const experienceScore = Math.min(supplierHistory.length / 5, 1) * 4; // Experience factor
-        const satisfactionScore = supplierHistory.length > 0 ? 
-          supplierHistory.reduce((sum, h) => sum + h.satisfaction, 0) / supplierHistory.length : 
-          supplier.rating;
-
-        const overallScore = (performanceScore + experienceScore + satisfactionScore) / 3;
-
-        // Calculate risk factors
-        const riskFactors = [];
-        if (supplier.defectRate > 5) riskFactors.push('שיעור פגמים גבוה');
-        if (supplier.onTimeDelivery < 85) riskFactors.push('עיכובים בזמני אספקה');
-        if (supplier.responseTime > 24) riskFactors.push('זמן תגובה איטי');
-        if (supplierHistory.length === 0) riskFactors.push('חוסר ניסיון בקטגוריה זו');
-
-        return {
-          supplierId: supplier.supplierId,
-          supplierName: supplier.supplierName,
-          overallScore: Math.round(overallScore * 10) / 10,
-          performanceMetrics: {
-            rating: supplier.rating,
-            reliabilityScore: supplier.reliabilityScore,
-            costEfficiency: supplier.costEfficiency,
-            qualityScore: supplier.qualityScore,
-            avgDeliveryTime: supplier.avgDeliveryTime,
-            onTimeDelivery: supplier.onTimeDelivery,
-            defectRate: supplier.defectRate,
-            responseTime: supplier.responseTime
-          },
-          categoryExperience: {
-            ordersInCategory: supplierHistory.length,
-            averageSatisfaction: satisfactionScore,
-            successfulProjects: supplierHistory.filter(h => h.satisfaction >= 4).length
-          },
-          riskFactors,
-          recommendation: generateSupplierRecommendation(overallScore, riskFactors, supplierHistory.length)
-        };
-      })
-      .sort((a, b) => b.overallScore - a.overallScore)
-      .slice(0, 5); // Top 5 recommendations
-
-      res.json({
-        success: true,
-        data: {
-          requestId,
-          category: procurementRequest.category,
-          recommendations: supplierRecommendations,
-          selectionCriteria: {
-            weightings: {
-              performance: '25%',
-              reliability: '25%',
-              costEfficiency: '25%',
-              quality: '25%'
-            },
-            bonusFactors: [
-              'ניסיון קודם בקטגוריה',
-              'רמת שביעות רצון גבוהה',
-              'זמני אספקה קצרים'
-            ]
-          }
-        },
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('Supplier recommendations error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'שגיאה בקבלת המלצות ספקים'
-      });
-    }
-  });
-
-  // Risk Assessment
-  app.get("/api/risk-assessment/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const procurementRequest = await storage.getProcurementRequest(requestId);
-
-      if (!procurementRequest) {
-        return res.status(404).json({
-          success: false,
-          error: 'דרישת רכש לא נמצאה'
-        });
-      }
-
-      // Get category data for risk assessment
-      const categoryData = await storage.getProcurementCategoriesByName(procurementRequest.category);
-      const historicalData = await storage.getHistoricalProcurementsByCategory(procurementRequest.category);
-
-      // Initialize pricing engine for risk analysis
-      await initializePricingEngineData();
-
-      const estimationRequest: EstimationRequest = {
-        requestId: procurementRequest.id,
-        itemName: procurementRequest.itemName,
-        description: procurementRequest.description || '',
-        category: procurementRequest.category,
-        quantity: procurementRequest.quantity,
-        specifications: procurementRequest.specifications || {},
-        targetDate: procurementRequest.targetDate,
-        emf: procurementRequest.emf
-      };
-
-      // Calculate risk factors using pricing engine
-      const marketEstimation = pricingEngine.calculateMarketBasedEstimate(estimationRequest);
-      const riskFactors = marketEstimation.risks;
-
-      // Additional risk analysis
-      const riskAssessment = {
-        overallRiskLevel: calculateOverallRisk(procurementRequest, categoryData[0], historicalData),
-        riskCategories: {
-          financial: assessFinancialRisk(procurementRequest, historicalData),
-          operational: assessOperationalRisk(procurementRequest, categoryData[0]),
-          market: assessMarketRisk(procurementRequest, categoryData[0]),
-          supplier: assessSupplierRisk(procurementRequest),
-          timeline: assessTimelineRisk(procurementRequest, categoryData[0])
-        },
-        riskFactors,
-        mitigationStrategies: generateMitigationStrategies(procurementRequest, categoryData[0], historicalData),
-        contingencyRecommendations: generateContingencyRecommendations(procurementRequest),
-        monitoringIndicators: generateMonitoringIndicators(procurementRequest, categoryData[0])
-      };
-
-      res.json({
-        success: true,
-        data: {
-          requestId,
-          requestTitle: procurementRequest.itemName,
-          category: procurementRequest.category,
-          riskAssessment,
-          lastUpdated: new Date().toISOString()
-        }
-      });
-
-    } catch (error) {
-      console.error('Risk assessment error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'שגיאה בהערכת סיכונים'
-      });
-    }
-  });
-
-  // Database Management - Execute direct SQL commands
-  app.post("/api/admin/execute-sql", async (req, res) => {
-    try {
-      const { query, params = [] } = req.body;
-
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          message: "שאילתה לא תקינה" 
-        });
-      }
-
-      // Execute SQL directly on database
-      const result = await storage.executeSQL(query, params);
-
-      res.json({
-        success: true,
-        data: result,
-        query: query,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('SQL execution error:', error);
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'שגיאה בביצוע השאילתה',
-        query: req.body.query
-      });
-    }
-  });
-
-  // SQL Runner for development (only works with memory storage simulation)
-  app.post("/api/sql-runner", async (req, res) => {
-    try {
-      const { query } = req.body;
-
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          message: "שאילתה לא תקינה" 
-        });
-      }
-
-      // פונקציה פשוטה להדמיה של שאילתות SQL על הנתונים בזיכרון
-      const simulateSQL = async (sqlQuery: string) => {
-        const lowerQuery = sqlQuery.toLowerCase().trim();
-
-        if (lowerQuery.includes('select') && lowerQuery.includes('procurement_requests')) {
-          const requests = await storage.getProcurementRequests();
-          if (lowerQuery.includes('count(*)')) {
-            return { count: requests.length };
-          }
-          return requests;
-        }
-
-        if (lowerQuery.includes('select') && lowerQuery.includes('cost_estimations')) {
-          const estimations = await storage.getCostEstimations();
-          if (lowerQuery.includes('confidencelevel > 90')) {
-            return estimations.filter(e => e.confidenceLevel > 90);
-          }
-          return estimations;
-        }
-
-        if (lowerQuery.includes('select') && lowerQuery.includes('suppliers')) {
-          return await storage.getSuppliers();
-        }
-
-        if (lowerQuery.includes('group by category')) {
-          const requests = await storage.getProcurementRequests();
-          const grouped = requests.reduce((acc, req) => {
-            acc[req.category] = (acc[req.category] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-
-          return Object.entries(grouped).map(([category, count]) => ({
-            category,
-            count
-          }));
-        }
-
-        throw new Error('שאילתה לא נתמכת. נסה שאילתות SELECT פשוטות על הטבלאות הזמינות.');
-      };
-
-      const results = await simulateSQL(query);
-
-      res.json({
-        success: true,
-        data: results,
-        query: query,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('SQL Runner error:', error);
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'שגיאה בביצוע השאילתה',
-        query: req.body.query
-      });
-    }
-  });
-
-  // Data seeding route for production database
-  app.post("/api/admin/seed-production-data", async (req, res) => {
-    try {
-      console.log('Starting production data seeding...');
-
-      // Create in-memory storage with demo data
-      const memStorage = new MemStorage();
-
-      if (process.env.DATABASE_URL && process.env.USE_POSTGRES === 'true') {
-        const { drizzle } = await import("drizzle-orm/postgres-js");
-        const postgres = (await import("postgres")).default;
-        const { users, suppliers, procurementRequests, costEstimations, supplierQuotes, documents, marketInsights } = await import("@shared/schema");
-
-        const client = postgres(process.env.DATABASE_URL);
-        const db = drizzle(client);
-
-        // Seed users
-        const memUsers = await memStorage.getUser(1); // Get the admin user
-        if (memUsers) {
-          try {
-            await db.insert(users).values({
-              username: memUsers.username,
-              password: memUsers.password,
-              displayName: memUsers.displayName,
-              role: memUsers.role
-            }).onConflictDoNothing();
-          } catch (error) {
-            console.log('User already exists or error:', error);
-          }
-        }
-
-        // Seed suppliers
-        const memSuppliers = await memStorage.getSuppliers();
-        for (const supplier of memSuppliers) {
-          try {
-            await db.insert(suppliers).values({
-              name: supplier.name,
-              code: supplier.code,
-              rating: supplier.rating,
-              reliability: supplier.reliability,
-              deliveryTime: supplier.deliveryTime,
-              discountPolicy: supplier.discountPolicy,
-              warrantyTerms: supplier.warrantyTerms,
-              isPreferred: supplier.isPreferred,
-              contactInfo: supplier.contactInfo
-            }).onConflictDoNothing();
-          } catch (error) {
-            console.log(`Supplier ${supplier.name} already exists or error:`, error);
-          }
-        }
-
-        // Seed procurement requests
-        const memRequests = await memStorage.getProcurementRequests();
-        for (const request of memRequests) {
-          try {
-            await db.insert(procurementRequests).values({
-              requestNumber: request.requestNumber,
-              itemName: request.itemName,
-              description: request.description,
-              category: request.category,
-              quantity: request.quantity,
-              priority: request.priority,
-              targetDate: request.targetDate,
-              requestedBy: request.requestedBy,
-              department: request.department,
-              status: request.status,
-              emf: request.emf,
-              estimatedCost: request.estimatedCost,
-              specifications: request.specifications,
-              userId: 1
-            }).onConflictDoNothing();
-          } catch (error) {
-            console.log(`Request ${request.requestNumber} already exists or error:`, error);
-          }
-        }
-
-        console.log('✅ Production data seeding completed successfully');
-        res.json({ 
-          success: true, 
-          message: 'נתוני הדמו נטענו בהצלחה לבסיס הנתונים',
-          seeded: {
-            users: 1,
-            suppliers: memSuppliers.length,
-            requests: memRequests.length
-          }
-        });
-      } else {
-        res.json({ success: false, message: 'PostgreSQL not configured' });
-      }
-    } catch (error) {
-      console.error('Error seeding production data:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'שגיאה בטעינת הנתונים',
-        error: error.message 
-      });
-    }
-  });
-
-  // Reports endpoints
-  app.get("/api/reports/savings", async (req, res) => {
-    try {
-      const { dateRange, category } = req.query;
-      // Mock savings data based on historical procurement data
-      const savingsData = {
-        totalSavings: 2450000,
-        yearlyGrowth: 18.5,
-        topCategories: [
-          { category: "טכנולוגיה", savings: 890000 },
-          { category: "שירותים", savings: 650000 },
-          { category: "ציוד משרדי", savings: 520000 },
-          { category: "אחזקה", savings: 390000 }
-        ],
-        monthlyTrend: [
-          { month: "ינואר", savings: 180000 },
-          { month: "פברואר", savings: 220000 },
-          { month: "מרץ", savings: 195000 },
-          { month: "אפריל", savings: 240000 },
-          { month: "מאי", savings: 285000 },
-          { month: "יוני", savings: 310000 },
-          { month: "יולי", savings: 295000 },
-          { month: "אוגוסט", savings: 330000 },
-          { month: "ספטמבר", savings: 275000 },
-          { month: "אוקטובר", savings: 320000 }
-        ]
-      };
-      res.json(savingsData);
-    } catch (error) {
-      console.error("Savings report error:", error);
-      res.status(500).json({ error: "Failed to generate savings report" });
-    }
-  });
-
-  app.get("/api/reports/suppliers", async (req, res) => {
-    try {
-      const suppliersData = {
-        suppliers: [
-          {
-            name: "חברת פיתוח Alpha-Tech",
-            rating: 4.8,
-            onTimeDelivery: 96,
-            costEfficiency: 92,
-            qualityScore: 94,
-            totalOrders: 24,
-            totalValue: 2850000
-          },
-          {
-            name: "Beta Solutions Ltd",
-            rating: 4.6,
-            onTimeDelivery: 88,
-            costEfficiency: 89,
-            qualityScore: 91,
-            totalOrders: 18,
-            totalValue: 1950000
-          },
-          {
-            name: "Gamma Consulting",
-            rating: 4.4,
-            onTimeDelivery: 92,
-            costEfficiency: 85,
-            qualityScore: 88,
-            totalOrders: 15,
-            totalValue: 1450000
-          }
-        ]
-      };
-      res.json(suppliersData);
-    } catch (error) {
-      console.error("Suppliers report error:", error);
-      res.status(500).json({ error: "Failed to generate suppliers report" });
-    }
-  });
-
-  app.get("/api/reports/accuracy", async (req, res) => {
-    try {
-      const accuracyData = {
-        overallAccuracy: 87.5,
-        byCategory: [
-          { category: "טכנולוגיה", accuracy: 92 },
-          { category: "שירותים", accuracy: 88 },
-          { category: "ציוד משרדי", accuracy: 85 },
-          { category: "אחזקה", accuracy: 82 }
-        ],
-        monthlyTrend: [
-          { month: "ינואר", accuracy: 78 },
-          { month: "פברואר", accuracy: 81 },
-          { month: "מרץ", accuracy: 83 },
-          { month: "אפריל", accuracy: 85 },
-          { month: "מאי", accuracy: 87 },
-          { month: "יוני", accuracy: 89 },
-          { month: "יולי", accuracy: 88 },
-          { month: "אוגוסט", accuracy: 90 },
-          { month: "ספטמבר", accuracy: 89 },
-          { month: "אוקטובר", accuracy: 92 }
-        ],
-        improvementTrend: 14.2
-      };
-      res.json(accuracyData);
-    } catch (error) {
-      console.error("Accuracy report error:", error);
-      res.status(500).json({ error: "Failed to generate accuracy report" });
-    }
-  });
-
-  app.get("/api/reports/cost-trends", async (req, res) => {
-    try {
-      const trendsData = {
-        categories: [
-          {
-            category: "טכנולוגיה",
-            currentQuarter: 3200000,
-            previousQuarter: 2950000,
-            yearOverYear: 12.5,
-            trend: 'up'
-          },
-          {
-            category: "שירותים",
-            currentQuarter: 2100000,
-            previousQuarter: 2250000,
-            yearOverYear: -4.2,
-            trend: 'down'
-          },
-          {
-            category: "ציוד משרדי",
-            currentQuarter: 850000,
-            previousQuarter: 830000,
-            yearOverYear: 2.1,
-            trend: 'stable'
-          }
-        ],
-        totalSpend: 8950000,
-        avgOrderValue: 285000
-      };
-      res.json(trendsData);
-    } catch (error) {
-      console.error("Cost trends report error:", error);
-      res.status(500).json({ error: "Failed to generate cost trends report" });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
-}
-
-// Helper functions for advanced estimation endpoints
-
-function getTopSuppliers(historicalData: any[]) {
-  const supplierStats = historicalData.reduce((acc, proc) => {
-    if (!acc[proc.supplierId]) {
-      acc[proc.supplierId] = {
-        supplierId: proc.supplierId,
-        orders: 0,
-        totalValue: 0,
-        avgSatisfaction: 0,
-        satisfactionSum: 0
-      };
-    }
-    acc[proc.supplierId].orders++;
-    acc[proc.supplierId].totalValue += proc.actualCost;
-    acc[proc.supplierId].satisfactionSum += proc.satisfaction;
-    acc[proc.supplierId].avgSatisfaction = acc[proc.supplierId].satisfactionSum / acc[proc.supplierId].orders;
-    return acc;
-  }, {} as Record<number, any>);
-
-  return Object.values(supplierStats)
-    .sort((a: any, b: any) => b.avgSatisfaction - a.avgSatisfaction)
-    .slice(0, 3);
-}
-
-function extractRiskFactors(historicalData: any[]) {
-  const factors = [];
-
-  const avgVariance = historicalData.length > 0 ? historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
-  if (avgVariance > 10) factors.push('סטיית מחיר גבוהה');
-
-  const recentProjects = historicalData.filter(p => 
-    new Date(p.completedDate) > new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
-  );
-  if (recentProjects.length < 3) factors.push('מעט נתונים עדכניים');
-
-  const lowSatisfaction = historicalData.filter(p => p.satisfaction < 3.5).length;
-  if (historicalData.length > 0 && lowSatisfaction > historicalData.length * 0.3) factors.push('שביעות רצון נמוכה');
-
-  return factors;
-}
-
-function generateSupplierRecommendation(score: number, riskFactors: string[], experience: number) {
-  if (score >= 4.0 && riskFactors.length === 0) {
-    return 'מומלץ מאוד - ספק מעולה עם ביצועים גבוהים';
-  } else if (score >= 3.5 && riskFactors.length <= 1) {
-    return 'מומלץ - ספק אמין עם ביצועים טובים';
-  } else if (score >= 3.0) {
-    return 'מתאים בתנאים - בדוק היבטים ספציפיים';
-  } else if (experience === 0) {
-    return 'ספק חדש - דרוש ניסיון נוסף בקטגוריה';
-  } else {
-    return 'לא מומלץ - ביצועים נמוכים או סיכונים גבוהים';
-  }
-}
-
-function calculateOverallRisk(request: any, category: any, historicalData: any[]) {
-  let riskScore = 0;
-  let maxScore = 5;
-
-  // Budget risk
-  if (parseFloat(request.emf || '0') < 50000) riskScore += 0.5;
-  else if (parseFloat(request.emf || '0') > 1000000) riskScore += 1;
-
-  // Category risk
-  if (category && category.riskFactor > 0.5) riskScore += 1.5;
-  else if (category && category.riskFactor > 0.3) riskScore += 1;
-
-  // Timeline risk
-  if (request.targetDate) {
-    const daysToTarget = (new Date(request.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
-    if (daysToTarget < 30) riskScore += 1.5;
-    else if (daysToTarget < 60) riskScore += 1;
-  }
-
-  // Historical variance risk
-  const avgVariance = historicalData.length > 0 ? 
-    historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
-  if (avgVariance > 15) riskScore += 1;
-  else if (avgVariance > 8) riskScore += 0.5;
-
-  const riskPercentage = (riskScore / maxScore) * 100;
-
-  if (riskPercentage < 30) return 'נמוך';
-  if (riskPercentage < 60) return 'בינוני';
-  return 'גבוה';
-}
-
-function assessFinancialRisk(request: any, historicalData: any[]) {
-  const budget = parseFloat(request.emf || '0');
-  const avgVariance = historicalData.length > 0 ? 
-    historicalData.reduce((sum, p) => sum + Math.abs(p.variance), 0) / historicalData.length : 0;
-
-  return {
-    level: budget > 500000 && avgVariance > 10 ? 'גבוה' : avgVariance > 5 ? 'בינוני' : 'נמוך',
-    factors: [
-      `תקציב: ₪${budget.toLocaleString()}`,
-      `סטיית מחיר היסטורית: ${avgVariance.toFixed(1)}%`,
-      `סיכון לחריגה: ${avgVariance > 10 ? 'גבוה' : 'בינוני'}`
-    ]
-  };
-}
-
-function assessOperationalRisk(request: any, category: any) {
-  const complexity = request.specifications?.complexity || 'בינונית';
-
-  return {
-    level: complexity === 'גבוהה' || request.quantity > 100 ? 'גבוה' : 'בינוני',
-    factors: [
-      `מורכבות: ${complexity}`,
-      `כמות: ${request.quantity}`,
-      `סיכון ביצועי: ${category?.riskFactor > 0.4 ? 'גבוה' : 'בינוני'}`
-    ]
-  };
-}
-
-function assessMarketRisk(request: any, category: any) {
-  const volatility = category?.marketVolatility || 0.3;
-
-  return {
-    level: volatility > 0.4 ? 'גבוה' : volatility > 0.2 ? 'בינוני' : 'נמוך',
-    factors: [
-      `תנודתיות שוק: ${(volatility * 100).toFixed(1)}%`,
-      `יציבות מחירים: ${volatility < 0.2 ? 'טובה' : 'בינונית'}`,
-      `תחרותיות: ${category?.name.includes('IT') ? 'גבוהה' : 'בינונית'}`
-    ]
-  };
-}
-
-function assessSupplierRisk(request: any) {
-  return {
-    level: 'בינוני',
-    factors: [
-      'זמינות ספקים מרובים',
-      'איכות ספקים מוכחת',
-      'סיכון תלות בספק יחיד'
-    ]
-  };
-}
-
-function assessTimelineRisk(request: any, category: any) {
-  const targetDate = request.targetDate ? new Date(request.targetDate) : null;
-  const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
-  const avgDeliveryTime = category?.avgDeliveryTime || 30;
-
-  return {
-    level: daysToTarget < avgDeliveryTime ? 'גבוה' : daysToTarget < avgDeliveryTime * 1.5 ? 'בינוני' : 'נמוך',
-    factors: [
-      `זמן עד התאריך המבוקש: ${Math.round(daysToTarget)} ימים`,
-      `זמן אספקה ממוצע: ${avgDeliveryTime} ימים`,
-      `מרווח זמן: ${daysToTarget > avgDeliveryTime ? 'מספיק' : 'צפוף'}`
-    ]
-  };
-}
-
-function generateMitigationStrategies(request: any, category: any, historicalData: any[]) {
-  const strategies = [];
-
-  // Financial mitigation
-  if (parseFloat(request.emf || '0') > 500000) {
-    strategies.push({
-      risk: 'סיכון פיננסי',
-      strategy: 'פיצול הרכישה לשלבים',
-      impact: 'הפחתת חשיפה פיננסית'
-    });
-  }
-
-  // Timeline mitigation
-  const targetDate = request.targetDate ? new Date(request.targetDate) : null;
-  const daysToTarget = targetDate ? (targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) : 365;
-
-  if (daysToTarget < 60) {
-    strategies.push({
-      risk: 'סיכון לוחות זמנים',
-      strategy: 'זירוז תהליכי אישור',
-      impact: 'קיצור זמני עיבוד'
-    });
-  }
-
-  // Market mitigation
-  if (category?.marketVolatility > 0.4) {
-    strategies.push({
-      risk: 'תנודתיות שוק',
-      strategy: 'קבלת הצעות מחיר מרובות',
-      impact: 'הבטחת תחרותיות'
-    });
-  }
-
-  return strategies;
-}
-
-function generateContingencyRecommendations(request: any) {
-  return [
-    {
-      scenario: 'חריגה מתקציב',
-      action: 'הכנת תקציב חירום של 15%',
-      trigger: 'כאשר האומדן חורג ב-10% מהתקציב המתוכנן'
-    },
-    {
-      scenario: 'עיכוב באספקה',
-      action: 'זיהוי ספק גיבוי',
-      trigger: 'כאשר הספק מדווח על עיכוב צפוי'
-    },
-    {
-      scenario: 'שינוי בדרישות',
-      action: 'הכנת מפרט גמיש',
-      trigger: 'כאשר מתגלים צרכים נוספים'
-    }
-  ];
-}
-
-function generateMonitoringIndicators(request: any, category: any) {
-  return [
-    {
-      indicator: 'מעקב מחירים',
-      frequency: 'שבועי',
-      threshold: 'שינוי של 5% במחירי שוק',
-      action: 'עדכון אומדן'
-    },
-    {
-      indicator: 'זמני אספקה',
-      frequency: 'יומי',
-      threshold: 'עיכוב של 3 ימים או יותר',
-      action: 'הפעלת ספק גיבוי'
-    },
-    {
-      indicator: 'איכות מוצר',
-      frequency: 'בביקורות ביניים',
-      threshold: 'סטייה ממפרטים',
-      action: 'תיקון מיידי או החלפת ספק'
-    }
-  ];
 }
 
 // Helper functions for estimation calculations
@@ -1859,7 +899,6 @@ function calculateByMethod(methodId: string, request: any) {
     case 'bottom_up':
       return calculateBottomUp(request);
     case 'market_based':
-    case 'market-based':
       return calculateMarketBased(request);
     default:
       throw new Error(`שיטת אומדן לא מוכרת: ${methodId}`);
@@ -1870,21 +909,21 @@ function calculateByMethod(methodId: string, request: any) {
 function calculateTimeBased(request: any) {
   const estimatedHours = request.specifications?.estimatedHours || 2400;
   const teamSize = request.specifications?.teamSize || 6;
-
+  
   const seniorHours = estimatedHours * 0.3;
   const midHours = estimatedHours * 0.5;  
   const juniorHours = estimatedHours * 0.2;
-
+  
   const seniorRate = 450;
   const midRate = 350;
   const juniorRate = 250;
-
+  
   const seniorCost = seniorHours * seniorRate;
   const midCost = midHours * midRate;
   const juniorCost = juniorHours * juniorRate;
-
+  
   const totalCost = seniorCost + midCost + juniorCost;
-
+  
   return {
     methodName: 'אומדן מבוסס זמן עבודה',
     estimate: totalCost,
@@ -1896,7 +935,7 @@ function calculateTimeBased(request: any) {
       { component: 'מפתח זוטר', hours: juniorHours, rate: juniorRate, cost: juniorCost }
     ],
     reasoning: 'האומדן מבוסס על הערכת שעות עבודה נדרשות וכפלתן בתעריפי שוק נוכחיים',
-    sources: ['תעריף שוק 2024', 'ניסיון פרויקטים דומים'],
+    sources: ['תעריفי שוק 2024', 'ניסיון פרויקטים דומים'],
     assumptions: ['זמינות צוות מלאה', 'ללא שינויי דרישות משמעותיים']
   };
 }
@@ -1908,11 +947,11 @@ function calculateDeliverableBased(request: any) {
     'תכנית יישום מפורטת',
     'הדרכה וליווי יישום'
   ];
-
+  
   const deliverableCosts = [150000, 200000, 100000, 180000];
   let totalCost = 0;
   let breakdown = [];
-
+  
   deliverables.forEach((deliverable, index) => {
     const cost = deliverableCosts[index] || 100000;
     totalCost += cost;
@@ -1922,7 +961,7 @@ function calculateDeliverableBased(request: any) {
       description: 'תוצר מוגדר עם מחיר קבוע'
     });
   });
-
+  
   return {
     methodName: 'אומדן מבוסס תוצרים',
     estimate: totalCost,
@@ -1938,12 +977,12 @@ function calculateDeliverableBased(request: any) {
 function calculateValueBased(request: any) {
   const businessValue = request.specifications?.businessValue || 'הגנה על נכסי מידע קריטיים';
   const serviceLevel = request.specifications?.serviceLevel || '24/7';
-
+  
   // Calculate based on business value - typically 20-30% of protected value
   const monthlyService = 150000;
   const duration = 12;
   const totalCost = monthlyService * duration;
-
+  
   return {
     methodName: 'אומדן מבוסס ערך',
     estimate: totalCost,
@@ -1966,10 +1005,10 @@ function calculateThreePoint(request: any) {
     mostLikely: 650000,
     pessimistic: 950000
   };
-
+  
   // PERT formula: (optimistic + 4*mostLikely + pessimistic) / 6
   const pertEstimate = (estimates.optimistic + 4 * estimates.mostLikely + estimates.pessimistic) / 6;
-
+  
   return {
     methodName: 'אומדן שלוש נקודות',
     estimate: pertEstimate,
@@ -1991,7 +1030,7 @@ function calculateAnalogous(request: any) {
   const quantity = request.quantity || 50;
   const unitPrice = 4500; // Based on historical data
   const totalCost = quantity * unitPrice;
-
+  
   return {
     methodName: 'אומדן אנלוגי',
     estimate: totalCost,
@@ -2012,10 +1051,10 @@ function calculateParametric(request: any) {
   const baseCost = 85000;
   const engineFactor = 1500; // Per 1600cc
   const capacityFactor = 2500; // Per 800kg capacity
-
+  
   const unitCost = baseCost + engineFactor + capacityFactor;
   const totalCost = unitCost * quantity;
-
+  
   return {
     methodName: 'אומדן פרמטרי',
     estimate: totalCost,
@@ -2041,11 +1080,11 @@ function calculateBottomUp(request: any) {
     { name: 'מערכות חשמל', quantity: 1, unit: 'פרויקט', unitCost: 150000, totalCost: 150000 },
     { name: 'מערכות אוורור', quantity: 1, unit: 'פרויקט', unitCost: 80000, totalCost: 80000 }
   ];
-
+  
   const baseCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
   const contingency = baseCost * 0.15; // 15% contingency
   const totalCost = baseCost + contingency;
-
+  
   return {
     methodName: 'אומדן מלמטה למעלה',
     estimate: totalCost,
@@ -2062,7 +1101,7 @@ function calculateMarketBased(request: any) {
   const category = request.category?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
   const quantity = request.quantity || 1;
-
+  
   // Generate contextual breakdown based on request type
   if (itemName.includes('מחשב') || itemName.includes('laptop') || category.includes('חומרה')) {
     // Computer/Hardware breakdown
@@ -2072,9 +1111,9 @@ function calculateMarketBased(request: any) {
       { name: 'רישיון Windows Pro', quantity: quantity, unit: 'רישיונות', unitPrice: 800, totalCost: quantity * 800 },
       { name: 'אחריות מורחבת', quantity: quantity, unit: 'שנים', unitPrice: 400, totalCost: quantity * 400 }
     ];
-
+    
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2089,13 +1128,13 @@ function calculateMarketBased(request: any) {
     // Furniture breakdown
     const unitPrice = 1800;
     const components = [
-      { name: 'כסא משרדי ארגונומי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
+      { name: 'כסא משרד ארגונומי', quantity: quantity, unit: 'יחידות', unitPrice: unitPrice, totalCost: quantity * unitPrice },
       { name: 'משלוח והרכבה', quantity: 1, unit: 'שירות', unitPrice: 500, totalCost: 500 },
       { name: 'אחריות 5 שנים', quantity: quantity, unit: 'יחידות', unitPrice: 200, totalCost: quantity * 200 }
     ];
-
+    
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2114,9 +1153,9 @@ function calculateMarketBased(request: any) {
       { name: 'ביטוח חובה ומקיף', quantity: quantity, unit: 'שנה', unitPrice: 8000, totalCost: quantity * 8000 },
       { name: 'בדיקות ורישוי', quantity: quantity, unit: 'יחידות', unitPrice: 1000, totalCost: quantity * 1000 }
     ];
-
+    
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2135,9 +1174,9 @@ function calculateMarketBased(request: any) {
       { name: 'מבנה פלדה וקירות', quantity: area, unit: 'מ"ר', unitPrice: 800, totalCost: area * 800 },
       { name: 'גג ומערכות', quantity: area, unit: 'מ"ר', unitPrice: 450, totalCost: area * 450 }
     ];
-
+    
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2155,9 +1194,9 @@ function calculateMarketBased(request: any) {
       { name: 'אלומיניום 6061', quantity: 20, unit: 'טון', unitPrice: 8500, totalCost: 170000 },
       { name: 'פלסטיק PVC', quantity: 10, unit: 'טון', unitPrice: 4200, totalCost: 42000 }
     ];
-
+    
     const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2176,9 +1215,9 @@ function calculateMarketBased(request: any) {
       { name: 'שירותים נלווים', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.1, totalCost: estimatedValue * 0.1 },
       { name: 'אחריות ותמיכה', quantity: 1, unit: 'שירות', unitPrice: estimatedValue * 0.05, totalCost: estimatedValue * 0.05 }
     ];
-
+    
     const totalCost = components.reduce((sum, comp) => sum + comp.totalCost, 0);
-
+    
     return {
       methodName: 'אומדן מבוסס מחיר שוק',
       estimate: totalCost,
@@ -2222,18 +1261,18 @@ function generateBreakdown(methodResults: any[]) {
 
 function generateRecommendations(methodResults: any[], request: any) {
   const recommendations = [];
-
+  
   if (methodResults.length > 1) {
     recommendations.push('השילוב של מספר שיטות אומדן מעלה את דירוג הביטחון');
   }
-
+  
   const avgConfidence = calculateOverallConfidence(methodResults);
   if (avgConfidence < 80) {
     recommendations.push('מומלץ לאסוף מידע נוסף לשיפור דירוג הביטחון');
   }
-
+  
   recommendations.push('מומלץ לקבל הצעות מחיר מספק נוסף לוודא תחרותיות');
-
+  
   return recommendations;
 }
 
@@ -2251,7 +1290,7 @@ function calculatePotentialSavings(finalEstimate: number, request: any) {
 function determinePricePosition(finalEstimate: number, request: any) {
   const marketPrice = calculateMarketPrice(request);
   const ratio = finalEstimate / marketPrice;
-
+  
   if (ratio < 0.9) return 'מחיר מעולה';
   if (ratio < 1.0) return 'מחיר טוב';  
   if (ratio < 1.1) return 'מחיר סביר';
@@ -2263,7 +1302,7 @@ function generateContextualAIAnalysis(request: any) {
   const category = request.category?.toLowerCase() || '';
   const subcategory = request.subcategory?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
-
+  
   // Determine analysis type based on request characteristics
   if (subcategory.includes('בנייה') || itemName.includes('מחסן') || itemName.includes('בניית')) {
     return generateConstructionAnalysis(request);
@@ -2513,9 +1552,9 @@ function generateContextualMarketResearch(request: any) {
   const category = request.category?.toLowerCase() || '';
   const itemName = request.itemName?.toLowerCase() || '';
   const description = request.description?.toLowerCase() || '';
-
+  
   console.log(`Market research detection - Category: ${category}, Item: ${itemName}, Desc: ${description}`);
-
+  
   // Detect request type based on category and content
   if (itemName.includes('רכב') || itemName.includes('צי') || description.includes('רכב')) {
     return generateVehicleMarketResearch(request);

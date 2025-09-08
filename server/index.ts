@@ -70,6 +70,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - accessible at https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+    log(`serving on port ${port}`);
   });
 })();

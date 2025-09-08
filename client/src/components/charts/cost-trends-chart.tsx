@@ -1,108 +1,55 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { month: 'ינואר', actual: 450000, estimated: 420000, savings: 30000 },
-  { month: 'פברואר', actual: 520000, estimated: 510000, savings: 10000 },
-  { month: 'מרץ', actual: 380000, estimated: 400000, savings: -20000 },
-  { month: 'אפריל', actual: 620000, estimated: 590000, savings: 30000 },
-  { month: 'מאי', actual: 480000, estimated: 470000, savings: 10000 },
-  { month: 'יוני', actual: 720000, estimated: 680000, savings: 40000 },
-];
+interface CostTrendsChartProps {
+  data: { month: string; cost: number }[];
+}
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="backdrop-filter backdrop-blur-[25px] bg-black/30 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
-        <p className="text-white font-semibold mb-3 text-base">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-base mb-1 font-medium text-white">
-            {`${entry.name}: ₪${entry.value?.toLocaleString()}`}
+export default function CostTrendsChart({ data }: CostTrendsChartProps) {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('he-IL', {
+      style: 'currency',
+      currency: 'ILS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
+          <p className="text-foreground font-medium">{`${label}`}</p>
+          <p className="text-primary">
+            {`עלויות: ${formatCurrency(payload[0].value)}`}
           </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+        </div>
+      );
+    }
+    return null;
+  };
 
-export default function CostTrendsChart() {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
-        style={{ direction: 'rtl' }}
-      >
-        <defs>
-          <pattern id="glassGrid" patternUnits="userSpaceOnUse" width="20" height="20">
-            <rect width="20" height="20" fill="rgba(15, 23, 42, 0.4)"/>
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.5"/>
-          </pattern>
-          <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.95)" />
-            <stop offset="100%" stopColor="rgba(30, 41, 59, 0.85)" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#chartBackground)" rx="8" />
-        <CartesianGrid stroke="rgba(100, 116, 139, 0.2)" strokeDasharray="2 2" />
+      <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
         <XAxis 
           dataKey="month" 
-          tick={{ 
-            fill: '#ffffff', 
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-          stroke="rgba(255, 255, 255, 0.3)"
-          tickMargin={15}
-          height={60}
+          stroke="#FFFFFF"
+          tick={{ fill: '#FFFFFF' }}
         />
         <YAxis 
-          tick={{ 
-            fill: '#ffffff', 
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-          stroke="rgba(255, 255, 255, 0.3)"
-          tickFormatter={(value) => `₪${(value / 1000).toFixed(0)}K`}
-          tickMargin={15}
-          width={80}
+          stroke="#FFFFFF"
+          tick={{ fill: '#FFFFFF' }}
+          tickFormatter={formatCurrency}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ 
-            direction: 'rtl', 
-            textAlign: 'right',
-            paddingTop: '35px',
-            color: '#ffffff'
-          }}
-          iconType="line"
-        />
         <Line 
           type="monotone" 
-          dataKey="actual" 
-          stroke="#4A90E2"
-          strokeWidth={2}
-          dot={{ fill: '#4A90E2', strokeWidth: 1, r: 4 }}
-          activeDot={{ r: 6, stroke: '#4A90E2', strokeWidth: 1, fill: '#4A90E2' }}
-          name="עלות בפועל"
-        />
-        <Line 
-          type="monotone" 
-          dataKey="estimated" 
-          stroke="#50C878"
-          strokeWidth={2}
-          dot={{ fill: '#50C878', strokeWidth: 1, r: 4 }}
-          activeDot={{ r: 6, stroke: '#50C878', strokeWidth: 1, fill: '#50C878' }}
-          name="עלות מוערכת"
-        />
-        <Line 
-          type="monotone" 
-          dataKey="savings" 
-          stroke="#FF8C42"
-          strokeWidth={2}
-          dot={{ fill: '#FF8C42', strokeWidth: 1, r: 4 }}
-          activeDot={{ r: 6, stroke: '#FF8C42', strokeWidth: 1, fill: '#FF8C42' }}
-          name="חיסכון"
+          dataKey="cost" 
+          stroke="#60a5fa" 
+          strokeWidth={3}
+          dot={{ fill: '#60a5fa', strokeWidth: 2, r: 4 }}
+          activeDot={{ r: 6, stroke: '#60a5fa', strokeWidth: 2 }}
         />
       </LineChart>
     </ResponsiveContainer>

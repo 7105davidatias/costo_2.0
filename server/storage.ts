@@ -1,63 +1,11 @@
-import {
-  users, suppliers, procurementRequests, costEstimations,
+import { 
+  users, suppliers, procurementRequests, costEstimations, 
   supplierQuotes, documents, marketInsights,
   type User, type InsertUser, type ProcurementRequest, type InsertProcurementRequest,
   type Supplier, type InsertSupplier, type CostEstimation, type InsertCostEstimation,
   type SupplierQuote, type InsertSupplierQuote, type Document, type InsertDocument,
   type MarketInsight, type InsertMarketInsight
 } from "@shared/schema";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { eq, ne, desc, isNotNull, sql } from "drizzle-orm";
-
-// טיפוסי נתונים חדשים למערכת v2.0
-export interface ProcurementCategory {
-  id: string;
-  name: string;
-  pricingMultiplier: number;
-  riskFactor: number;
-  avgDeliveryTime: number;
-  specifications: string[];
-  marketVolatility: number;
-}
-
-export interface HistoricalProcurement {
-  id: string;
-  requestNumber: string;
-  category: string;
-  itemName: string;
-  quantity: number;
-  actualCost: number;
-  estimatedCost: number;
-  variance: number;
-  supplierId: number;
-  completedDate: Date;
-  satisfaction: number;
-  lessons: string[];
-}
-
-export interface SupplierPerformance {
-  supplierId: number;
-  supplierName: string;
-  rating: number;
-  avgDeliveryTime: number;
-  reliabilityScore: number;
-  costEfficiency: number;
-  qualityScore: number;
-  totalOrders: number;
-  onTimeDelivery: number;
-  defectRate: number;
-  responseTime: number;
-}
-
-export interface DocumentTemplate {
-  id: string;
-  name: string;
-  category: string;
-  estimatedCost: number;
-  specifications: any;
-  template: any;
-}
 
 export interface IStorage {
   // Users
@@ -102,26 +50,6 @@ export interface IStorage {
   getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null>;
   clearExtractedData(requestId: number): Promise<void>;
 
-  // New v2.0 Methods - קטגוריות רכש
-  getProcurementCategories(): Promise<ProcurementCategory[]>;
-  getProcurementCategory(id: string): Promise<ProcurementCategory | undefined>;
-  getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]>;
-
-  // New v2.0 Methods - רכישות היסטוריות
-  getHistoricalProcurements(): Promise<HistoricalProcurement[]>;
-  getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]>;
-  getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]>;
-
-  // New v2.0 Methods - ביצועי ספקים
-  getSupplierPerformance(): Promise<SupplierPerformance[]>;
-  getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined>;
-  getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]>;
-
-  // New v2.0 Methods - תבניות מסמכים
-  getDocumentTemplates(): Promise<DocumentTemplate[]>;
-  getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined>;
-  getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]>;
-
   // Admin functions for demo reset
   resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }>;
   resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }>;
@@ -131,9 +59,6 @@ export interface IStorage {
     clearedDocumentAnalysis: number;
     updatedRequests: number;
   }>;
-
-  // Method to execute raw SQL queries (for production database operations)
-  executeSQL(query: string, params?: any[]): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -146,12 +71,6 @@ export class MemStorage implements IStorage {
   private marketInsights: Map<number, MarketInsight>;
   private currentId: number;
 
-  // New v2.0 Collections
-  public procurementCategories: Map<string, ProcurementCategory>;
-  public historicalProcurements: Map<string, HistoricalProcurement>;
-  public supplierPerformance: Map<number, SupplierPerformance>;
-  public documentTemplates: Map<string, DocumentTemplate>;
-
   constructor() {
     this.users = new Map();
     this.procurementRequests = new Map();
@@ -161,13 +80,6 @@ export class MemStorage implements IStorage {
     this.documents = new Map();
     this.marketInsights = new Map();
     this.currentId = 1;
-
-    // Initialize new v2.0 collections
-    this.procurementCategories = new Map();
-    this.historicalProcurements = new Map();
-    this.supplierPerformance = new Map();
-    this.documentTemplates = new Map();
-
     this.seedData();
   }
 
@@ -250,9 +162,6 @@ export class MemStorage implements IStorage {
           storage: "512GB SSD",
           display: "15.6 FHD"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-15"),
         updatedAt: new Date("2024-01-15"),
@@ -277,9 +186,6 @@ export class MemStorage implements IStorage {
           adjustable: true,
           warranty: "5 שנים"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-18"),
         updatedAt: new Date("2024-01-18"),
@@ -304,9 +210,6 @@ export class MemStorage implements IStorage {
           storage: "2x 1TB NVMe SSD",
           network: "4x 1GbE + 2x 10GbE"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-20"),
         updatedAt: new Date("2024-01-20"),
@@ -334,9 +237,6 @@ export class MemStorage implements IStorage {
           complexity: "גבוהה",
           riskLevel: "בינוני"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-25"),
         updatedAt: new Date("2024-01-25"),
@@ -358,7 +258,7 @@ export class MemStorage implements IStorage {
         specifications: {
           deliverables: [
             "מיפוי תהליכים נוכחיים",
-            "ניתוח פערים וזיהוי הזדמנויות",
+            "ניתוח פערים וזיהוי הזדמנויות", 
             "תכנית יישום מפורטת",
             "הדרכה וליווי יישום"
           ],
@@ -366,9 +266,6 @@ export class MemStorage implements IStorage {
           consultantLevel: "senior",
           complexity: "גבוהה"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-26"),
         updatedAt: new Date("2024-01-26"),
@@ -394,9 +291,6 @@ export class MemStorage implements IStorage {
           duration: "12 חודשים",
           businessValue: "הגנה על נכסי מידע קריטיים"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-27"),
         updatedAt: new Date("2024-01-27"),
@@ -426,9 +320,6 @@ export class MemStorage implements IStorage {
             pessimistic: 950000
           }
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-28"),
         updatedAt: new Date("2024-01-28"),
@@ -454,9 +345,6 @@ export class MemStorage implements IStorage {
           graphics: "מובנה",
           warranty: "3 שנים"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-29"),
         updatedAt: new Date("2024-01-29"),
@@ -483,9 +371,6 @@ export class MemStorage implements IStorage {
           seatingCapacity: 2,
           expectedMileage: 100000
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-30"),
         updatedAt: new Date("2024-01-30"),
@@ -510,9 +395,6 @@ export class MemStorage implements IStorage {
           components: "עבודות עפר, יציקת בטון, מבנה פלדה, קירות וגגות, מערכות חשמל ואוורור",
           contingency: "15%"
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-31"),
         updatedAt: new Date("2024-01-31"),
@@ -538,9 +420,6 @@ export class MemStorage implements IStorage {
             { name: "פלסטיק PVC", quantity: 10, unit: "טון", grade: "רגיל" }
           ]
         },
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-02-01"),
         updatedAt: new Date("2024-02-01"),
@@ -561,7 +440,6 @@ export class MemStorage implements IStorage {
       confidenceLevel: 94,
       marketPrice: "205000",
       potentialSavings: "25000",
-      recommendedSupplierId: 1,
       justifications: [
         {
           variable: "מחיר יחידה בסיסי",
@@ -643,7 +521,7 @@ export class MemStorage implements IStorage {
       {
         id: this.currentId++,
         procurementRequestId: 5, // REQ-2024-001 - מחשבים ניידים
-        fileName: "תרשים רשת ותשתיות.pdf",
+        fileName: "תרשים רשת ותשתיות.pdf", 
         fileType: "pdf",
         fileSize: 1887436, // 1.8 MB
         filePath: "/documents/network_diagram.pdf",
@@ -668,7 +546,7 @@ export class MemStorage implements IStorage {
         id: this.currentId++,
         procurementRequestId: 7, // שרתי Dell PowerEdge
         fileName: "מפרט שרתי Dell PowerEdge R750.pdf",
-        fileType: "pdf",
+        fileType: "pdf", 
         fileSize: 3145728, // 3 MB
         filePath: "/documents/dell_r750_spec.pdf",
         isAnalyzed: true,
@@ -706,7 +584,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 96,
         marketPrice: "135000",
         potentialSavings: "10000",
-        recommendedSupplierId: 1,
+        estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         aiAnalysisResults: {
           reasoning: [
             { factor: "מחיר יחידה", impact: "סטנדרט", description: "₪4,272 ליחידה - תחרותי" },
@@ -732,7 +610,7 @@ export class MemStorage implements IStorage {
         confidenceLevel: 89,
         marketPrice: "82000",
         potentialSavings: "7000",
-        recommendedSupplierId: 2,
+        estimatedDelivery: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
         aiAnalysisResults: {
           reasoning: [
             { factor: "מחיר יחידה", impact: "תחרותי", description: "₪1,282 ליחידה - מתחת לממוצע שוק" },
@@ -838,7 +716,6 @@ export class MemStorage implements IStorage {
         confidenceLevel: 88,
         marketPrice: "1100000",
         potentialSavings: "140000",
-        recommendedSupplierId: 3,
         justifications: [
           {
             variable: "עלות פיתוח (2400 שעות)",
@@ -879,7 +756,6 @@ export class MemStorage implements IStorage {
         confidenceLevel: 92,
         marketPrice: "720000",
         potentialSavings: "90000",
-        recommendedSupplierId: 4,
         justifications: [
           {
             variable: "מיפוי תהליכים",
@@ -934,7 +810,6 @@ export class MemStorage implements IStorage {
         confidenceLevel: 94,
         marketPrice: "2800000",
         potentialSavings: "400000",
-        recommendedSupplierId: 5,
         justifications: [
           {
             variable: "שירותי SOC 24/7",
@@ -982,7 +857,6 @@ export class MemStorage implements IStorage {
         confidenceLevel: 78,
         marketPrice: "750000",
         potentialSavings: "100000",
-        recommendedSupplierId: 6,
         justifications: [
           {
             variable: "אומדן אופטימי",
@@ -1009,7 +883,7 @@ export class MemStorage implements IStorage {
         aiAnalysisResults: {
           reasoning: [
             { factor: "אי-ודאות גבוהה", impact: "מורכב", description: "קשה לחזות כמות תקלות עתידיות" },
-            { factor: "ניסיון היסטורי", impact: "חיובי", description: "נתונים מ-3 שנים אחרונית" },
+            { factor: "ניסיון היסטורי", impact: "חיובי", description: "נתונים מ-3 שנים אחורנית" },
             { factor: "גיוון סיכונים", impact: "בינוני", description: "שיטת 3 נקודות מפחיתה סיכון תקציבי" }
           ],
           sources: [
@@ -1030,7 +904,6 @@ export class MemStorage implements IStorage {
         confidenceLevel: 95,
         marketPrice: "240000",
         potentialSavings: "15000",
-        recommendedSupplierId: 1,
         justifications: [
           {
             variable: "מחיר יחידה",
@@ -1290,656 +1163,6 @@ export class MemStorage implements IStorage {
     };
 
     this.marketInsights.set(marketInsight.id, marketInsight);
-
-    // New v2.0 Data Seeding
-    this.seedProcurementCategories();
-    this.seedHistoricalProcurements();
-    this.seedSupplierPerformance();
-    this.seedDocumentTemplates();
-  }
-
-  private seedProcurementCategories() {
-    const categories: ProcurementCategory[] = [
-      {
-        id: "IT001",
-        name: "חומרה - מחשבים",
-        pricingMultiplier: 1.15,
-        riskFactor: 0.3,
-        avgDeliveryTime: 14,
-        specifications: ["מעבד", "זיכרון", "אחסון", "מסך"],
-        marketVolatility: 0.25
-      },
-      {
-        id: "IT002",
-        name: "חומרה - שרתים",
-        pricingMultiplier: 1.25,
-        riskFactor: 0.4,
-        avgDeliveryTime: 21,
-        specifications: ["מעבד", "זיכרון ECC", "אחסון רדיק", "רשת"],
-        marketVolatility: 0.35
-      },
-      {
-        id: "FURN01",
-        name: "ריהוט משרדי",
-        pricingMultiplier: 1.1,
-        riskFactor: 0.2,
-        avgDeliveryTime: 28,
-        specifications: ["חומר", "ארגונומיה", "אחריות", "התאמה"],
-        marketVolatility: 0.15
-      },
-      {
-        id: "SERV01",
-        name: "שירותים",
-        pricingMultiplier: 1.3,
-        riskFactor: 0.5,
-        avgDeliveryTime: 90,
-        specifications: ["היקף", "מורכבות", "משך זמן", "מומחיות"],
-        marketVolatility: 0.45
-      },
-      {
-        id: "PROD01",
-        name: "מוצרים",
-        pricingMultiplier: 1.2,
-        riskFactor: 0.35,
-        avgDeliveryTime: 45,
-        specifications: ["איכות", "כמות", "מפרט", "תקנים"],
-        marketVolatility: 0.30
-      },
-      {
-        id: "CONST01",
-        name: "בנייה ותשתיות",
-        pricingMultiplier: 1.4,
-        riskFactor: 0.6,
-        avgDeliveryTime: 120,
-        specifications: ["שטח", "חומרים", "מורכבות", "תקנות"],
-        marketVolatility: 0.50
-      },
-      {
-        id: "RAW01",
-        name: "חומרי גלם",
-        pricingMultiplier: 1.1,
-        riskFactor: 0.4,
-        avgDeliveryTime: 30,
-        specifications: ["סוג חומר", "כמות", "איכות", "מפרט טכני"],
-        marketVolatility: 0.60
-      },
-      {
-        id: "FLEET01",
-        name: "צי רכב",
-        pricingMultiplier: 1.2,
-        riskFactor: 0.3,
-        avgDeliveryTime: 60,
-        specifications: ["סוג רכב", "מנוע", "ציוד", "אחריות"],
-        marketVolatility: 0.25
-      }
-    ];
-
-    categories.forEach(category => this.procurementCategories.set(category.id, category));
-  }
-
-  private seedHistoricalProcurements() {
-    const historical: HistoricalProcurement[] = [
-      {
-        id: "HIST-001",
-        requestNumber: "REQ-2023-050",
-        category: "IT001",
-        itemName: "מחשבים ניידים Dell Latitude 5530",
-        quantity: 15,
-        actualCost: 78000,
-        estimatedCost: 75000,
-        variance: 4.0,
-        supplierId: 1,
-        completedDate: new Date("2023-06-15"),
-        satisfaction: 4.2,
-        lessons: ["הוסף זמן להובלה", "בדוק זמינות מלאי מראש"]
-      },
-      {
-        id: "HIST-002",
-        requestNumber: "REQ-2023-051",
-        category: "FURN01",
-        itemName: "כסאות ארגונומיים למשרד",
-        quantity: 40,
-        actualCost: 62000,
-        estimatedCost: 60000,
-        variance: 3.3,
-        supplierId: 3,
-        completedDate: new Date("2023-07-20"),
-        satisfaction: 4.0,
-        lessons: ["בדוק איכות ריפוד", "השווה מחירים"]
-      },
-      {
-        id: "HIST-003",
-        requestNumber: "REQ-2023-052",
-        category: "IT002",
-        itemName: "שרתי Dell PowerEdge R450",
-        quantity: 2,
-        actualCost: 120000,
-        estimatedCost: 115000,
-        variance: 4.3,
-        supplierId: 2,
-        completedDate: new Date("2023-08-10"),
-        satisfaction: 4.8,
-        lessons: ["התקנה מורכבת יותר", "דרוש יותר זמן הכנה"]
-      },
-      {
-        id: "HIST-004",
-        requestNumber: "REQ-2023-053",
-        category: "SERV01",
-        itemName: "פיתוח מערכת CRM",
-        quantity: 1,
-        actualCost: 850000,
-        estimatedCost: 800000,
-        variance: 6.25,
-        supplierId: 1,
-        completedDate: new Date("2023-12-01"),
-        satisfaction: 4.5,
-        lessons: ["דרישות השתנו במהלך הפרויקט", "צרכים נוספים התגלו"]
-      },
-      {
-        id: "HIST-005",
-        requestNumber: "REQ-2023-054",
-        category: "PROD01",
-        itemName: "מחשבי עבודה HP EliteDesk",
-        quantity: 30,
-        actualCost: 180000,
-        estimatedCost: 175000,
-        variance: 2.9,
-        supplierId: 1,
-        completedDate: new Date("2023-09-15"),
-        satisfaction: 4.3,
-        lessons: ["מחיר יציב", "ספק אמין"]
-      },
-      // הוספת 15 רכישות היסטוריות נוספות
-      {
-        id: "HIST-006",
-        requestNumber: "REQ-2023-055",
-        category: "IT001",
-        itemName: "מסכי Dell UltraSharp 27 אינץ'",
-        quantity: 20,
-        actualCost: 45000,
-        estimatedCost: 42000,
-        variance: 7.1,
-        supplierId: 2,
-        completedDate: new Date("2023-10-05"),
-        satisfaction: 4.6,
-        lessons: ["איכות מסך מעולה", "מחיר עלה בגלל ביקוש"]
-      },
-      {
-        id: "HIST-007",
-        requestNumber: "REQ-2023-056",
-        category: "FURN01",
-        itemName: "שולחנות עמידה חשמליים",
-        quantity: 12,
-        actualCost: 36000,
-        estimatedCost: 38000,
-        variance: -5.3,
-        supplierId: 3,
-        completedDate: new Date("2023-11-12"),
-        satisfaction: 4.4,
-        lessons: ["הנחה בלתי צפויה", "איכות טובה מהצפוי"]
-      },
-      {
-        id: "HIST-008",
-        requestNumber: "REQ-2023-057",
-        category: "SERV01",
-        itemName: "שירותי גיבוי ואבטחה",
-        quantity: 1,
-        actualCost: 420000,
-        estimatedCost: 400000,
-        variance: 5.0,
-        supplierId: 1,
-        completedDate: new Date("2023-12-20"),
-        satisfaction: 4.7,
-        lessons: ["שירות מעולה", "תוספות שלא חזינו"]
-      },
-      {
-        id: "HIST-009",
-        requestNumber: "REQ-2023-058",
-        category: "IT002",
-        itemName: "מערכת אחסון SAN",
-        quantity: 1,
-        actualCost: 320000,
-        estimatedCost: 310000,
-        variance: 3.2,
-        supplierId: 2,
-        completedDate: new Date("2024-01-08"),
-        satisfaction: 4.5,
-        lessons: ["התקנה מורכבת", "ביצועים מעולים"]
-      },
-      {
-        id: "HIST-010",
-        requestNumber: "REQ-2023-059",
-        category: "PROD01",
-        itemName: "מדפסות רשת HP LaserJet",
-        quantity: 8,
-        actualCost: 24000,
-        estimatedCost: 25000,
-        variance: -4.0,
-        supplierId: 1,
-        completedDate: new Date("2024-01-15"),
-        satisfaction: 4.1,
-        lessons: ["מחיר טוב", "התקנה פשוטה"]
-      },
-      {
-        id: "HIST-011",
-        requestNumber: "REQ-2022-080",
-        category: "CONST01",
-        itemName: "שיפוץ משרדים קומה 3",
-        quantity: 1,
-        actualCost: 280000,
-        estimatedCost: 250000,
-        variance: 12.0,
-        supplierId: 3,
-        completedDate: new Date("2022-11-30"),
-        satisfaction: 3.8,
-        lessons: ["עלויות נסתרות", "לוח זמנים התארך"]
-      },
-      {
-        id: "HIST-012",
-        requestNumber: "REQ-2022-081",
-        category: "RAW01",
-        itemName: "חומרי גלם לייצור Q4",
-        quantity: 60,
-        actualCost: 195000,
-        estimatedCost: 200000,
-        variance: -2.5,
-        supplierId: 2,
-        completedDate: new Date("2022-12-15"),
-        satisfaction: 4.3,
-        lessons: ["מחיר יציב", "איכות טובה"]
-      },
-      {
-        id: "HIST-013",
-        requestNumber: "REQ-2022-082",
-        category: "FLEET01",
-        itemName: "רכבי מסחרי צי החברה",
-        quantity: 5,
-        actualCost: 425000,
-        estimatedCost: 450000,
-        variance: -5.6,
-        supplierId: 1,
-        completedDate: new Date("2023-01-20"),
-        satisfaction: 4.6,
-        lessons: ["הנחת כמות", "שירות מעולה"]
-      },
-      {
-        id: "HIST-014",
-        requestNumber: "REQ-2022-083",
-        category: "IT001",
-        itemName: "טאבלטים לעובדי שטח",
-        quantity: 25,
-        actualCost: 87000,
-        estimatedCost: 85000,
-        variance: 2.4,
-        supplierId: 2,
-        completedDate: new Date("2023-02-10"),
-        satisfaction: 4.2,
-        lessons: ["מגן נוסף נדרש", "באטרי טוב"]
-      },
-      {
-        id: "HIST-015",
-        requestNumber: "REQ-2022-084",
-        category: "SERV01",
-        itemName: "ייעוץ ארגוני ושיפור תהליכים",
-        quantity: 1,
-        actualCost: 520000,
-        estimatedCost: 500000,
-        variance: 4.0,
-        supplierId: 3,
-        completedDate: new Date("2023-03-25"),
-        satisfaction: 4.4,
-        lessons: ["תוצאות מעולות", "כדאי להמשיך"]
-      },
-      {
-        id: "HIST-016",
-        requestNumber: "REQ-2022-085",
-        category: "FURN01",
-        itemName: "ארונות אחסון למשרד",
-        quantity: 15,
-        actualCost: 22500,
-        estimatedCost: 24000,
-        variance: -6.3,
-        supplierId: 3,
-        completedDate: new Date("2023-04-12"),
-        satisfaction: 4.0,
-        lessons: ["איכות סבירה", "מחיר זול"]
-      },
-      {
-        id: "HIST-017",
-        requestNumber: "REQ-2022-086",
-        category: "IT002",
-        itemName: "מערכת גיבוי מתקדמת",
-        quantity: 1,
-        actualCost: 185000,
-        estimatedCost: 180000,
-        variance: 2.8,
-        supplierId: 1,
-        completedDate: new Date("2023-05-08"),
-        satisfaction: 4.8,
-        lessons: ["מערכת מעולה", "תמיכה טובה"]
-      },
-      {
-        id: "HIST-018",
-        requestNumber: "REQ-2022-087",
-        category: "PROD01",
-        itemName: "מכשירי תקשורת אלחוטית",
-        quantity: 50,
-        actualCost: 95000,
-        estimatedCost: 92000,
-        variance: 3.3,
-        supplierId: 2,
-        completedDate: new Date("2023-05-20"),
-        satisfaction: 4.3,
-        lessons: ["טווח טוב", "קליטה יציבה"]
-      },
-      {
-        id: "HIST-019",
-        requestNumber: "REQ-2022-088",
-        category: "CONST01",
-        itemName: "בניית מחסן עזר",
-        quantity: 1,
-        actualCost: 650000,
-        estimatedCost: 600000,
-        variance: 8.3,
-        supplierId: 3,
-        completedDate: new Date("2023-07-30"),
-        satisfaction: 3.9,
-        lessons: ["עלויות נוספות", "תוצאה טובה"]
-      },
-      {
-        id: "HIST-020",
-        requestNumber: "REQ-2022-089",
-        category: "RAW01",
-        itemName: "פלסטיק מיוחד לייצור",
-        quantity: 35,
-        actualCost: 168000,
-        estimatedCost: 170000,
-        variance: -1.2,
-        supplierId: 2,
-        completedDate: new Date("2023-08-15"),
-        satisfaction: 4.5,
-        lessons: ["איכות מעולה", "מחיר יציב"]
-      }
-    ];
-
-    historical.forEach(hist => this.historicalProcurements.set(hist.id, hist));
-  }
-
-  private seedSupplierPerformance() {
-    const performance: SupplierPerformance[] = [
-      {
-        supplierId: 1,
-        supplierName: "TechSource Ltd",
-        rating: 4.8,
-        avgDeliveryTime: 10,
-        reliabilityScore: 98,
-        costEfficiency: 4.5,
-        qualityScore: 4.7,
-        totalOrders: 45,
-        onTimeDelivery: 96,
-        defectRate: 2,
-        responseTime: 4
-      },
-      {
-        supplierId: 2,
-        supplierName: "Dell Technologies",
-        rating: 4.5,
-        avgDeliveryTime: 30,
-        reliabilityScore: 92,
-        costEfficiency: 4.2,
-        qualityScore: 4.8,
-        totalOrders: 28,
-        onTimeDelivery: 89,
-        defectRate: 1,
-        responseTime: 8
-      },
-      {
-        supplierId: 3,
-        supplierName: "CompuTrade",
-        rating: 4.2,
-        avgDeliveryTime: 25,
-        reliabilityScore: 88,
-        costEfficiency: 4.4,
-        qualityScore: 4.1,
-        totalOrders: 32,
-        onTimeDelivery: 85,
-        defectRate: 5,
-        responseTime: 12
-      },
-      // 7 ספקים נוספים
-      {
-        supplierId: 4,
-        supplierName: "ריהוט ישראלי בע\"מ",
-        rating: 4.2,
-        avgDeliveryTime: 25,
-        reliabilityScore: 85,
-        costEfficiency: 4.3,
-        qualityScore: 4.2,
-        totalOrders: 18,
-        onTimeDelivery: 88,
-        defectRate: 3,
-        responseTime: 6
-      },
-      {
-        supplierId: 5,
-        supplierName: "מערכות IT מתקדמות",
-        rating: 4.6,
-        avgDeliveryTime: 18,
-        reliabilityScore: 94,
-        costEfficiency: 4.4,
-        qualityScore: 4.6,
-        totalOrders: 22,
-        onTimeDelivery: 91,
-        defectRate: 2,
-        responseTime: 5
-      },
-      {
-        supplierId: 6,
-        supplierName: "בנייה ותשתיות כהן",
-        rating: 3.9,
-        avgDeliveryTime: 45,
-        reliabilityScore: 78,
-        costEfficiency: 3.8,
-        qualityScore: 4.0,
-        totalOrders: 12,
-        onTimeDelivery: 75,
-        defectRate: 8,
-        responseTime: 24
-      },
-      {
-        supplierId: 7,
-        supplierName: "חומרי גלם שמיר",
-        rating: 4.3,
-        avgDeliveryTime: 15,
-        reliabilityScore: 89,
-        costEfficiency: 4.5,
-        qualityScore: 4.3,
-        totalOrders: 35,
-        onTimeDelivery: 92,
-        defectRate: 3,
-        responseTime: 8
-      },
-      {
-        supplierId: 8,
-        supplierName: "צי רכב ישראל",
-        rating: 4.4,
-        avgDeliveryTime: 35,
-        reliabilityScore: 87,
-        costEfficiency: 4.2,
-        qualityScore: 4.4,
-        totalOrders: 15,
-        onTimeDelivery: 87,
-        defectRate: 4,
-        responseTime: 12
-      },
-      {
-        supplierId: 9,
-        supplierName: "שירותי IT ובטחון",
-        rating: 4.7,
-        avgDeliveryTime: 20,
-        reliabilityScore: 95,
-        costEfficiency: 4.3,
-        qualityScore: 4.8,
-        totalOrders: 25,
-        onTimeDelivery: 94,
-        defectRate: 1,
-        responseTime: 6
-      },
-      {
-        supplierId: 10,
-        supplierName: "פתרונות משרד מודרני",
-        rating: 4.1,
-        avgDeliveryTime: 22,
-        reliabilityScore: 83,
-        costEfficiency: 4.2,
-        qualityScore: 4.0,
-        totalOrders: 20,
-        onTimeDelivery: 82,
-        defectRate: 6,
-        responseTime: 10
-      }
-    ];
-
-    performance.forEach(perf => this.supplierPerformance.set(perf.supplierId, perf));
-  }
-
-  private seedDocumentTemplates() {
-    const templates: DocumentTemplate[] = [
-      {
-        id: "REQ-2024-001",
-        name: "מחשבים ניידים Dell Latitude 5520",
-        category: "IT001",
-        estimatedCost: 130000,
-        specifications: {
-          processor: "Intel Core i5",
-          memory: "16GB DDR4",
-          storage: "512GB SSD",
-          display: "15.6 FHD",
-          quantity: 25
-        },
-        template: {
-          title: "רכש מחשבים ניידים",
-          description: "רכש 25 מחשבים ניידים לעובדי המשרד",
-          category: "חומרה - מחשבים",
-          department: "IT"
-        }
-      },
-      {
-        id: "REQ-2024-003",
-        name: "שרתי Dell PowerEdge R750",
-        category: "IT002",
-        estimatedCost: 200000,
-        specifications: {
-          processor: "Intel Xeon Silver 4314 (16 cores)",
-          memory: "64GB DDR4 ECC",
-          storage: "2x 1TB NVMe SSD",
-          network: "4x 1GbE + 2x 10GbE",
-          quantity: 3
-        },
-        template: {
-          title: "רכש שרתי דאטה סנטר",
-          description: "רכש 3 שרתי Dell עבור מרכז הנתונים",
-          category: "חומרה - שרתים",
-          department: "IT"
-        }
-      },
-      {
-        id: "REQ-2024-010",
-        name: "מערכת ניהול משאבי אנוש",
-        category: "SERV01",
-        estimatedCost: 1000000,
-        specifications: {
-          estimatedHours: 2400,
-          teamSize: 6,
-          duration: "8 חודשים",
-          technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
-          complexity: "גבוהה"
-        },
-        template: {
-          title: "פיתוח מערכת HR",
-          description: "פיתוח מערכת ניהול משאבי אנוש מקיפה",
-          category: "שירותים",
-          department: "משאבי אנוש"
-        }
-      },
-      {
-        id: "REQ-2024-011",
-        name: "ייעוץ אסטרטגי לשיפור תהליכים",
-        category: "SERV01",
-        estimatedCost: 650000,
-        specifications: {
-          deliverables: ["מיפוי תהליכים", "ניתוח פערים", "תכנית יישום", "הדרכה"],
-          duration: "6 חודשים",
-          consultantLevel: "senior",
-          complexity: "גבוהה"
-        },
-        template: {
-          title: "ייעוץ עסקי אסטרטגי",
-          description: "ייעוץ לשיפור תהליכים עסקיים ויעילות ארגונית",
-          category: "שירותים",
-          department: "הנהלה"
-        }
-      },
-      {
-        id: "REQ-2024-012",
-        name: "שירותי אבטחת מידע ו-SOC",
-        category: "SERV01",
-        estimatedCost: 2500000,
-        specifications: {
-          serviceLevel: "24/7",
-          coverage: "מלא",
-          responseTime: "15 דקות",
-          duration: "12 חודשים",
-          businessValue: "הגנה על נכסי מידע קריטיים"
-        },
-        template: {
-          title: "שירותי SOC ואבטחה",
-          description: "שירותי ניטור אבטחה 24/7 ותגובה לאירועים",
-          category: "שירותים",
-          department: "IT"
-        }
-      },
-      {
-        id: "REQ-2024-013",
-        name: "תחזוקה שנתית למערכות IT",
-        category: "SERV01",
-        estimatedCost: 700000,
-        specifications: {
-          uncertainty: "גבוהה",
-          variableFactors: ["כמות תקלות", "זמינות טכנאים", "מורכבות תיקונים"],
-          duration: "12 חודשים",
-          systemsCount: 45
-        },
-        template: {
-          title: "תחזוקת מערכות IT",
-          description: "תחזוקה מונעת ותיקונית למערכות IT, שרתים, רשת ותוכנות",
-          category: "שירותים",
-          department: "IT"
-        }
-      },
-      {
-        id: "REQ-2024-014",
-        name: "50 מחשבי עבודה",
-        category: "PROD01",
-        estimatedCost: 250000,
-        specifications: {
-          processor: "Intel i7 או AMD Ryzen 7",
-          ram: "16GB",
-          storage: "512GB SSD",
-          graphics: "מובנה",
-          warranty: "3 שנים",
-          quantity: 50
-        },
-        template: {
-          title: "רכש מחשבי עבודה",
-          description: "רכש 50 מחשבי עבודה למשרדי החברה החדשים",
-          category: "מוצרים",
-          department: "משאבי אנוש"
-        }
-      }
-    ];
-
-    templates.forEach(template => this.documentTemplates.set(template.id, template));
   }
 
   // Users
@@ -1970,11 +1193,11 @@ export class MemStorage implements IStorage {
   async createProcurementRequest(insertRequest: InsertProcurementRequest): Promise<ProcurementRequest> {
     const id = this.currentId++;
     const now = new Date();
-    const request: ProcurementRequest = {
-      ...insertRequest,
-      id,
-      createdAt: now,
-      updatedAt: now
+    const request: ProcurementRequest = { 
+      ...insertRequest, 
+      id, 
+      createdAt: now, 
+      updatedAt: now 
     };
     this.procurementRequests.set(id, request);
     return request;
@@ -1983,11 +1206,11 @@ export class MemStorage implements IStorage {
   async updateProcurementRequest(id: number, updateData: Partial<InsertProcurementRequest>): Promise<ProcurementRequest | undefined> {
     const existing = this.procurementRequests.get(id);
     if (!existing) return undefined;
-
-    const updated: ProcurementRequest = {
-      ...existing,
-      ...updateData,
-      updatedAt: new Date()
+    
+    const updated: ProcurementRequest = { 
+      ...existing, 
+      ...updateData, 
+      updatedAt: new Date() 
     };
     this.procurementRequests.set(id, updated);
     return updated;
@@ -2066,7 +1289,7 @@ export class MemStorage implements IStorage {
   async updateDocument(id: number, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
     const existing = this.documents.get(id);
     if (!existing) return undefined;
-
+    
     const updated: Document = { ...existing, ...updateData };
     this.documents.set(id, updated);
     return updated;
@@ -2146,7 +1369,7 @@ export class MemStorage implements IStorage {
     // Manually update each request status to "new"
     const allRequests = Array.from(this.procurementRequests.values());
     console.log(`Starting reset of ${totalRequests} requests...`);
-
+    
     for (const request of allRequests) {
       if (request.status !== "new") {
         console.log(`Updating request ${request.id} from ${request.status} to new`);
@@ -2158,14 +1381,14 @@ export class MemStorage implements IStorage {
     }
 
     console.log(`Demo reset completed: ${updatedRequests} requests updated out of ${totalRequests} total`);
-
+    
     // Verify the changes
     const statusSummary: { [key: string]: number } = {};
     for (const request of this.procurementRequests.values()) {
       statusSummary[request.status] = (statusSummary[request.status] || 0) + 1;
     }
     console.log('Status summary after reset:', statusSummary);
-
+    
     return { totalRequests, updatedRequests };
   }
 
@@ -2173,10 +1396,10 @@ export class MemStorage implements IStorage {
   async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
     const totalEstimations = this.costEstimations.size;
     console.log(`Starting reset of ${totalEstimations} cost estimations...`);
-
+    
     // Clear all cost estimations
     this.costEstimations.clear();
-
+    
     // Also clear estimated costs from procurement requests
     let updatedRequests = 0;
     for (const [id, request] of this.procurementRequests.entries()) {
@@ -2193,519 +1416,85 @@ export class MemStorage implements IStorage {
   }
 
   // אפס את כל נתוני ה-AI והאומדנים במערכת
-  async resetAllAIData() {
-    console.log('Resetting all AI data and cost estimations...');
-
-    try {
-      // Clear all cost estimations
-      const clearedEstimations = await this.resetAllCostEstimations();
-
-      // Clear all extracted data from procurement requests
-      const clearedExtractedData = await this.clearAllExtractedData();
-
-      // Clear all document analysis
-      const clearedDocumentAnalysis = await this.clearAllDocumentAnalysis();
-
-      // Reset all request statuses to 'new'
-      const updatedRequests = await this.resetAllRequestsStatus();
-
-      return {
-        clearedEstimations: clearedEstimations.clearedEstimations,
-        clearedExtractedData,
-        clearedDocumentAnalysis,
-        updatedRequests: updatedRequests.updatedRequests
-      };
-    } catch (error) {
-      console.error('Error resetting AI data:', error);
-      throw error;
-    }
-  }
-
-  async executeSQL(query: string, params: any[] = []) {
-    try {
-      // For safety, allow only SELECT, INSERT, UPDATE, DELETE
-      const normalizedQuery = query.trim().toLowerCase();
-      const allowedCommands = ['select', 'insert', 'update', 'delete'];
-      const isAllowed = allowedCommands.some(cmd => normalizedQuery.startsWith(cmd));
-
-      if (!isAllowed) {
-        throw new Error('רק שאילתות SELECT, INSERT, UPDATE, DELETE מותרות');
-      }
-
-      // במקום ביצוע על database אמיתי, נבצע על הנתונים שלנו ב-memory
-      return this.simulateSQL(query);
-    } catch (error) {
-      console.error('SQL execution error:', error);
-      throw error;
-    }
-  }
-
-  private async simulateSQL(query: string) {
-    const lowerQuery = query.toLowerCase().trim();
+  async resetAllAIData(): Promise<{
+    clearedEstimations: number;
+    clearedExtractedData: number;
+    clearedDocumentAnalysis: number;
+    updatedRequests: number;
+  }> {
+    console.log('Starting comprehensive AI data reset...');
     
-    // SELECT queries
-    if (lowerQuery.includes('select') && lowerQuery.includes('procurement_requests')) {
-      const requests = Array.from(this.procurementRequests.values());
-      if (lowerQuery.includes('where status = \'new\'')) {
-        return requests.filter(r => r.status === 'new');
+    // 1. נקה את כל האומדנים
+    const totalEstimations = this.costEstimations.size;
+    this.costEstimations.clear();
+    
+    // 2. נקה נתוני ניתוח AI מדרישות רכש
+    let clearedExtractedData = 0;
+    let updatedRequests = 0;
+    
+    for (const [id, request] of this.procurementRequests.entries()) {
+      let updated = false;
+      
+      // נקה את הנתונים שחולצו
+      if (request.extractedData) {
+        request.extractedData = null;
+        request.extractionDate = null;
+        request.extractionStatus = 'not_extracted';
+        clearedExtractedData++;
+        updated = true;
       }
-      if (lowerQuery.includes('count(*)')) {
-        return [{ count: requests.length }];
+      
+      // נקה את האומדן המחושב
+      if (request.estimatedCost) {
+        request.estimatedCost = null;
+        updated = true;
       }
-      return requests;
-    }
-
-    if (lowerQuery.includes('select') && lowerQuery.includes('cost_estimations')) {
-      const estimations = Array.from(this.costEstimations.values());
-      if (lowerQuery.includes('confidencelevel > 90')) {
-        return estimations.filter(e => e.confidenceLevel > 90);
+      
+      // החזר את הסטטוס ל"חדש" אם הדרישה הושלמה או בעיבוד
+      if (request.status === 'completed' || request.status === 'in_progress' || request.status === 'processing') {
+        request.status = 'new';
+        updated = true;
       }
-      return estimations;
-    }
-
-    if (lowerQuery.includes('select') && lowerQuery.includes('suppliers')) {
-      return Array.from(this.suppliers.values());
-    }
-
-    if (lowerQuery.includes('select') && lowerQuery.includes('documents')) {
-      return Array.from(this.documents.values());
-    }
-
-    // Group by queries
-    if (lowerQuery.includes('group by')) {
-      if (lowerQuery.includes('category')) {
-        const requests = Array.from(this.procurementRequests.values());
-        const grouped = requests.reduce((acc, req) => {
-          acc[req.category] = (acc[req.category] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        return Object.entries(grouped).map(([category, count]) => ({ category, count }));
-      }
-      if (lowerQuery.includes('status')) {
-        const requests = Array.from(this.procurementRequests.values());
-        const grouped = requests.reduce((acc, req) => {
-          acc[req.status] = (acc[req.status] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        return Object.entries(grouped).map(([status, count]) => ({ status, count }));
+      
+      if (updated) {
+        request.updatedAt = new Date();
+        this.procurementRequests.set(id, request);
+        updatedRequests++;
       }
     }
-
-    // Generic SELECT *
-    if (lowerQuery.startsWith('select *')) {
-      if (lowerQuery.includes('procurement_requests')) {
-        return Array.from(this.procurementRequests.values());
-      }
-      if (lowerQuery.includes('suppliers')) {
-        return Array.from(this.suppliers.values());
-      }
-      if (lowerQuery.includes('cost_estimations')) {
-        return Array.from(this.costEstimations.values());
-      }
-    }
-
-    throw new Error('שאילתה לא נתמכת או לא מזוהה. השתמש ב-SELECT על הטבלאות הקיימות');
-  }
-
-  // New v2.0 Methods Implementation
-
-  // Procurement Categories Methods
-  async getProcurementCategories(): Promise<ProcurementCategory[]> {
-    return Array.from(this.procurementCategories.values());
-  }
-
-  async getProcurementCategory(id: string): Promise<ProcurementCategory | undefined> {
-    return this.procurementCategories.get(id);
-  }
-
-  async getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]> {
-    return Array.from(this.procurementCategories.values()).filter(
-      category => category.name.includes(name)
-    );
-  }
-
-  // Historical Procurements Methods
-  async getHistoricalProcurements(): Promise<HistoricalProcurement[]> {
-    return Array.from(this.historicalProcurements.values());
-  }
-
-  async getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]> {
-    return Array.from(this.historicalProcurements.values()).filter(
-      procurement => procurement.category === category
-    );
-  }
-
-  async getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]> {
-    return Array.from(this.historicalProcurements.values()).filter(
-      procurement => procurement.supplierId === supplierId
-    );
-  }
-
-  // Supplier Performance Methods
-  async getSupplierPerformance(): Promise<SupplierPerformance[]> {
-    return Array.from(this.supplierPerformance.values());
-  }
-
-  async getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined> {
-    return this.supplierPerformance.get(supplierId);
-  }
-
-  async getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]> {
-    return Array.from(this.supplierPerformance.values())
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, limit);
-  }
-
-  // Document Templates Methods
-  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
-    return Array.from(this.documentTemplates.values());
-  }
-
-  async getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined> {
-    return this.documentTemplates.get(id);
-  }
-
-  async getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]> {
-    return Array.from(this.documentTemplates.values()).filter(
-      template => template.category === category
-    );
-  }
-
-  // Helper methods for resetAllAIData (assuming they exist and are implemented similarly to the others)
-  private async clearAllExtractedData(): Promise<number> {
-    let count = 0;
-    for (const req of this.procurementRequests.values()) {
-      if (req.extractedData) {
-        req.extractedData = null;
-        req.extractionDate = null;
-        req.extractionStatus = 'not_extracted';
-        count++;
+    
+    // 3. נקה נתוני ניתוח מסמכים
+    let clearedDocumentAnalysis = 0;
+    
+    for (const [id, document] of this.documents.entries()) {
+      if (document.isAnalyzed || document.analysisResults || document.extractedSpecs) {
+        document.isAnalyzed = false;
+        document.analysisResults = null;
+        document.extractedSpecs = null;
+        this.documents.set(id, document);
+        clearedDocumentAnalysis++;
       }
     }
-    console.log(`Cleared extracted data from ${count} requests.`);
-    return count;
-  }
-
-  private async clearAllDocumentAnalysis(): Promise<number> {
-    let count = 0;
-    for (const doc of this.documents.values()) {
-      if (doc.isAnalyzed || doc.analysisResults || doc.extractedSpecs) {
-        doc.isAnalyzed = false;
-        doc.analysisResults = null;
-        doc.extractedSpecs = null;
-        count++;
-      }
+    
+    console.log(`AI data reset completed:`);
+    console.log(`- ${totalEstimations} cost estimations cleared`);
+    console.log(`- ${clearedExtractedData} extracted data entries cleared`);
+    console.log(`- ${clearedDocumentAnalysis} document analyses cleared`);
+    console.log(`- ${updatedRequests} procurement requests updated`);
+    
+    // הדפס סטטוסים של כל הדרישות לצורך ניפוי באגים
+    console.log('Current request statuses:');
+    for (const [id, request] of this.procurementRequests.entries()) {
+      console.log(`  Request ${id}: ${request.status}`);
     }
-    console.log(`Cleared document analysis from ${count} documents.`);
-    return count;
+    
+    return {
+      clearedEstimations: totalEstimations,
+      clearedExtractedData,
+      clearedDocumentAnalysis,
+      updatedRequests
+    };
   }
 }
 
-// PostgreSQL Storage Implementation
-export class PostgresStorage implements IStorage {
-  private db;
-
-  constructor() {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is required');
-    }
-    const client = postgres(connectionString);
-    this.db = drizzle(client);
-  }
-
-  // Users
-  async getUser(id: number): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.username, username)).limit(1);
-    return result[0];
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await this.db.insert(users).values(insertUser).returning();
-    return result[0];
-  }
-
-  // Procurement Requests
-  async getProcurementRequests(): Promise<ProcurementRequest[]> {
-    return await this.db.select().from(procurementRequests).orderBy(desc(procurementRequests.createdAt));
-  }
-
-  async getProcurementRequest(id: number): Promise<ProcurementRequest | undefined> {
-    const result = await this.db.select().from(procurementRequests).where(eq(procurementRequests.id, id)).limit(1);
-    return result[0];
-  }
-
-  async createProcurementRequest(insertRequest: InsertProcurementRequest): Promise<ProcurementRequest> {
-    const result = await this.db.insert(procurementRequests).values(insertRequest).returning();
-    return result[0];
-  }
-
-  async updateProcurementRequest(id: number, updateData: Partial<InsertProcurementRequest>): Promise<ProcurementRequest | undefined> {
-    const result = await this.db.update(procurementRequests)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(procurementRequests.id, id))
-      .returning();
-    return result[0];
-  }
-
-  // Suppliers
-  async getSuppliers(): Promise<Supplier[]> {
-    return await this.db.select().from(suppliers).orderBy(suppliers.name);
-  }
-
-  async getSupplier(id: number): Promise<Supplier | undefined> {
-    const result = await this.db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
-    return result[0];
-  }
-
-  async createSupplier(insertSupplier: InsertSupplier): Promise<Supplier> {
-    const result = await this.db.insert(suppliers).values(insertSupplier).returning();
-    return result[0];
-  }
-
-  // Cost Estimations
-  async getCostEstimations(): Promise<CostEstimation[]> {
-    return await this.db.select().from(costEstimations).orderBy(desc(costEstimations.createdAt));
-  }
-
-  async getCostEstimation(id: number): Promise<CostEstimation | undefined> {
-    const result = await this.db.select().from(costEstimations).where(eq(costEstimations.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getCostEstimationByRequestId(requestId: number): Promise<CostEstimation | undefined> {
-    const result = await this.db.select().from(costEstimations).where(eq(costEstimations.procurementRequestId, requestId)).limit(1);
-    return result[0];
-  }
-
-  async createCostEstimation(insertEstimation: InsertCostEstimation): Promise<CostEstimation> {
-    const result = await this.db.insert(costEstimations).values(insertEstimation).returning();
-    return result[0];
-  }
-
-  // Supplier Quotes
-  async getSupplierQuotes(): Promise<SupplierQuote[]> {
-    return await this.db.select().from(supplierQuotes).orderBy(desc(supplierQuotes.createdAt));
-  }
-
-  async getSupplierQuotesByRequestId(requestId: number): Promise<SupplierQuote[]> {
-    return await this.db.select().from(supplierQuotes).where(eq(supplierQuotes.procurementRequestId, requestId));
-  }
-
-  async createSupplierQuote(insertQuote: InsertSupplierQuote): Promise<SupplierQuote> {
-    const result = await this.db.insert(supplierQuotes).values(insertQuote).returning();
-    return result[0];
-  }
-
-  // Documents
-  async getDocumentsByRequestId(requestId: number): Promise<Document[]> {
-    return await this.db.select().from(documents).where(eq(documents.procurementRequestId, requestId));
-  }
-
-  async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const result = await this.db.insert(documents).values(insertDocument).returning();
-    return result[0];
-  }
-
-  async updateDocument(id: number, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
-    const result = await this.db.update(documents)
-      .set(updateData)
-      .where(eq(documents.id, id))
-      .returning();
-    return result[0];
-  }
-
-  // Market Insights
-  async getMarketInsights(): Promise<MarketInsight[]> {
-    return await this.db.select().from(marketInsights).orderBy(desc(marketInsights.updatedAt));
-  }
-
-  async getMarketInsightByCategory(category: string): Promise<MarketInsight | undefined> {
-    const result = await this.db.select().from(marketInsights).where(eq(marketInsights.category, category)).limit(1);
-    return result[0];
-  }
-
-  async createMarketInsight(insertInsight: InsertMarketInsight): Promise<MarketInsight> {
-    const result = await this.db.insert(marketInsights).values(insertInsight).returning();
-    return result[0];
-  }
-
-  // Extracted Data Management
-  async saveExtractedData(requestId: number, data: any): Promise<void> {
-    await this.db.update(procurementRequests)
-      .set({
-        extractedData: data,
-        extractionDate: new Date(),
-        extractionStatus: "extracted",
-        updatedAt: new Date()
-      })
-      .where(eq(procurementRequests.id, requestId));
-  }
-
-  async getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null> {
-    const result = await this.db.select({
-      extractedData: procurementRequests.extractedData,
-      extractionDate: procurementRequests.extractionDate,
-      extractionStatus: procurementRequests.extractionStatus
-    }).from(procurementRequests).where(eq(procurementRequests.id, requestId)).limit(1);
-
-    if (!result[0] || !result[0].extractedData || result[0].extractionStatus !== "extracted") {
-      return null;
-    }
-
-    return {
-      data: result[0].extractedData,
-      extractionDate: result[0].extractionDate!,
-      status: result[0].extractionStatus!
-    };
-  }
-
-  async clearExtractedData(requestId: number): Promise<void> {
-    await this.db.update(procurementRequests)
-      .set({
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
-        updatedAt: new Date()
-      })
-      .where(eq(procurementRequests.id, requestId));
-  }
-
-  // Admin reset methods
-  async resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }> {
-    const allRequests = await this.db.select().from(procurementRequests);
-    const totalRequests = allRequests.length;
-    
-    const result = await this.db.update(procurementRequests)
-      .set({ status: "new", updatedAt: new Date() })
-      .where(ne(procurementRequests.status, "new"))
-      .returning({ id: procurementRequests.id });
-    
-    return { totalRequests, updatedRequests: result.length };
-  }
-
-  async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
-    const allEstimations = await this.db.select().from(costEstimations);
-    const totalEstimations = allEstimations.length;
-    
-    await this.db.delete(costEstimations);
-    await this.db.update(procurementRequests).set({ 
-      estimatedCost: null, 
-      updatedAt: new Date() 
-    });
-    
-    return { totalEstimations, clearedEstimations: totalEstimations };
-  }
-
-  async resetAllAIData() {
-    // Clear cost estimations
-    const clearedEstimations = await this.resetAllCostEstimations();
-    
-    // Clear extracted data and document analysis
-    const clearedExtractedResult = await this.db.update(procurementRequests)
-      .set({
-        extractedData: null,
-        extractionDate: null,
-        extractionStatus: "not_extracted",
-        updatedAt: new Date()
-      })
-      .where(isNotNull(procurementRequests.extractedData))
-      .returning({ id: procurementRequests.id });
-
-    const clearedDocumentsResult = await this.db.update(documents)
-      .set({
-        isAnalyzed: false,
-        analysisResults: null,
-        extractedSpecs: null
-      })
-      .where(eq(documents.isAnalyzed, true))
-      .returning({ id: documents.id });
-
-    // Reset request statuses
-    const updatedRequests = await this.resetAllRequestsStatus();
-
-    return {
-      clearedEstimations: clearedEstimations.clearedEstimations,
-      clearedExtractedData: clearedExtractedResult.length,
-      clearedDocumentAnalysis: clearedDocumentsResult.length,
-      updatedRequests: updatedRequests.updatedRequests
-    };
-  }
-
-  async executeSQL(query: string, params: any[] = []) {
-    try {
-      const result = await this.db.execute(sql`${query}`);
-      return result;
-    } catch (error) {
-      console.error('SQL execution error:', error);
-      throw error;
-    }
-  }
-
-  // New v2.0 Methods - Not implemented for PostgreSQL yet
-  async getProcurementCategories(): Promise<ProcurementCategory[]> {
-    return [];
-  }
-
-  async getProcurementCategory(id: string): Promise<ProcurementCategory | undefined> {
-    return undefined;
-  }
-
-  async getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]> {
-    return [];
-  }
-
-  async getHistoricalProcurements(): Promise<HistoricalProcurement[]> {
-    return [];
-  }
-
-  async getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]> {
-    return [];
-  }
-
-  async getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]> {
-    return [];
-  }
-
-  async getSupplierPerformance(): Promise<SupplierPerformance[]> {
-    return [];
-  }
-
-  async getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined> {
-    return undefined;
-  }
-
-  async getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]> {
-    return [];
-  }
-
-  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
-    return [];
-  }
-
-  async getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined> {
-    return undefined;
-  }
-
-  async getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]> {
-    return [];
-  }
-}
-
-// Initialize storage based on environment
-const initStorage = (): IStorage => {
-  if (process.env.DATABASE_URL && process.env.USE_POSTGRES === 'true') {
-    console.log('Using PostgreSQL storage');
-    return new PostgresStorage();
-  } else {
-    console.log('Using in-memory storage');
-    return new MemStorage();
-  }
-};
-
-export const storage = initStorage();
+export const storage = new MemStorage();

@@ -12,19 +12,6 @@ interface SupplierChartProps {
 }
 
 export default function SupplierChart({ data }: SupplierChartProps) {
-  // Check if data is available and valid
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="text-muted-foreground mb-2">📊</div>
-          <p className="text-muted-foreground text-sm">אין נתוני ספקים זמינים להצגה</p>
-          <p className="text-muted-foreground text-xs mt-1">יתכן שהנתונים עדיין נטענים או שאין ספקים מתאימים</p>
-        </div>
-      </div>
-    );
-  }
-
   // Transform data for radar chart
   const categories = ['מחיר', 'איכות', 'זמן אספקה', 'שירות', 'אמינות'];
   const radarData = categories.map(category => {
@@ -37,25 +24,25 @@ export default function SupplierChart({ data }: SupplierChartProps) {
         'שירות': 'service',
         'אמינות': 'reliability',
       }[category] as keyof typeof supplier;
-
+      
       categoryData[supplier.supplier] = supplier[categoryKey];
     });
     return categoryData;
   });
 
   const colors = [
-    '#4A90E2', // blue
-    '#50C878', // green  
-    '#FF8C42', // orange
+    '#60a5fa',
+    '#34d399', 
+    '#fbbf24',
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="backdrop-filter backdrop-blur-[25px] bg-black/30 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
-          <p className="text-white font-semibold mb-3 text-base">{label}</p>
+        <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
+          <p className="text-foreground font-medium mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-base mb-1 font-medium text-white">
+            <p key={index} style={{ color: entry.color }}>
               {`${entry.dataKey}: ${entry.value}`}
             </p>
           ))}
@@ -68,22 +55,15 @@ export default function SupplierChart({ data }: SupplierChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-        <defs>
-          <linearGradient id="radarBackground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.95)" />
-            <stop offset="100%" stopColor="rgba(30, 41, 59, 0.85)" />
-          </linearGradient>
-        </defs>
-        <circle cx="50%" cy="50%" r="45%" fill="url(#radarBackground)" />
-        <PolarGrid stroke="rgba(100, 116, 139, 0.3)" />
+        <PolarGrid stroke="hsl(var(--muted))" />
         <PolarAngleAxis 
           dataKey="category" 
-          tick={{ fill: '#cbd5e1', fontSize: 14, fontWeight: 600 }}
+          tick={{ fill: '#FFFFFF', fontSize: 12 }}
         />
         <PolarRadiusAxis 
           angle={90} 
           domain={[0, 100]} 
-          tick={{ fill: '#8892b0', fontSize: 12, fontWeight: 500 }}
+          tick={{ fill: '#E0E0E0', fontSize: 10 }}
         />
         {data.map((supplier, index) => (
           <Radar

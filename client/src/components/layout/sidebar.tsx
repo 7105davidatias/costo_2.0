@@ -11,8 +11,7 @@ import {
   Bot,
   Home,
   Settings,
-  HelpCircle,
-  Database
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,12 +55,6 @@ export default function Sidebar({ className }: SidebarProps) {
           icon: BarChart3,
           badge: null
         },
-        { 
-          path: "/sql-runner", 
-          label: "SQL Runner (Dev)", 
-          icon: Database,
-          badge: null
-        },
       ]
     },
     {
@@ -83,12 +76,6 @@ export default function Sidebar({ className }: SidebarProps) {
           path: "/analytics", 
           label: "אנליטיקה", 
           icon: TrendingUp,
-          badge: null
-        },
-        { 
-          path: "/templates", 
-          label: "תבניות מסמכים", 
-          icon: FileText,
           badge: null
         },
       ]
@@ -134,7 +121,7 @@ export default function Sidebar({ className }: SidebarProps) {
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
-
+                  
                   return (
                     <Link key={item.path} href={item.path}>
                       <Button
@@ -178,7 +165,7 @@ export default function Sidebar({ className }: SidebarProps) {
           {bottomItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
-
+            
             return (
               <Link key={item.path} href={item.path}>
                 <Button

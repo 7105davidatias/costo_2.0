@@ -73,8 +73,8 @@ export default function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
         description: `בקשה ${data.requestNumber} נוצרה ונשלחה לעיבוד`,
       });
       
-      queryClient.invalidateQueries({ queryKey: ["procurement-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       
       onSuccess?.();
       setLocation(`/procurement-request/${data.id}`);
@@ -311,7 +311,6 @@ export default function RequestForm({ onSuccess, onCancel }: RequestFormProps) {
                   <FormControl>
                     <Textarea
                       {...field}
-                      value={field.value || ''}
                       placeholder="תיאור מפורט של הפריט או השירות הנדרש"
                       className="min-h-[100px]"
                     />

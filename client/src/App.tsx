@@ -9,13 +9,7 @@ import ProcurementRequest from "@/pages/procurement-request";
 import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
 import MarketResearch from "@/pages/market-research";
-import Reports from "@/pages/reports";
 import NotFound from "@/pages/not-found";
-import Templates from "@/pages/templates";
-import SqlRunner from "@/pages/sql-runner";
-import EstimationMethods from "@/pages/estimation-methods";
-import DatabaseAdmin from './pages/database-admin';
-
 
 function Router() {
   return (
@@ -29,11 +23,6 @@ function Router() {
           <Route path="/procurement-request/:id?" component={ProcurementRequest} />
           <Route path="/cost-estimation/:id?" component={CostEstimation} />
           <Route path="/market-research/:category?" component={MarketResearch} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/templates" component={Templates} />
-          <Route path="/sql-runner" component={SqlRunner} />
-          <Route path="/database-admin" element={<DatabaseAdmin />} />
-          <Route path="/estimation-methods" component={EstimationMethods} />
           <Route component={NotFound} />
         </Switch>
       </main>

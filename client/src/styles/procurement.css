@@ -1,32 +1,3 @@
-
-/* Stable UI - No jumping animations */
-.stable-card {
-  @apply transition-shadow duration-150;
-}
-
-.stable-card:hover {
-  @apply shadow-md;
-}
-
-.stable-button {
-  @apply transition-colors duration-150;
-}
-
-.stable-layout {
-  /* Prevent layout shifts */
-  min-height: fit-content;
-  contain: layout;
-}
-
-/* Disable problematic transforms */
-.no-jump {
-  transform: none !important;
-}
-
-.no-jump:hover {
-  transform: none !important;
-}
-
 /* client/src/styles/procurement.css */
 
 /* משתני CSS נוספים לעקביות */
@@ -69,6 +40,7 @@
 
 .procurement-button-primary:hover {
   @apply bg-procurement-primary-blue-hover;
+  transform: translateY(-1px);
   box-shadow: var(--procurement-shadow-md);
 }
 
@@ -85,5 +57,5 @@
 }
 
 .procurement-text-muted {
-  @apply text-procurement-text-muted;
+  @apply text-procurement-text-muted-improved; /* שיפור נגישות */
 }
