@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Enhanced UI Overrides */
-@import './styles/ui-overrides.css';
-
 /* Enhanced Glassmorphism Design with Neon Colors */
 @keyframes shimmer {
   0% {
@@ -137,37 +134,6 @@
   text-shadow: 0 0 2.5px #00ffff;
 }
 
-/* Glass Variants */
-.glass-ultra-light {
-  background: var(--glass-ultra-light);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.glass-light {
-  background: var(--glass-light);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.glass-heavy {
-  background: var(--glass-heavy);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-/* Interactive Glass States */
-.glass-interactive {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-interactive:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(0, 255, 255, 0.4);
-  box-shadow: var(--glow-cyan-md);
-  transform: translateY(-1px);
-}
-
 .glass-button:hover {
   background: rgba(0, 255, 255, 0.05);
   border-color: #66cccc;
@@ -185,39 +151,6 @@
   @apply glass-panel;
   padding: 24px;
   margin: 16px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-/* Chart Legend Glassmorphism */
-.recharts-legend-wrapper {
-  background: rgba(15, 23, 42, 0.4) !important;
-  backdrop-filter: blur(10px) !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  border: 1px solid rgba(0, 255, 255, 0.2) !important;
-}
-
-/* Chart Grid Enhancement */
-.recharts-cartesian-grid line {
-  stroke: rgba(0, 255, 255, 0.1) !important;
-  stroke-dasharray: 3 3 !important;
-}
-
-/* Chart Bars Glassmorphism */
-.recharts-bar {
-  filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.3)) !important;
 }
 
 .data-point {

@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -68,19 +69,6 @@ export default {
             glass: 'rgba(59, 130, 246, 0.3)',
             'glass-hover': 'rgba(0, 255, 255, 0.6)',
             neon: '#00ffff',
-          },
-          glass: {
-            'ultra-light': 'rgba(15, 23, 42, 0.3)',
-            'light': 'rgba(15, 23, 42, 0.5)',
-            'medium': 'rgba(15, 23, 42, 0.7)',
-            'heavy': 'rgba(15, 23, 42, 0.9)',
-          },
-          glow: {
-            'cyan-sm': '0 0 10px rgba(0, 255, 255, 0.3)',
-            'cyan-md': '0 0 20px rgba(0, 255, 255, 0.4)',
-            'cyan-lg': '0 0 30px rgba(0, 255, 255, 0.5)',
-            'green-sm': '0 0 10px rgba(0, 255, 136, 0.3)',
-            'pink-sm': '0 0 10px rgba(255, 0, 128, 0.3)',
           }
         },
         background: "var(--background)",
@@ -134,29 +122,6 @@ export default {
           ring: "var(--sidebar-ring)",
         },
       },
-      /* Glass Variants */
-      --glass-bg: rgba(15, 23, 42, 0.7);
-      --glass-border: rgba(59, 130, 246, 0.3);
-      --glass-ultra-light: rgba(15, 23, 42, 0.4);
-      --glass-light: rgba(15, 23, 42, 0.6);
-      --glass-heavy: rgba(15, 23, 42, 0.9);
-      --neon-cyan: #00ffff;
-      --neon-green: #00ff88;
-      --neon-pink: #ff0080;
-      --neon-yellow: #ffaa00;
-
-      /* Glow Effects */
-      --glow-cyan-sm: 0 0 10px rgba(0, 255, 255, 0.2);
-      --glow-cyan-md: 0 0 20px rgba(0, 255, 255, 0.3);
-      --glow-cyan-lg: 0 0 30px rgba(0, 255, 255, 0.4);
-      --glow-green-sm: 0 0 10px rgba(0, 255, 136, 0.2);
-      --glow-green-md: 0 0 20px rgba(0, 255, 136, 0.3);
-      --glow-green-lg: 0 0 30px rgba(0, 255, 136, 0.4);
-      --glow-pink-sm: 0 0 10px rgba(255, 0, 128, 0.2);
-      --glow-pink-md: 0 0 20px rgba(255, 0, 128, 0.3);
-      --glow-pink-lg: 0 0 30px rgba(255, 0, 128, 0.4);
-
-
       // גדלי טקסט עקביים עם נגישות משופרת
       fontSize: {
         'procurement-xs': ['0.75rem', { lineHeight: '1.2rem' }],

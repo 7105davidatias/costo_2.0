@@ -7,7 +7,7 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="table-glass glass-scrollbar w-full overflow-auto">
+  <div className="glass-table w-full overflow-auto">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm rtl-table", className)}
@@ -24,9 +24,7 @@ const TableHeader = React.forwardRef<
   <thead 
     ref={ref} 
     className={cn(
-      "bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-cyan-500/10 backdrop-blur-glass border-b border-cyan-500/30 relative",
-      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px",
-      "after:bg-gradient-to-r after:from-transparent after:via-cyan-400 after:to-transparent",
+      "bg-procurement-primary-neon/10 backdrop-blur-glass border-b border-procurement-border-glass",
       className
     )} 
     {...props} 
@@ -53,9 +51,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 font-medium relative",
-      "before:absolute before:top-0 before:left-0 before:right-0 before:h-px",
-      "before:bg-gradient-to-r before:from-transparent before:via-cyan-400/60 before:to-transparent",
+      "border-t border-procurement-border-glass bg-procurement-background-glass/50 font-medium",
       className
     )}
     {...props}
@@ -70,10 +66,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-slate-700/30 transition-all duration-300",
-      "hover:bg-gradient-to-r hover:from-cyan-500/5 hover:via-transparent hover:to-cyan-500/5",
-      "hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(0,255,255,0.1)]",
-      "data-[state=selected]:bg-cyan-500/10 data-[state=selected]:border-cyan-500/40",
+      "border-b border-procurement-border-glass/30 transition-colors hover:bg-procurement-primary-neon/5 data-[state=selected]:bg-procurement-primary-neon/10",
       className
     )}
     {...props}
@@ -88,9 +81,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-right align-middle font-semibold text-cyan-400 border-b border-cyan-500/20",
-      "text-shadow-[0_0_5px_rgba(0,255,255,0.5)] [&:has([role=checkbox])]:pr-0 relative",
-      "hover:text-cyan-300 transition-colors duration-200",
+      "h-12 px-4 text-right align-middle font-medium text-slate-200 border-b border-procurement-border-glass [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}
@@ -105,8 +96,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "p-4 align-middle text-right text-slate-200 [&:has([role=checkbox])]:pr-0",
-      "transition-colors duration-200 group-hover:text-slate-100",
+      "p-4 align-middle text-right text-procurement-text-primary [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}
@@ -120,7 +110,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-slate-400 text-right", className)}
+    className={cn("mt-4 text-sm text-muted text-right", className)}
     {...props}
   />
 ))
