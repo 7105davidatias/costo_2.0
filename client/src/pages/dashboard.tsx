@@ -554,7 +554,17 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-48">
-                    <AccuracyChart />
+                    <AccuracyChart
+                      data={dashboardStats?.accuracyBreakdown || [
+                        { label: 'טכנולוגיה', value: 95 },
+                        { label: 'ציוד משרדי', value: 88 },
+                        { label: 'שירותים', value: 92 },
+                        { label: 'תחזוקה', value: 86 },
+                        { label: 'חומרי גלם', value: 90 }
+                      ]}
+                      type="bar"
+                      className="glass-float"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -573,7 +583,17 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="h-80">
-                <CostTrendsChart />
+                <CostTrendsChart
+                  data={dashboardStats?.costTrends || [
+                    { month: 'ינואר', cost: 150000, predicted: 145000, savings: 5000 },
+                    { month: 'פברואר', cost: 180000, predicted: 175000, savings: 5000 },
+                    { month: 'מרץ', cost: 165000, predicted: 170000, savings: -5000 },
+                    { month: 'אפריל', cost: 200000, predicted: 195000, savings: 5000 },
+                    { month: 'מאי', cost: 175000, predicted: 180000, savings: -5000 },
+                    { month: 'יוני', cost: 220000, predicted: 215000, savings: 5000 }
+                  ]}
+                  className="glass-float"
+                />
               </div>
             </CardContent>
           </Card>
