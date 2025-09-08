@@ -459,7 +459,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && documents.length > 0 && (
+              {documents && Array.isArray(documents) && documents.length > 0 ? (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -490,7 +490,7 @@ export default function ProcurementRequest() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
 
