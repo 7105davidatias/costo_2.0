@@ -92,7 +92,7 @@ export default function Header() {
             <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full flex items-center justify-center shadow-glow">
               <User className="text-white w-5 h-5" />
             </div>
-            <span className="text-base font-medium neon-text-primary whitespace-nowrap">אהרון כהן</span>
+            <span className="text-base font-medium neon-text-primary whitespace-nowrap">אמיר רונן</span>
           </div>
         </div>
       </div>
