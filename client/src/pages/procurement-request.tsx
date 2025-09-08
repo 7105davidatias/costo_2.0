@@ -380,7 +380,6 @@ export default function ProcurementRequest() {
               פרטי דרישת רכש - {request.requestNumber}
             </h1>
           </div>
-          <p className="text-muted-foreground">{request.itemName}</p>
         </div>
         <div className="flex space-x-reverse space-x-4">
           <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
@@ -582,53 +581,81 @@ export default function ProcurementRequest() {
             </CardContent>
           </Card>
 
-          {/* Status Timeline */}
+          {/* Horizontal Progress Tracker */}
           <Card className="bg-card border-warning/20">
-            <CardHeader>
-              <CardTitle>סטטוס בקשה</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className="w-3 h-3 bg-success rounded-full"></div>
-                  <div>
-                    <p className="text-sm text-foreground font-medium">בקשה נוצרה</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(request.createdAt!).toLocaleString('he-IL')}
-                    </p>
-                  </div>
-                </div>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between relative">
+                {/* Progress Line */}
+                <div className="absolute top-1/2 left-6 right-6 h-0.5 bg-muted -translate-y-1/2 z-0"></div>
+                <div 
+                  className="absolute top-1/2 left-6 h-0.5 bg-success -translate-y-1/2 z-0 transition-all duration-500"
+                  style={{ 
+                    width: `${Math.min(
+                      ((documents && Array.isArray(documents) && documents.length > 0 ? 1 : 0) + 
+                       (request.status === 'processing' || request.status === 'completed' ? 1 : 0) + 
+                       (request.status === 'completed' ? 1 : 0)) * 25, 75
+                    )}%` 
+                  }}
+                ></div>
                 
-                {documents && Array.isArray(documents) && documents.length > 0 ? (
-                  <div className="flex items-center space-x-reverse space-x-3">
-                    <div className="w-3 h-3 bg-success rounded-full"></div>
-                    <div>
-                      <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(documents as any[]).length} קבצים
-                      </p>
-                    </div>
+                {/* Step 1: בקשה נוצרה */}
+                <div className="flex flex-col items-center relative z-10">
+                  <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-white" />
                   </div>
-                ) : null}
-
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${request.status === 'processing' ? 'bg-warning animate-pulse' : 'bg-muted'}`}></div>
-                  <div>
-                    <p className="text-sm text-foreground font-medium">ניתוח AI</p>
-                    <p className="text-xs text-muted-foreground">
-                      {request.status === 'processing' ? 'בתהליך' : 'ממתין'}
-                    </p>
-                  </div>
+                  <span className="text-xs text-center font-medium">בקשה נוצרה</span>
                 </div>
 
-                <div className="flex items-center space-x-reverse space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${request.status === 'completed' ? 'bg-success' : 'bg-muted'}`}></div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">הערכת עלות</p>
-                    <p className="text-xs text-muted-foreground">
-                      {request.status === 'completed' ? 'הושלם' : 'ממתין'}
-                    </p>
+                {/* Step 2: מסמכים הועלו */}
+                <div className="flex flex-col items-center relative z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
+                    documents && Array.isArray(documents) && documents.length > 0 
+                      ? 'bg-success' 
+                      : 'bg-muted'
+                  }`}>
+                    {documents && Array.isArray(documents) && documents.length > 0 ? (
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    ) : (
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                    )}
                   </div>
+                  <span className="text-xs text-center font-medium">מסמכים הועלו</span>
+                </div>
+
+                {/* Step 3: ניתוח AI */}
+                <div className="flex flex-col items-center relative z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
+                    request.status === 'completed' 
+                      ? 'bg-success' 
+                      : request.status === 'processing' 
+                        ? 'bg-warning animate-pulse' 
+                        : 'bg-muted'
+                  }`}>
+                    {request.status === 'completed' ? (
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    ) : request.status === 'processing' ? (
+                      <Clock className="w-4 h-4 text-white" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <span className="text-xs text-center font-medium">ניתוח AI</span>
+                </div>
+
+                {/* Step 4: הערכת עלות */}
+                <div className="flex flex-col items-center relative z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
+                    request.status === 'completed' 
+                      ? 'bg-success' 
+                      : 'bg-muted'
+                  }`}>
+                    {request.status === 'completed' ? (
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">₪</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-center font-medium">הערכת עלות</span>
                 </div>
               </div>
             </CardContent>
