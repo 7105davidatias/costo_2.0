@@ -738,7 +738,7 @@ export default function ProcurementRequest() {
                               {filteredTemplates.map((template) => (
                                 <Card 
                                   key={template.id} 
-                                  className="cursor-pointer hover:shadow-md transition-shadow duration-150"
+                                  className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
                                   onClick={() => handleSelectTemplate(template)}
                                 >
                                   <CardHeader className="pb-2">
@@ -794,7 +794,7 @@ export default function ProcurementRequest() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="stable-card stable-layout bg-card border-primary/20">
+              <Card className="bg-card border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-reverse space-x-2">

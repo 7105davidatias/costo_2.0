@@ -285,7 +285,7 @@ export default function TemplateGallery({ onSelectTemplate, showActions = true }
                           {template.title}
                         </DialogTitle>
                       </DialogHeader>
-                      <TemplatePreview template={template} formatCurrency={formatCurrency} />
+                      <TemplatePreview template={template} />
                     </DialogContent>
                   </Dialog>
 
@@ -316,10 +316,7 @@ export default function TemplateGallery({ onSelectTemplate, showActions = true }
 }
 
 // רכיב תצוגה מקדימה של תבנית
-function TemplatePreview({ template, formatCurrency }: { 
-  template: DocumentTemplate;
-  formatCurrency: (amount: string) => string;
-}) {
+function TemplatePreview({ template }: { template: DocumentTemplate }) {
   return (
     <div className="space-y-6">
       {/* Basic Info */}
