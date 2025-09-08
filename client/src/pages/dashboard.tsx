@@ -110,10 +110,10 @@ export default function Dashboard() {
     <div className="space-y-8 p-8">
       {/* Page Header */}
       <div className="text-center glass-panel p-8 animate-glass-float">
-        <h1 className="text-4xl font-bold neon-text-primary mb-4 animate-neon-glow">
+        <h1 className="text-4xl font-bold text-primary mb-4">
           מערכת ניהול אומדני עלויות רכש
         </h1>
-        <p className="text-lg neon-text-muted">
+        <p className="text-lg text-muted">
           ניתוח ואומדן עלויות מתקדם עם בינה מלאכותית
         </p>
         {/* Removed the redundant 'ניתוח AI' button */}
