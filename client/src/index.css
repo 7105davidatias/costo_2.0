@@ -743,17 +743,17 @@
   .dashboard-main.sidebar-collapsed {
     margin-left: 0;
   }
-  
+
   .dynamic-sidebar {
     position: fixed;
     height: 100vh;
     z-index: 200;
   }
-  
+
   .dynamic-sidebar.collapsed {
     transform: translateX(-100%);
   }
-  
+
   .floating-kpi-card.expanded {
     grid-column: span 1;
   }
@@ -763,15 +763,15 @@
   .dashboard-header {
     padding: 1rem;
   }
-  
+
   .floating-cards-container {
     padding: 1rem;
   }
-  
+
   .charts-grid {
     padding: 1rem;
   }
-  
+
   .cost-trends-section {
     padding: 1rem;
   }
