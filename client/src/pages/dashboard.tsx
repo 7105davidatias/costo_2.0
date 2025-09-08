@@ -113,7 +113,7 @@ export default function Dashboard() {
         <h1 className="text-4xl font-bold text-primary mb-4">
           מערכת ניהול אומדני עלויות רכש
         </h1>
-        <p className="text-lg text-muted">
+        <p className="text-lg text-white">
           ניתוח ואומדן עלויות מתקדם עם בינה מלאכותית
         </p>
         {/* Removed the redundant 'ניתוח AI' button */}
