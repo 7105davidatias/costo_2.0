@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Database, Play, AlertTriangle, Table as TableIcon, Search, Plus, Edit, Trash2, Eye, RefreshCw, Upload } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 export default function DatabaseAdmin() {
   const [query, setQuery] = useState('');
@@ -21,7 +21,7 @@ export default function DatabaseAdmin() {
   const [loadingTables, setLoadingTables] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [connectionStatus, setConnectionStatus] = useState<string>('checking...');
   const [isSeeding, setIsSeeding] = useState(false);
 
@@ -218,7 +218,7 @@ export default function DatabaseAdmin() {
       }
     } catch (error) {
       console.error('Error seeding data:', error);
-      alert(`❌ שגיאה בטעינת נתוני הדמו: ${error.message}`);
+      alert(`❌ שגיאה בטעינת נתוני הדמו: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`);
     } finally {
       setIsSeeding(false);
     }
@@ -268,7 +268,7 @@ export default function DatabaseAdmin() {
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.back()}
             className="flex items-center gap-2 text-gray-300 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
