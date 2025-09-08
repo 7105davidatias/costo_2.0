@@ -9,6 +9,26 @@ import { RefreshCw, Download, TrendingUp, Store, ArrowDown, Clock, Shield, Brain
 import SupplierChart from "@/components/charts/supplier-chart";
 import PriceTrackingChart from "@/components/charts/price-tracking-chart";
 import { MarketInsight, Supplier } from "@shared/schema";
+
+// Interface for expected market research data structure
+interface MarketResearchData {
+  supplierComparison?: Array<{
+    supplier?: string;
+    name?: string;
+    pricePerUnit?: string;
+    rating?: string;
+    reliability?: number;
+  }>;
+  requestDetails?: {
+    title?: string;
+  };
+  informationSources?: Array<{
+    title: string;
+    description: string;
+    lastUpdated: string;
+    reliability: string;
+  }>;
+}
 import { Scatter, ScatterChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell, PieChart, Pie, BarChart, Bar, LineChart, Line, Area, AreaChart } from 'recharts';
 import AIRecommendations from '@/components/market/ai-recommendations';
 import { LoadingSpinner, CenteredLoadingSpinner } from '@/components/ui/loading-spinner';
@@ -63,7 +83,7 @@ export default function MarketResearch() {
   console.log('Document referrer:', document.referrer);
 
   // Use new contextual market research API if requestId is provided
-  const { data: marketResearch, isLoading: marketResearchLoading, error: marketResearchError } = useQuery({
+  const { data: marketResearch, isLoading: marketResearchLoading, error: marketResearchError } = useQuery<MarketResearchData>({
     queryKey: ["market-research", finalRequestId],
     enabled: !!finalRequestId,
   });
@@ -96,7 +116,7 @@ export default function MarketResearch() {
 
   if (!finalRequestId && suppliersLoading) {
     return <div className="flex justify-center items-center h-screen">
-      <CenteredLoadingSpinner type="suppliers" />
+      <CenteredLoadingSpinner type="research" />
     </div>;
   }
 
@@ -106,7 +126,7 @@ export default function MarketResearch() {
   console.log('MarketResearch - requestId:', requestId);
   console.log('MarketResearch - URL:', window.location.pathname);
   console.log('MarketResearch - marketResearch:', marketResearch);
-  console.log('MarketResearch - contextualSuppliers:', marketResearch?.supplierComparison);
+  console.log('MarketResearch - contextualSuppliers:', marketResearch?.supplierComparison || []);
   console.log('MarketResearch - suppliers (legacy):', suppliers);
 
   const formatCurrency = (amount: string | number) => {
@@ -195,7 +215,7 @@ export default function MarketResearch() {
   // AI Recommendations based on specific request
   const getAIRecommendations = () => {
     if (finalRequestId && marketResearch?.requestDetails) {
-      const requestTitle = marketResearch.requestDetails.title || '';
+      const requestTitle = marketResearch.requestDetails?.title || '';
 
       if (requestTitle.includes('מחשב') || requestTitle.includes('לפטופ')) {
         return [
@@ -270,7 +290,7 @@ export default function MarketResearch() {
           </div>
           <p className="text-muted-foreground">
             {finalRequestId && marketResearch?.requestDetails 
-              ? `ניתוח מתקדם לדרישת ${marketResearch.requestDetails.title || 'רכש'}`
+              ? `ניתוח מתקדם לדרישת ${marketResearch.requestDetails?.title || 'רכש'}`
               : `ניתוח מקיף של שוק ${decodedCategory}`
             }
           </p>
@@ -323,7 +343,7 @@ export default function MarketResearch() {
                   {loading ? <div className="h-8 w-32 bg-muted rounded animate-pulse"></div> :
                     finalRequestId && marketResearch?.supplierComparison ? (
                       formatCurrency(
-                        marketResearch.supplierComparison.reduce((sum, supplier) => 
+                        marketResearch.supplierComparison.reduce((sum: number, supplier: any) => 
                           sum + parseFloat(supplier.pricePerUnit?.replace(/[₪,]/g, '') || '0'), 0
                         ) / marketResearch.supplierComparison.length
                       )
