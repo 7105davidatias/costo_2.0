@@ -170,7 +170,10 @@ export default function ProcurementRequestsList() {
       {/* Requests List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {requests.map((request) => (
-          <Card key={request.id} className="hover:shadow-lg transition-all duration-200">
+          <Card
+                  key={request.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow duration-150"
+                >
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
