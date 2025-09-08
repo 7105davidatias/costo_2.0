@@ -52,7 +52,7 @@ export default function SupplierChart({ data }: SupplierChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
+        <div className="backdrop-filter backdrop-blur-[25px] bg-black/30 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
           <p className="text-white font-semibold mb-3 text-base">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-base mb-1 font-medium text-white">

@@ -330,8 +330,7 @@ export default function Dashboard() {
                       innerRadius={0}
                       outerRadius={90}
                       dataKey="amount"
-                      stroke="rgba(255,255,255,0.2)"
-                      strokeWidth={2}
+                      stroke="none"
                     >
                       {(dashboardStats?.categoryBreakdown.length > 0 ? dashboardStats.categoryBreakdown : [
                         { category: 'ציוד מחשוב', amount: 3030000, color: 'url(#pieGradient1)' },

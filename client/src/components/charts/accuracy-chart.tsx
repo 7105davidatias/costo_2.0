@@ -11,8 +11,8 @@ const data = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-primary/20 rounded-lg shadow-md text-right">
-        <p className="text-white font-semibold mb-3 text-base">{`שיטה: ${label}`}</p>
+      <div className="backdrop-filter backdrop-blur-[25px] bg-black/30 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
+        <p className="text-white font-semibold mb-3 text-base">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-base mb-1 font-medium text-white">
             {`${entry.name}: ${entry.value}%`}
@@ -44,10 +44,10 @@ export default function AccuracyChart() {
         </defs>
         <rect width="100%" height="100%" fill="url(#chartBackground)" rx="8" />
         <CartesianGrid stroke="rgba(100, 116, 139, 0.2)" strokeDasharray="2 2" />
-        <XAxis 
-          dataKey="method" 
-          tick={{ 
-            fill: '#ffffff', 
+        <XAxis
+          dataKey="method"
+          tick={{
+            fill: '#ffffff',
             fontSize: 11,
             fontWeight: 500,
           }}
@@ -57,9 +57,9 @@ export default function AccuracyChart() {
           height={60}
           interval={0}
         />
-        <YAxis 
-          tick={{ 
-            fill: '#ffffff', 
+        <YAxis
+          tick={{
+            fill: '#ffffff',
             fontSize: 12,
             fontWeight: 500,
           }}
@@ -68,24 +68,24 @@ export default function AccuracyChart() {
           tickFormatter={(value) => `${value}%`}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ 
-            direction: 'rtl', 
+        <Legend
+          wrapperStyle={{
+            direction: 'rtl',
             textAlign: 'right',
             paddingTop: '30px',
             color: '#ffffff'
           }}
         />
-        <Bar 
-          dataKey="accuracy" 
+        <Bar
+          dataKey="accuracy"
           fill="#4A90E2"
           name="דיוק (%)"
           radius={[4, 4, 0, 0]}
           stroke="#4A90E2"
           strokeWidth={1}
         />
-        <Bar 
-          dataKey="requests" 
+        <Bar
+          dataKey="requests"
           fill="#E85D75"
           name="מספר דרישות"
           radius={[4, 4, 0, 0]}
