@@ -37,25 +37,25 @@ export default function SupplierChart({ data }: SupplierChartProps) {
         'שירות': 'service',
         'אמינות': 'reliability',
       }[category] as keyof typeof supplier;
-      
+
       categoryData[supplier.supplier] = supplier[categoryKey];
     });
     return categoryData;
   });
 
   const colors = [
-    '#00ffff', // cyan neon
-    '#00ff88', // green neon  
-    '#ffaa00', // yellow neon
+    '#4A90E2', // blue
+    '#50C878', // green  
+    '#FF8C42', // orange
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-panel backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-procurement-primary-neon/40 rounded-glass shadow-neon text-right" dir="rtl">
-          <p className="neon-text-primary font-semibold mb-3 text-base">{label}</p>
+        <div className="backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-primary/20 rounded-lg shadow-md text-right" dir="rtl">
+          <p className="text-white font-semibold mb-3 text-base">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-base mb-1 font-medium" style={{ color: entry.color }}>
+            <p key={index} className="text-base mb-1 font-medium text-white">
               {`${entry.dataKey}: ${entry.value}`}
             </p>
           ))}

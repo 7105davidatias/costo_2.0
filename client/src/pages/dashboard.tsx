@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle, Clock, Users, Package, FileText, Target } from "lucide-react";
+import { TrendingUp, PiggyBank, TrendingDown, Bot, Plus, Eye, Calculator, Coins, TriangleAlert, CheckCircle, Clock, Users, Package, FileText, Target, RefreshCw, Download, Brain } from "lucide-react";
 import CostTrendsChart from "@/components/charts/cost-trends-chart";
 import AccuracyChart from "@/components/charts/accuracy-chart";
 import { Link } from "wouter";
@@ -116,6 +116,17 @@ export default function Dashboard() {
         <p className="text-lg neon-text-muted">
           ניתוח ואומדן עלויות מתקדם עם בינה מלאכותית
         </p>
+        {/* Removed the redundant 'ניתוח AI' button */}
+        <div className="flex space-x-reverse space-x-4 justify-center mt-6">
+          <Button variant="outline">
+            <RefreshCw className="w-4 h-4 ml-2" />
+            רענן נתונים
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Download className="w-4 h-4 ml-2" />
+            ייצא דוח מתקדם
+          </Button>
+        </div>
       </div>
 
       {/* Primary KPI Cards */}
@@ -450,6 +461,47 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Analysis Section - To be refined based on further instructions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <Card className="chart-container glass-panel">
+          <CardHeader>
+            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+              <Bot className="text-primary w-5 h-5" />
+              <span>ניתוח AI חכם</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              ניתוח נתונים מתקדם לצורך אופטימיזציה של תהליכי רכש.
+            </p>
+            <Button variant="outline" className="neon-text-primary border-procurement-primary-neon/40">
+              <Bot className="w-4 h-4 ml-2" />
+              הפעל ניתוח AI
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="chart-container glass-panel">
+          <CardHeader>
+            <CardTitle className="neon-text-primary text-xl flex items-center space-x-reverse space-x-2">
+              <Target className="text-secondary w-5 h-5" />
+              <span>שיטות אומדן מומלצות</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              הצגת שיטות אומדן יעילות בהתאם לנתוני השוק והדרישות.
+            </p>
+            <Link href="/estimation-methods">
+              <Button variant="outline" className="neon-text-secondary border-procurement-secondary-neon/40">
+                <FileText className="w-4 h-4 ml-2" />
+                לצפייה בשיטות
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

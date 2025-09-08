@@ -13,10 +13,10 @@ const data = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-panel backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-procurement-primary-neon/40 rounded-glass shadow-neon text-right">
-        <p className="neon-text-primary font-semibold mb-3 text-base">{`${label}`}</p>
+      <div className="backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-primary/20 rounded-lg shadow-md text-right">
+        <p className="text-white font-semibold mb-3 text-base">{`${label}`}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-base mb-1 font-medium" style={{ color: entry.color }}>
+          <p key={index} className="text-base mb-1 font-medium text-white">
             {`${entry.name}: ₪${entry.value.toLocaleString()}`}
           </p>
         ))}
@@ -31,28 +31,34 @@ export default function CostTrendsChart() {
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
         data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+        margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
         style={{ direction: 'rtl' }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.2)" />
+        <defs>
+          <pattern id="glassGrid" patternUnits="userSpaceOnUse" width="20" height="20">
+            <rect width="20" height="20" fill="transparent"/>
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="0.5"/>
+          </pattern>
+        </defs>
+        <CartesianGrid stroke="url(#glassGrid)" />
         <XAxis 
           dataKey="month" 
           tick={{ 
-            fill: '#cbd5e1', 
+            fill: '#ffffff', 
             fontSize: 14,
             fontWeight: 600,
           }}
-          stroke="rgba(0, 255, 255, 0.4)"
+          stroke="rgba(255, 255, 255, 0.3)"
           tickMargin={15}
           height={60}
         />
         <YAxis 
           tick={{ 
-            fill: '#cbd5e1', 
+            fill: '#ffffff', 
             fontSize: 14,
             fontWeight: 600,
           }}
-          stroke="rgba(0, 255, 255, 0.4)"
+          stroke="rgba(255, 255, 255, 0.3)"
           tickFormatter={(value) => `₪${(value / 1000).toFixed(0)}K`}
           tickMargin={15}
           width={80}
@@ -62,35 +68,36 @@ export default function CostTrendsChart() {
           wrapperStyle={{ 
             direction: 'rtl', 
             textAlign: 'right',
-            paddingTop: '20px'
+            paddingTop: '35px',
+            color: '#ffffff'
           }}
           iconType="line"
         />
         <Line 
           type="monotone" 
           dataKey="actual" 
-          stroke="#00ffff"
-          strokeWidth={3}
-          dot={{ fill: '#00ffff', strokeWidth: 2, r: 5 }}
-          activeDot={{ r: 7, stroke: '#00ffff', strokeWidth: 2, fill: '#00ffff' }}
+          stroke="#4A90E2"
+          strokeWidth={2}
+          dot={{ fill: '#4A90E2', strokeWidth: 1, r: 4 }}
+          activeDot={{ r: 6, stroke: '#4A90E2', strokeWidth: 1, fill: '#4A90E2' }}
           name="עלות בפועל"
         />
         <Line 
           type="monotone" 
           dataKey="estimated" 
-          stroke="#00ff88"
-          strokeWidth={3}
-          dot={{ fill: '#00ff88', strokeWidth: 2, r: 5 }}
-          activeDot={{ r: 7, stroke: '#00ff88', strokeWidth: 2, fill: '#00ff88' }}
+          stroke="#50C878"
+          strokeWidth={2}
+          dot={{ fill: '#50C878', strokeWidth: 1, r: 4 }}
+          activeDot={{ r: 6, stroke: '#50C878', strokeWidth: 1, fill: '#50C878' }}
           name="עלות מוערכת"
         />
         <Line 
           type="monotone" 
           dataKey="savings" 
-          stroke="#ffaa00"
-          strokeWidth={3}
-          dot={{ fill: '#ffaa00', strokeWidth: 2, r: 5 }}
-          activeDot={{ r: 7, stroke: '#ffaa00', strokeWidth: 2, fill: '#ffaa00' }}
+          stroke="#FF8C42"
+          strokeWidth={2}
+          dot={{ fill: '#FF8C42', strokeWidth: 1, r: 4 }}
+          activeDot={{ r: 6, stroke: '#FF8C42', strokeWidth: 1, fill: '#FF8C42' }}
           name="חיסכון"
         />
       </LineChart>
