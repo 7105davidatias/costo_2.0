@@ -122,7 +122,7 @@ export default function Dashboard() {
             <RefreshCw className="w-4 h-4 ml-2" />
             רענן נתונים
           </Button>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-none">
             <Download className="w-4 h-4 ml-2" />
             ייצא דוח מתקדם
           </Button>
