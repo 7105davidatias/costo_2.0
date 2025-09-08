@@ -3,54 +3,70 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calculator, TrendingUp, Users, Target, Brain, Clock, DollarSign } from 'lucide-react';
+import { ArrowRight, Calculator, TrendingUp, Users, Target, Brain, Clock, DollarSign, BarChart } from 'lucide-react';
 import { Link } from 'wouter';
 
 export default function EstimationMethods() {
   const methods = [
     {
       id: 1,
-      name: "אומדן מבוסס AI",
-      description: "שימוש באלגוריתמי למידת מכונה לניתוח היסטורי ויצירת אומדנים מדויקים",
+      name: "אומדן מבוסס מחיר שוק",
+      description: "שימוש במחירי שוק נוכחיים, הצעות ספקים ונתוני תמחור בזמן אמת",
       accuracy: 95,
       timeRequired: "5-10 דקות",
       complexity: "נמוך",
-      icon: Brain,
-      advantages: ["דיוק גבוה", "חיסכון בזמן", "למידה מתמשכת"],
-      useCase: "מתאים לרוב הפריטים הסטנדרטיים"
+      icon: TrendingUp,
+      advantages: ["דיוק גבוה ביותר", "מבוסס נתונים עדכניים", "התאמה לתנודות שוק"],
+      useCase: "מתאים לפריטים סטנדרטיים עם שוק פעיל",
+      methodId: "market-based"
     },
     {
       id: 2,
-      name: "אומדן השוואתי",
-      description: "השוואה למחירי פריטים דומים מהעבר ומהשוק הנוכחי",
-      accuracy: 85,
-      timeRequired: "15-30 דקות",
-      complexity: "בינוני",
-      icon: TrendingUp,
-      advantages: ["מבוסס על נתונים ריאליים", "קל להבנה", "מהיר יחסית"],
-      useCase: "מתאים לפריטים עם היסטוריה קיימת"
-    },
-    {
-      id: 3,
-      name: "אומדן פרמטרי",
-      description: "שימוש בפרמטרים טכניים ומפרטים ליצירת אומדן מפורט",
+      name: "אומדן מלמטה למעלה",
+      description: "פירוק מפורט של כל רכיבי העלות ואומדן כל רכיב בנפרד",
       accuracy: 90,
       timeRequired: "30-60 דקות",
       complexity: "גבוה",
+      icon: BarChart,
+      advantages: ["דיוק גבוה לפריטים מורכבים", "שקיפות מלאה", "זיהוי חיסכונים פוטנציאליים"],
+      useCase: "מתאים לפריטים מורכבים הניתנים לפירוק",
+      methodId: "bottom-up"
+    },
+    {
+      id: 3,
+      name: "אומדן אנלוגי",
+      description: "השוואה לרכישות דומות מהעבר עם התאמות לתנאים נוכחיים",
+      accuracy: 85,
+      timeRequired: "15-30 דקות",
+      complexity: "בינוני",
       icon: Calculator,
-      advantages: ["דיוק גבוה לפריטים מורכבים", "שקיפות מלאה", "התאמה אישית"],
-      useCase: "מתאים לפריטים מורכבים וייחודיים"
+      advantages: ["מבוסס על נתונים ריאליים", "קל להבנה", "מהיר יחסית"],
+      useCase: "מתאים לפריטים עם היסטוריה קיימת במערכת",
+      methodId: "analogous"
     },
     {
       id: 4,
-      name: "אומדן ממומחים",
-      description: "התייעצות עם מומחי תחום ובעלי ניסיון רלוונטי",
+      name: "אומדן פרמטרי",
+      description: "שימוש במודלים מתמטיים ופרמטרים טכניים ליצירת אומדן מדויק",
       accuracy: 80,
+      timeRequired: "20-40 דקות",
+      complexity: "בינוני",
+      icon: Brain,
+      advantages: ["מבוסס מודלים סטטיסטיים", "התאמה לפרמטרים ספציפיים", "עקביות בתוצאות"],
+      useCase: "מתאים לפריטים עם פרמטרים מדידים וקשר סטטיסטי ידוע",
+      methodId: "parametric"
+    },
+    {
+      id: 5,
+      name: "אומדן ממומחים",
+      description: "התייעצות עם מומחי תחום ושימוש בבנצ'מרקים תעשייתיים",
+      accuracy: 75,
       timeRequired: "2-5 ימים",
       complexity: "גבוה",
       icon: Users,
-      advantages: ["ניסיון מעשי", "הבנה עמוקה", "גמישות"],
-      useCase: "מתאים לפריטים חדשים או מיוחדים"
+      advantages: ["ניסיון מעשי", "הבנה עמוקה של התחום", "גמישות בהערכה"],
+      useCase: "מתאים לפריטים חדשים, ייחודיים או מורכבים במיוחד",
+      methodId: "expert-judgment"
     }
   ];
 
@@ -71,7 +87,7 @@ export default function EstimationMethods() {
           שיטות אומדן עלויות
         </h1>
         <p className="text-lg text-slate-300">
-          בחירת השיטה המתאימה ביותר לכל סוג של דרישת רכש
+          5 שיטות מתקדמות לאומדן עלויות מדויק - בחירת השיטה המתאימה ביותר לכל סוג רכש
         </p>
       </div>
 
@@ -135,7 +151,7 @@ export default function EstimationMethods() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-reverse space-x-2">
             <Target className="w-5 h-5 text-secondary" />
-            <span className="text-slate-200">המלצות לבחירת שיטה</span>
+            <span className="text-slate-200">המלצות לבחירת שיטה אופטימלית</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -144,36 +160,52 @@ export default function EstimationMethods() {
               <h3 className="text-lg font-semibold text-slate-200">לפי סוג הפריט:</h3>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center text-slate-400">
-                  <DollarSign className="w-4 h-4 ml-2 text-green-400" />
-                  ציוד משרדי סטנדרטי → אומדן מבוסס AI
+                  <TrendingUp className="w-4 h-4 ml-2 text-green-400" />
+                  ציוד סטנדרטי (מחשבים, ריהוט) → אומדן מבוסס מחיר שוק
                 </li>
                 <li className="flex items-center text-slate-400">
-                  <Calculator className="w-4 h-4 ml-2 text-blue-400" />
-                  מערכות מורכבות → אומדן פרמטרי
+                  <BarChart className="w-4 h-4 ml-2 text-blue-400" />
+                  פרויקטים מורכבים (בנייה, פיתוח) → אומדן מלמטה למעלה
                 </li>
                 <li className="flex items-center text-slate-400">
-                  <Users className="w-4 h-4 ml-2 text-purple-400" />
-                  פריטים חדשים → אומדן ממומחים
+                  <Calculator className="w-4 h-4 ml-2 text-purple-400" />
+                  פריטים חוזרים → אומדן אנלוגי
+                </li>
+                <li className="flex items-center text-slate-400">
+                  <Brain className="w-4 h-4 ml-2 text-orange-400" />
+                  פריטים עם מפרטים מדידים → אומדן פרמטרי
+                </li>
+                <li className="flex items-center text-slate-400">
+                  <Users className="w-4 h-4 ml-2 text-red-400" />
+                  פריטים חדשים/ייחודיים → אומדן ממומחים
                 </li>
               </ul>
             </div>
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-slate-200">לפי דחיפות:</h3>
+              <h3 className="text-lg font-semibold text-slate-200">לפי דחיפות ותקציב:</h3>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center text-slate-400">
                   <Clock className="w-4 h-4 ml-2 text-red-400" />
-                  דחוף → אומדן מבוסס AI
+                  דחוף (עד שבוע) → אומדן מבוסס מחיר שוק
                 </li>
                 <li className="flex items-center text-slate-400">
-                  <TrendingUp className="w-4 h-4 ml-2 text-yellow-400" />
-                  בינוני → אומדן השוואתי
+                  <DollarSign className="w-4 h-4 ml-2 text-yellow-400" />
+                  תקציב גבוה (מעל ₪500K) → אומדן מלמטה למעלה
                 </li>
                 <li className="flex items-center text-slate-400">
                   <Target className="w-4 h-4 ml-2 text-green-400" />
-                  ללא לחץ זמן → אומדן פרמטרי
+                  ללא לחץ זמן → שילוב מספר שיטות
                 </li>
               </ul>
             </div>
+          </div>
+          
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mt-6">
+            <h4 className="text-blue-300 font-medium mb-2">💡 עצה מקצועית</h4>
+            <p className="text-slate-300 text-sm">
+              לרכישות בסכום גבוה (מעל ₪200K) מומלץ להשתמש ב-2-3 שיטות במקביל ולהשוות את התוצאות.
+              זה מגביר את דירוג הביטחון ומזהה הזדמנויות חיסכון.
+            </p>
           </div>
         </CardContent>
       </Card>

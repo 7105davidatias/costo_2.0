@@ -656,8 +656,18 @@ export class PricingEngine {
   ): ComprehensiveEstimation {
     const results: EstimationResult[] = [];
     
+    // Normalize method names to handle legacy formats
+    const normalizedMethods = methods.map(method => {
+      switch(method) {
+        case 'market_based': return 'market-based';
+        case 'bottom_up': return 'bottom-up';
+        case 'expert_judgment': return 'expert-judgment';
+        default: return method;
+      }
+    });
+    
     try {
-      if (methods.includes('market-based')) {
+      if (normalizedMethods.includes('market-based')) {
         results.push(this.calculateMarketBasedEstimate(request));
       }
     } catch (error) {
@@ -665,7 +675,7 @@ export class PricingEngine {
     }
     
     try {
-      if (methods.includes('analogous')) {
+      if (normalizedMethods.includes('analogous')) {
         results.push(this.calculateAnalogousEstimate(request));
       }
     } catch (error) {
@@ -673,7 +683,7 @@ export class PricingEngine {
     }
     
     try {
-      if (methods.includes('parametric')) {
+      if (normalizedMethods.includes('parametric')) {
         results.push(this.calculateParametricEstimate(request));
       }
     } catch (error) {
@@ -681,7 +691,7 @@ export class PricingEngine {
     }
     
     try {
-      if (methods.includes('bottom-up')) {
+      if (normalizedMethods.includes('bottom-up')) {
         results.push(this.calculateBottomUpEstimate(request));
       }
     } catch (error) {
@@ -689,7 +699,7 @@ export class PricingEngine {
     }
     
     try {
-      if (methods.includes('expert-judgment')) {
+      if (normalizedMethods.includes('expert-judgment')) {
         results.push(this.calculateExpertJudgmentEstimate(request));
       }
     } catch (error) {

@@ -259,70 +259,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine request type based on category or item description
       const requestType = determineRequestType(request);
 
-      let methods = [];
+      // Unified estimation methods for all types with consistent naming
+      let methods = [
+        {
+          id: 'market-based',
+          method: 'אומדן מבוסס מחיר שוק',
+          suitability: 95,
+          description: 'מתאים לפריטים סטנדרטיים עם מחירי שוק זמינים',
+          explanation: 'שיטה זו מתבססת על מחירי שוק נוכחיים, הצעות ספקים ונתוני תמחור בזמן אמת',
+          accuracy: 95,
+          confidence: 95
+        },
+        {
+          id: 'bottom-up',
+          method: 'אומדן מלמטה למעלה',
+          suitability: 90,
+          description: 'מתאים לפריטים מורכבים הניתנים לפירוק לרכיבים',
+          explanation: 'שיטה זו מפרקת את הרכש לרכיבים קטנים ומעריכה כל רכיב בנפרד',
+          accuracy: 90,
+          confidence: 90
+        },
+        {
+          id: 'analogous',
+          method: 'אומדן אנלוגי',
+          suitability: 85,
+          description: 'מתאים לרכש דומה שבוצע בעבר',
+          explanation: 'שיטה זו מתבססת על נתוני עלות מרכישות דומות שבוצעו בעבר עם התאמות לתנאים נוכחיים',
+          accuracy: 85,
+          confidence: 85
+        },
+        {
+          id: 'parametric',
+          method: 'אומדן פרמטרי',
+          suitability: 80,
+          description: 'מתאים לרכש עם פרמטרים מדידים וקשר סטטיסטי ידוע',
+          explanation: 'שיטה זו משתמשת במודלים מתמטיים המבוססים על פרמטרים מדידים',
+          accuracy: 80,
+          confidence: 80
+        },
+        {
+          id: 'expert-judgment',
+          method: 'אומדן ממומחים',
+          suitability: 75,
+          description: 'מתאים לרכש חדש או מורכב ללא נתונים היסטוריים',
+          explanation: 'שיטה זו מתבססת על הערכת מומחים בתחום הרלוונטי ובנצ\'מרקים תעשייתיים',
+          accuracy: 75,
+          confidence: 75
+        }
+      ];
 
+      // Adjust suitability based on request characteristics
       if (requestType === 'services') {
-        methods = [
-          {
-            id: 'time_based',
-            method: 'אומדן מבוסס זמן עבודה',
-            suitability: 85,
-            description: 'מתאים לשירותים עם הגדרה ברורה של שעות עבודה',
-            explanation: 'שיטה זו מתבססת על הערכת כמות שעות העבודה הנדרשות וכפלתן בתעריף שעתי'
-          },
-          {
-            id: 'deliverable_based',
-            method: 'אומדן מבוסס תוצרים',
-            suitability: 70,
-            description: 'מתאים לשירותים עם תוצרים מוגדרים בבירור',
-            explanation: 'שיטה זו מתבססת על הגדרת תוצרים ספציפיים ותמחור כל תוצר בנפרד'
-          },
-          {
-            id: 'value_based',
-            method: 'אומדן מבוסס ערך',
-            suitability: 60,
-            description: 'מתאים לשירותים אסטרטגיים בעלי ערך עסקי גבוה',
-            explanation: 'שיטה זו מתבססת על הערך העסקי הצפוי מהשירות'
-          },
-          {
-            id: 'three_point',
-            method: 'אומדן שלוש נקודות',
-            suitability: 92,
-            description: 'מתאים לשירותים מורכבים עם רמת אי-ודאות גבוהה',
-            explanation: 'שיטה זו משתמשת בשלושה אומדנים: אופטימי, פסימי וסביר ביותר'
-          }
-        ];
-      } else {
-        methods = [
-          {
-            id: 'analogous',
-            method: 'אומדן אנלוגי',
-            suitability: 85,
-            description: 'מתאים לרכש דומה שבוצע בעבר',
-            explanation: 'שיטה זו מתבססת על נתוני עלות מרכישות דומות שבוצעו בעבר'
-          },
-          {
-            id: 'parametric',
-            method: 'אומדן פרמטרי',
-            suitability: 70,
-            description: 'מתאים לרכש עם פרמטרים מדידים וקשר סטטיסטי ידוע',
-            explanation: 'שיטה זו משתמשת במודלים מתמטיים המבוססים על פרמטרים מדידים'
-          },
-          {
-            id: 'bottom_up',
-            method: 'אומדן מלמטה למעלה',
-            suitability: 78,
-            description: 'מתאים לרכש מורכב הניתן לפירוק לרכיבים',
-            explanation: 'שיטה זו מפרקת את הרכש לרכיבים קטנים ומעריכה כל רכיב בנפרד'
-          },
-          {
-            id: 'market_based',
-            method: 'אומדן מבוסס מחיר שוק',
-            suitability: 88,
-            description: 'מתאים לרכש סטנדרטי עם מחירי שוק זמינים',
-            explanation: 'שיטה זו מתבססת על מחירי שוק נוכחיים ומגמות מחירים'
-          }
-        ];
+        // For services, expert judgment and parametric are more suitable
+        methods.find(m => m.id === 'expert-judgment')!.suitability = 88;
+        methods.find(m => m.id === 'parametric')!.suitability = 85;
+        methods.find(m => m.id === 'market-based')!.suitability = 75;
       }
 
       res.json({
