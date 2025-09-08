@@ -2,574 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Enhanced UI Overrides */
-@import './styles/ui-overrides.css';
-
-/* Enhanced Glassmorphism Design with Neon Colors */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  }
-  50% {
-    opacity: 0.8;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-  }
+/* Basic Resets */
+* {
+  box-sizing: border-box;
 }
 
-@keyframes neon-glow {
-  0%, 100% {
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff;
-  }
-  50% {
-    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-@keyframes glass-float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+/* Dark Theme Variables */
+:root {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
 }
 
-@keyframes data-flow {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(20px);
-  }
+/* Animation Classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Glassmorphism Base Styles */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 16px;
-  box-shadow:
-    0 8px 32px rgba(15, 23, 42, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-.glass-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.8), transparent);
+/* Card Hover Effects */
+.card-hover {
+  transition: transform 0.2s ease;
 }
 
-.glass-card {
-  @apply glass-panel;
-  transition: all 0.3s ease;
-  animation: glass-float 6s ease-in-out infinite;
-}
-
-.glass-card:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(0, 255, 255, 0.3);
-  box-shadow:
-    0 12px 40px rgba(15, 23, 42, 0.6),
-    0 0 10px rgba(0, 255, 255, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.card-hover:hover {
   transform: translateY(-2px);
 }
 
-/* Neon Text Styles - Reduced 50% */
-.neon-text-primary {
-  color: #66cccc;
-  text-shadow: 0 0 2.5px #00ffff, 0 0 5px #00ffff;
-  animation: neon-glow 3s ease-in-out infinite alternate;
+/* Loading Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.neon-text-secondary {
-  color: #66cc99;
-  text-shadow: 0 0 2.5px #00ff88, 0 0 5px #00ff88;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-.neon-text-accent {
-  color: #cc6699;
-  text-shadow: 0 0 2.5px #ff0080, 0 0 5px #ff0080;
-}
-
-.neon-text-warning {
-  color: #ccaa66;
-  text-shadow: 0 0 2.5px #ffaa00, 0 0 5px #ffaa00;
-}
-
-.neon-text-muted {
-  color: #a8b2c0;
-  text-shadow: 0 0 1.5px #8892b0;
-}
-
-/* Enhanced Buttons - Reduced Glow */
-.glass-button {
-  @apply glass-panel;
-  padding: 12px 24px;
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  background: rgba(15, 23, 42, 0.6);
-  color: #66cccc;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  text-shadow: 0 0 2.5px #00ffff;
-}
-
-/* Glass Variants */
-.glass-ultra-light {
-  background: var(--glass-ultra-light);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.glass-light {
-  background: var(--glass-light);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.glass-heavy {
-  background: var(--glass-heavy);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-/* Interactive Glass States */
-.glass-interactive {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-interactive:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(0, 255, 255, 0.4);
-  box-shadow: var(--glow-cyan-md);
-  transform: translateY(-1px);
-}
-
-.glass-button:hover {
-  background: rgba(0, 255, 255, 0.05);
-  border-color: #66cccc;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.glass-button:active {
-  transform: translateY(0);
-  box-shadow: 0 0 5px rgba(0, 255, 255, 0.15);
-}
-
-/* Data Visualization Enhancements */
-.chart-container {
-  @apply glass-panel;
-  padding: 24px;
-  margin: 16px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-/* Chart Legend Glassmorphism */
-.recharts-legend-wrapper {
-  background: rgba(15, 23, 42, 0.4) !important;
-  backdrop-filter: blur(10px) !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  border: 1px solid rgba(0, 255, 255, 0.2) !important;
-}
-
-/* Chart Grid Enhancement */
-.recharts-cartesian-grid line {
-  stroke: rgba(0, 255, 255, 0.1) !important;
-  stroke-dasharray: 3 3 !important;
-}
-
-/* Chart Bars Glassmorphism */
-.recharts-bar {
-  filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.3)) !important;
-}
-
-.data-point {
-  transition: all 0.3s ease;
-}
-
-.data-point:hover {
-  filter: brightness(1.3);
-  animation: pulse-glow 1s ease-in-out;
-}
-
-/* RTL Enhancements */
-.rtl-table {
-  direction: rtl;
-  text-align: right;
-}
-
-.rtl-table th:first-child {
-  border-radius: 0 8px 0 0;
-}
-
-.rtl-table th:last-child {
-  border-radius: 8px 0 0 0;
-}
-
-.rtl-chart-legend {
-  direction: rtl;
-  text-align: right;
-}
-
-/* Loading States with Glassmorphism */
-.glass-skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(15, 23, 42, 0.4) 25%,
-    rgba(59, 130, 246, 0.2) 50%,
-    rgba(15, 23, 42, 0.4) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
-}
-
-/* Enhanced Animations */
-.data-flow-animation {
-  animation: data-flow 3s ease-in-out infinite;
-}
-
-.pulse-neon {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-/* Navigation Glassmorphism */
-.glass-nav {
-  @apply glass-panel;
-  backdrop-filter: blur(25px);
-  background: rgba(15, 23, 42, 0.8);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-}
-
-/* Form Elements */
-.glass-input {
-  @apply glass-panel;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #e2e8f0;
-  padding: 12px 16px;
-  transition: all 0.3s ease;
-}
-
-.glass-input:focus {
-  border-color: #00ffff;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-  background: rgba(15, 23, 42, 0.7);
-}
-
-.glass-input::placeholder {
-  color: #64748b;
-}
-
-/* Root Variables for Glassmorphism Theme */
-:root {
-  --background: hsl(220, 50%, 6%);
-  --foreground: hsl(180, 100%, 90%);
-  --muted: hsl(220, 30%, 15%);
-  --muted-foreground: hsl(180, 20%, 65%);
-  --popover: hsl(220, 40%, 8%);
-  --popover-foreground: hsl(180, 100%, 90%);
-  --card: hsl(220, 45%, 10%);
-  --card-foreground: hsl(180, 100%, 90%);
-  --border: hsl(180, 100%, 50%);
-  --input: hsl(220, 40%, 12%);
-  --primary: hsl(180, 100%, 50%);
-  --primary-foreground: hsl(220, 50%, 6%);
-  --secondary: hsl(320, 100%, 75%);
-  --secondary-foreground: hsl(220, 50%, 6%);
-  --accent: hsl(220, 40%, 15%);
-  --accent-foreground: hsl(180, 100%, 90%);
-  --destructive: hsl(0, 100%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(180, 100%, 50%);
-  --radius: 16px;
-  --success: hsl(120, 100%, 60%);
-  --warning: hsl(45, 100%, 60%);
-  --chart-1: hsl(180, 100%, 60%);
-  --chart-2: hsl(120, 100%, 60%);
-  --chart-3: hsl(45, 100%, 60%);
-  --chart-4: hsl(320, 100%, 70%);
-  --chart-5: hsl(0, 100%, 65%);
-
-  /* Glassmorphism specific variables */
-  --glass-bg: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(59, 130, 246, 0.3);
-  --neon-cyan: #00ffff;
-  --neon-green: #00ff88;
-  --neon-pink: #ff0080;
-  --neon-yellow: #ffaa00;
-}
-
-.dark {
-  --background: hsl(220, 50%, 6%);
-  --foreground: hsl(180, 100%, 90%);
-  --muted: hsl(220, 30%, 15%);
-  --muted-foreground: hsl(180, 20%, 65%);
-  --popover: hsl(220, 40%, 8%);
-  --popover-foreground: hsl(180, 100%, 90%);
-  --card: hsl(220, 45%, 10%);
-  --card-foreground: hsl(180, 100%, 90%);
-  --border: hsl(180, 100%, 50%);
-  --input: hsl(220, 40%, 12%);
-  --primary: hsl(180, 100%, 50%);
-  --primary-foreground: hsl(220, 50%, 6%);
-  --secondary: hsl(320, 100%, 75%);
-  --secondary-foreground: hsl(220, 50%, 6%);
-  --accent: hsl(220, 40%, 15%);
-  --accent-foreground: hsl(180, 100%, 90%);
-  --destructive: hsl(0, 100%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(180, 100%, 50%);
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply font-sans antialiased;
-    background: linear-gradient(135deg,
-      hsl(220, 50%, 6%) 0%,
-      hsl(220, 45%, 8%) 50%,
-      hsl(220, 40%, 10%) 100%);
-    color: var(--foreground);
-    direction: rtl;
-    font-family: 'Assistant', 'Roboto', sans-serif;
-    min-height: 100vh;
-    position: relative;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-      radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  html {
-    direction: rtl;
-  }
-}
-
-@layer components {
-  .glow-effect {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  }
-
-  .card-hover {
-    transition: all 0.3s ease;
-  }
-
-  .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-  }
-
-  .progress-bar {
-    background: linear-gradient(90deg, var(--neon-cyan) 0%, var(--neon-green) 100%);
-    height: 4px;
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-  }
-
-  /* KPI Cards - Glassmorphism Style */
-  .dashboard-kpi-card {
-    @apply glass-card;
-    text-align: center;
-    padding: 24px;
-    margin: 12px;
-  }
-
-  .dashboard-kpi-card .flex.items-center.justify-between {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-  }
-
-  .dashboard-kpi-card .flex.items-center.justify-between > div:first-child {
-    text-align: center;
-  }
-
-  .dashboard-kpi-card .flex.items-center.justify-between > div:last-child {
-    order: -1;
-  }
-
-  .dashboard-kpi-card p,
-  .dashboard-kpi-card span {
-    text-align: center;
-  }
-
-  .dashboard-kpi-card .flex.items-center {
-    justify-content: center;
-  }
-
-  /* Procurement requests KPI styles */
-  .procurement-kpi-card {
-    @apply glass-card;
-    text-align: center;
-    padding: 20px;
-  }
-
-  .procurement-kpi-card .flex.items-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .procurement-kpi-card .flex.items-center > div:last-child {
-    text-align: center;
-    margin: 0;
-  }
-
-  .procurement-kpi-card p,
-  .procurement-kpi-card span {
-    text-align: center;
-  }
-
-  /* Table Glassmorphism */
-  .glass-table {
-    @apply glass-panel;
-    overflow: hidden;
-  }
-
-  .glass-table thead {
-    background: rgba(0, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-  }
-
-  .glass-table th {
-    @apply neon-text-primary;
-    padding: 16px;
-    text-align: right;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-  }
-
-  .glass-table td {
-    padding: 16px;
-    text-align: right;
-    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-    color: #e2e8f0;
-  }
-
-  .glass-table tr:hover {
-    background: rgba(0, 255, 255, 0.05);
-  }
-}
-
-/* RTL specific chart styles */
-[dir="rtl"] .recharts-legend-wrapper {
-  direction: rtl;
-  text-align: right;
-}
-
-[dir="rtl"] .recharts-cartesian-axis-tick-value {
-  direction: rtl;
-  text-anchor: start;
-  fill: #8892b0;
-  font-size: 12px;
-}
-
-[dir="rtl"] .recharts-legend-item {
+/* RTL Layout Fixes */
+[dir="rtl"] .space-x-reverse > * + * {
+  margin-right: 0.5rem;
   margin-left: 0;
-  margin-right: 10px;
 }
 
-/* Enhanced scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Responsive Grid */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
-  border-radius: 4px;
+/* Basic Button Styles */
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, var(--neon-cyan), var(--neon-green));
-  border-radius: 4px;
-  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+.btn-primary:hover {
+  opacity: 0.9;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #00ffff, #00ff88);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-/* Chart text readability improvements */
-.recharts-text {
-  fill: #cbd5e1 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-}
-
-.recharts-cartesian-axis-tick-value {
-  fill: #cbd5e1 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-}
-
-.recharts-legend-item-text {
-  color: #e2e8f0 !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-}
-
-.recharts-tooltip-wrapper {
-  backdrop-filter: blur(20px) !important;
-  background: rgba(15, 23, 42, 0.9) !important;
-  border: 1px solid rgba(0, 255, 255, 0.3) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
+/* Chart Colors */
+.chart-primary { color: #60a5fa; }
+.chart-secondary { color: #34d399; }
+.chart-warning { color: #fbbf24; }
+.chart-danger { color: #f87171; }

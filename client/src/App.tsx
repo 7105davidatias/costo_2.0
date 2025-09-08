@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/layout/header";
-import Dashboard from "@/pages/dashboard";
+import Dashboard from "@/pages/dashboard-simple";
 import ProcurementRequest from "@/pages/procurement-request";
 import ProcurementRequestsList from "@/pages/procurement-requests-list";
 import CostEstimation from "@/pages/cost-estimation";
