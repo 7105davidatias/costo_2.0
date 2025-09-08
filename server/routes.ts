@@ -1737,6 +1737,7 @@ function calculateByMethod(methodId: string, request: any) {
     case 'bottom_up':
       return calculateBottomUp(request);
     case 'market_based':
+    case 'market-based':
       return calculateMarketBased(request);
     default:
       throw new Error(`שיטת אומדן לא מוכרת: ${methodId}`);
