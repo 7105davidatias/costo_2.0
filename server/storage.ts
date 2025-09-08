@@ -6,6 +6,9 @@ import {
   type SupplierQuote, type InsertSupplierQuote, type Document, type InsertDocument,
   type MarketInsight, type InsertMarketInsight
 } from "@shared/schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { eq, ne, desc, isNotNull, sql } from "drizzle-orm";
 
 // טיפוסי נתונים חדשים למערכת v2.0
 export interface ProcurementCategory {
@@ -2359,4 +2362,311 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL Storage Implementation
+export class PostgresStorage implements IStorage {
+  private db;
+
+  constructor() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL environment variable is required');
+    }
+    const client = postgres(connectionString);
+    this.db = drizzle(client);
+  }
+
+  // Users
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await this.db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  // Procurement Requests
+  async getProcurementRequests(): Promise<ProcurementRequest[]> {
+    return await this.db.select().from(procurementRequests).orderBy(desc(procurementRequests.createdAt));
+  }
+
+  async getProcurementRequest(id: number): Promise<ProcurementRequest | undefined> {
+    const result = await this.db.select().from(procurementRequests).where(eq(procurementRequests.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createProcurementRequest(insertRequest: InsertProcurementRequest): Promise<ProcurementRequest> {
+    const result = await this.db.insert(procurementRequests).values(insertRequest).returning();
+    return result[0];
+  }
+
+  async updateProcurementRequest(id: number, updateData: Partial<InsertProcurementRequest>): Promise<ProcurementRequest | undefined> {
+    const result = await this.db.update(procurementRequests)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(procurementRequests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Suppliers
+  async getSuppliers(): Promise<Supplier[]> {
+    return await this.db.select().from(suppliers).orderBy(suppliers.name);
+  }
+
+  async getSupplier(id: number): Promise<Supplier | undefined> {
+    const result = await this.db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createSupplier(insertSupplier: InsertSupplier): Promise<Supplier> {
+    const result = await this.db.insert(suppliers).values(insertSupplier).returning();
+    return result[0];
+  }
+
+  // Cost Estimations
+  async getCostEstimations(): Promise<CostEstimation[]> {
+    return await this.db.select().from(costEstimations).orderBy(desc(costEstimations.createdAt));
+  }
+
+  async getCostEstimation(id: number): Promise<CostEstimation | undefined> {
+    const result = await this.db.select().from(costEstimations).where(eq(costEstimations.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getCostEstimationByRequestId(requestId: number): Promise<CostEstimation | undefined> {
+    const result = await this.db.select().from(costEstimations).where(eq(costEstimations.procurementRequestId, requestId)).limit(1);
+    return result[0];
+  }
+
+  async createCostEstimation(insertEstimation: InsertCostEstimation): Promise<CostEstimation> {
+    const result = await this.db.insert(costEstimations).values(insertEstimation).returning();
+    return result[0];
+  }
+
+  // Supplier Quotes
+  async getSupplierQuotes(): Promise<SupplierQuote[]> {
+    return await this.db.select().from(supplierQuotes).orderBy(desc(supplierQuotes.createdAt));
+  }
+
+  async getSupplierQuotesByRequestId(requestId: number): Promise<SupplierQuote[]> {
+    return await this.db.select().from(supplierQuotes).where(eq(supplierQuotes.procurementRequestId, requestId));
+  }
+
+  async createSupplierQuote(insertQuote: InsertSupplierQuote): Promise<SupplierQuote> {
+    const result = await this.db.insert(supplierQuotes).values(insertQuote).returning();
+    return result[0];
+  }
+
+  // Documents
+  async getDocumentsByRequestId(requestId: number): Promise<Document[]> {
+    return await this.db.select().from(documents).where(eq(documents.procurementRequestId, requestId));
+  }
+
+  async createDocument(insertDocument: InsertDocument): Promise<Document> {
+    const result = await this.db.insert(documents).values(insertDocument).returning();
+    return result[0];
+  }
+
+  async updateDocument(id: number, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
+    const result = await this.db.update(documents)
+      .set(updateData)
+      .where(eq(documents.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Market Insights
+  async getMarketInsights(): Promise<MarketInsight[]> {
+    return await this.db.select().from(marketInsights).orderBy(desc(marketInsights.updatedAt));
+  }
+
+  async getMarketInsightByCategory(category: string): Promise<MarketInsight | undefined> {
+    const result = await this.db.select().from(marketInsights).where(eq(marketInsights.category, category)).limit(1);
+    return result[0];
+  }
+
+  async createMarketInsight(insertInsight: InsertMarketInsight): Promise<MarketInsight> {
+    const result = await this.db.insert(marketInsights).values(insertInsight).returning();
+    return result[0];
+  }
+
+  // Extracted Data Management
+  async saveExtractedData(requestId: number, data: any): Promise<void> {
+    await this.db.update(procurementRequests)
+      .set({
+        extractedData: data,
+        extractionDate: new Date(),
+        extractionStatus: "extracted",
+        updatedAt: new Date()
+      })
+      .where(eq(procurementRequests.id, requestId));
+  }
+
+  async getExtractedData(requestId: number): Promise<{ data: any; extractionDate: Date; status: string } | null> {
+    const result = await this.db.select({
+      extractedData: procurementRequests.extractedData,
+      extractionDate: procurementRequests.extractionDate,
+      extractionStatus: procurementRequests.extractionStatus
+    }).from(procurementRequests).where(eq(procurementRequests.id, requestId)).limit(1);
+
+    if (!result[0] || !result[0].extractedData || result[0].extractionStatus !== "extracted") {
+      return null;
+    }
+
+    return {
+      data: result[0].extractedData,
+      extractionDate: result[0].extractionDate!,
+      status: result[0].extractionStatus!
+    };
+  }
+
+  async clearExtractedData(requestId: number): Promise<void> {
+    await this.db.update(procurementRequests)
+      .set({
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
+        updatedAt: new Date()
+      })
+      .where(eq(procurementRequests.id, requestId));
+  }
+
+  // Admin reset methods
+  async resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }> {
+    const allRequests = await this.db.select().from(procurementRequests);
+    const totalRequests = allRequests.length;
+    
+    const result = await this.db.update(procurementRequests)
+      .set({ status: "new", updatedAt: new Date() })
+      .where(ne(procurementRequests.status, "new"))
+      .returning({ id: procurementRequests.id });
+    
+    return { totalRequests, updatedRequests: result.length };
+  }
+
+  async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
+    const allEstimations = await this.db.select().from(costEstimations);
+    const totalEstimations = allEstimations.length;
+    
+    await this.db.delete(costEstimations);
+    await this.db.update(procurementRequests).set({ 
+      estimatedCost: null, 
+      updatedAt: new Date() 
+    });
+    
+    return { totalEstimations, clearedEstimations: totalEstimations };
+  }
+
+  async resetAllAIData() {
+    // Clear cost estimations
+    const clearedEstimations = await this.resetAllCostEstimations();
+    
+    // Clear extracted data and document analysis
+    const clearedExtractedResult = await this.db.update(procurementRequests)
+      .set({
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
+        updatedAt: new Date()
+      })
+      .where(isNotNull(procurementRequests.extractedData))
+      .returning({ id: procurementRequests.id });
+
+    const clearedDocumentsResult = await this.db.update(documents)
+      .set({
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null
+      })
+      .where(eq(documents.isAnalyzed, true))
+      .returning({ id: documents.id });
+
+    // Reset request statuses
+    const updatedRequests = await this.resetAllRequestsStatus();
+
+    return {
+      clearedEstimations: clearedEstimations.clearedEstimations,
+      clearedExtractedData: clearedExtractedResult.length,
+      clearedDocumentAnalysis: clearedDocumentsResult.length,
+      updatedRequests: updatedRequests.updatedRequests
+    };
+  }
+
+  async executeSQL(query: string, params: any[] = []) {
+    try {
+      const result = await this.db.execute(sql`${query}`);
+      return result;
+    } catch (error) {
+      console.error('SQL execution error:', error);
+      throw error;
+    }
+  }
+
+  // New v2.0 Methods - Not implemented for PostgreSQL yet
+  async getProcurementCategories(): Promise<ProcurementCategory[]> {
+    return [];
+  }
+
+  async getProcurementCategory(id: string): Promise<ProcurementCategory | undefined> {
+    return undefined;
+  }
+
+  async getProcurementCategoriesByName(name: string): Promise<ProcurementCategory[]> {
+    return [];
+  }
+
+  async getHistoricalProcurements(): Promise<HistoricalProcurement[]> {
+    return [];
+  }
+
+  async getHistoricalProcurementsByCategory(category: string): Promise<HistoricalProcurement[]> {
+    return [];
+  }
+
+  async getHistoricalProcurementsBySupplierId(supplierId: number): Promise<HistoricalProcurement[]> {
+    return [];
+  }
+
+  async getSupplierPerformance(): Promise<SupplierPerformance[]> {
+    return [];
+  }
+
+  async getSupplierPerformanceById(supplierId: number): Promise<SupplierPerformance | undefined> {
+    return undefined;
+  }
+
+  async getBestPerformingSuppliers(limit: number): Promise<SupplierPerformance[]> {
+    return [];
+  }
+
+  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
+    return [];
+  }
+
+  async getDocumentTemplate(id: string): Promise<DocumentTemplate | undefined> {
+    return undefined;
+  }
+
+  async getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]> {
+    return [];
+  }
+}
+
+// Initialize storage based on environment
+const initStorage = (): IStorage => {
+  if (process.env.DATABASE_URL && process.env.USE_POSTGRES === 'true') {
+    console.log('Using PostgreSQL storage');
+    return new PostgresStorage();
+  } else {
+    console.log('Using in-memory storage');
+    return new MemStorage();
+  }
+};
+
+export const storage = initStorage();

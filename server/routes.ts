@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, MemStorage } from "./storage";
 import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema } from "@shared/schema";
 import { PricingEngine, initializePricingEngine, type EstimationRequest } from "@shared/pricing-engine";
 import multer from "multer";
@@ -1359,6 +1359,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         message: error instanceof Error ? error.message : 'שגיאה בביצוע השאילתה',
         query: req.body.query
+      });
+    }
+  });
+
+  // Data seeding route for production database
+  app.post("/api/admin/seed-production-data", async (req, res) => {
+    try {
+      console.log('Starting production data seeding...');
+
+      // Create in-memory storage with demo data
+      const memStorage = new MemStorage();
+
+      if (process.env.DATABASE_URL && process.env.USE_POSTGRES === 'true') {
+        const { drizzle } = await import("drizzle-orm/postgres-js");
+        const postgres = (await import("postgres")).default;
+        const { users, suppliers, procurementRequests, costEstimations, supplierQuotes, documents, marketInsights } = await import("@shared/schema");
+
+        const client = postgres(process.env.DATABASE_URL);
+        const db = drizzle(client);
+
+        // Seed users
+        const memUsers = await memStorage.getUser(1); // Get the admin user
+        if (memUsers) {
+          try {
+            await db.insert(users).values({
+              username: memUsers.username,
+              password: memUsers.password,
+              displayName: memUsers.displayName,
+              role: memUsers.role
+            }).onConflictDoNothing();
+          } catch (error) {
+            console.log('User already exists or error:', error);
+          }
+        }
+
+        // Seed suppliers
+        const memSuppliers = await memStorage.getSuppliers();
+        for (const supplier of memSuppliers) {
+          try {
+            await db.insert(suppliers).values({
+              name: supplier.name,
+              code: supplier.code,
+              rating: supplier.rating,
+              reliability: supplier.reliability,
+              deliveryTime: supplier.deliveryTime,
+              discountPolicy: supplier.discountPolicy,
+              warrantyTerms: supplier.warrantyTerms,
+              isPreferred: supplier.isPreferred,
+              contactInfo: supplier.contactInfo
+            }).onConflictDoNothing();
+          } catch (error) {
+            console.log(`Supplier ${supplier.name} already exists or error:`, error);
+          }
+        }
+
+        // Seed procurement requests
+        const memRequests = await memStorage.getProcurementRequests();
+        for (const request of memRequests) {
+          try {
+            await db.insert(procurementRequests).values({
+              requestNumber: request.requestNumber,
+              itemName: request.itemName,
+              description: request.description,
+              category: request.category,
+              quantity: request.quantity,
+              priority: request.priority,
+              targetDate: request.targetDate,
+              requestedBy: request.requestedBy,
+              department: request.department,
+              status: request.status,
+              emf: request.emf,
+              estimatedCost: request.estimatedCost,
+              specifications: request.specifications,
+              userId: 1
+            }).onConflictDoNothing();
+          } catch (error) {
+            console.log(`Request ${request.requestNumber} already exists or error:`, error);
+          }
+        }
+
+        console.log('✅ Production data seeding completed successfully');
+        res.json({ 
+          success: true, 
+          message: 'נתוני הדמו נטענו בהצלחה לבסיס הנתונים',
+          seeded: {
+            users: 1,
+            suppliers: memSuppliers.length,
+            requests: memRequests.length
+          }
+        });
+      } else {
+        res.json({ success: false, message: 'PostgreSQL not configured' });
+      }
+    } catch (error) {
+      console.error('Error seeding production data:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'שגיאה בטעינת הנתונים',
+        error: error.message 
       });
     }
   });

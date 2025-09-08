@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Database, Play, AlertTriangle, Table as TableIcon, Search, Plus, Edit, Trash2, Eye, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Database, Play, AlertTriangle, Table as TableIcon, Search, Plus, Edit, Trash2, Eye, RefreshCw, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function DatabaseAdmin() {
@@ -23,6 +22,8 @@ export default function DatabaseAdmin() {
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [connectionStatus, setConnectionStatus] = useState<string>('checking...');
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // טעינת סקירת הטבלאות
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function DatabaseAdmin() {
       ];
 
       setTables(tablesInfo);
-      
+
       // שמירת הנתונים לתצוגה מפורטת
       setTableData({
         procurement_requests: procurementRequests,
@@ -56,6 +57,7 @@ export default function DatabaseAdmin() {
         cost_estimations: costEstimations,
         documents: documents
       });
+      setConnectionStatus('Production database connected');
     } catch (error) {
       console.error('Error loading database overview:', error);
       toast({
@@ -63,6 +65,7 @@ export default function DatabaseAdmin() {
         description: "שגיאה בטעינת נתוני מסד הנתונים",
         variant: "destructive"
       });
+      setConnectionStatus('Failed to connect to Production database');
     } finally {
       setLoadingTables(false);
     }
@@ -89,7 +92,7 @@ export default function DatabaseAdmin() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'שגיאה בביצוע השאילתה');
       }
@@ -118,10 +121,10 @@ export default function DatabaseAdmin() {
 
   const formatTableData = (data: any[], tableName: string) => {
     if (!data || data.length === 0) return null;
-    
+
     const sample = data[0];
     const columns = Object.keys(sample);
-    
+
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -133,7 +136,7 @@ export default function DatabaseAdmin() {
             רענן
           </Button>
         </div>
-        
+
         <div className="border rounded-lg overflow-hidden bg-gray-900">
           <Table>
             <TableHeader>
@@ -161,7 +164,7 @@ export default function DatabaseAdmin() {
             </TableBody>
           </Table>
         </div>
-        
+
         {data.length > 10 && (
           <p className="text-sm text-gray-400">
             מוצגות 10 רשומות ראשונות מתוך {data.length} סה״כ
@@ -190,6 +193,75 @@ export default function DatabaseAdmin() {
     }
   ];
 
+  const seedDemoData = async () => {
+    setIsSeeding(true);
+    try {
+      const response = await fetch('/api/admin/seed-production-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`✅ ${result.message}\n\nנטענו:\n• ${result.seeded.users} משתמשים\n• ${result.seeded.suppliers} ספקים\n• ${result.seeded.requests} דרישות רכש`);
+        // Refresh the data
+        await loadDatabaseOverview();
+      } else {
+        alert(`❌ שגיאה: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error seeding data:', error);
+      alert(`❌ שגיאה בטעינת נתוני הדמו: ${error.message}`);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  // Helper function to reload all table data, used after seeding
+  const loadTableData = async () => {
+    setLoadingTables(true);
+    try {
+      const [procurementRequests, suppliers, costEstimations, documents] = await Promise.all([
+        fetch('/api/procurement-requests').then(r => r.json()),
+        fetch('/api/suppliers').then(r => r.json()),
+        fetch('/api/cost-estimations').then(r => r.json()),
+        fetch('/api/documents/request/1').then(r => r.json()).catch(() => [])
+      ]);
+      
+      setTableData({
+        procurement_requests: procurementRequests,
+        suppliers: suppliers,
+        cost_estimations: costEstimations,
+        documents: documents
+      });
+
+      const tablesInfo = [
+        { name: 'procurement_requests', count: procurementRequests.length, description: 'דרישות רכש' },
+        { name: 'suppliers', count: suppliers.length, description: 'ספקים' },
+        { name: 'cost_estimations', count: costEstimations.length, description: 'אומדני עלויות' },
+        { name: 'documents', count: Array.isArray(documents) ? documents.length : 0, description: 'מסמכים' }
+      ];
+      setTables(tablesInfo);
+
+    } catch (error) {
+      console.error('Error reloading database overview:', error);
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בטעינת נתוני מסד הנתונים לאחר פעולת הוספה",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingTables(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -207,6 +279,33 @@ export default function DatabaseAdmin() {
             <div>
               <h1 className="text-3xl font-bold">ניהול מסד נתונים - Production</h1>
               <p className="text-gray-400">ניהול וביצוע שאילתות על מסד הנתונים הפעיל</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              onClick={seedDemoData}
+              disabled={isSeeding || connectionStatus !== 'Production database connected'}
+              variant="outline"
+              size="sm"
+            >
+              {isSeeding ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  טוען נתונים...
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-1" />
+                  טען נתוני דמו
+                </>
+              )}
+            </Button>
+            <div className={`px-2 py-1 rounded text-sm ${
+              connectionStatus === 'Production database connected' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {connectionStatus}
             </div>
           </div>
         </div>
@@ -321,7 +420,7 @@ export default function DatabaseAdmin() {
                     dir="ltr"
                   />
                   <Button 
-                    onClick={executeQuery}
+                    onClick={() => executeQuery()}
                     disabled={loading}
                     className="w-full"
                   >
