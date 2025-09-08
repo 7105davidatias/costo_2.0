@@ -1,4 +1,3 @@
-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const data = [
@@ -12,14 +11,11 @@ const data = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-panel p-4 border border-procurement-border-glass rounded-lg shadow-glass">
-        <p className="neon-text-primary font-semibold mb-2">{`${label}`}</p>
+      <div className="glass-panel backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-procurement-primary-neon/40 rounded-glass shadow-neon text-right">
+        <p className="neon-text-primary font-semibold mb-3 text-base">{`חודש: ${label}`}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-procurement-text-primary text-sm" style={{ color: entry.color }}>
-            {entry.dataKey === 'accuracy' 
-              ? `דיוק: ${entry.value}%`
-              : `מספר דרישות: ${entry.value}`
-            }
+          <p key={index} className="text-base mb-1 font-medium" style={{ color: entry.color }}>
+            {`${entry.name}: ${entry.value}%`}
           </p>
         ))}
       </div>

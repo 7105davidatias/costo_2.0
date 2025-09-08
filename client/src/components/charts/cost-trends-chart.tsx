@@ -13,10 +13,10 @@ const data = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-panel p-4 border border-procurement-border-glass rounded-lg shadow-glass">
-        <p className="neon-text-primary font-semibold mb-2">{`${label}`}</p>
+      <div className="glass-panel backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-procurement-primary-neon/40 rounded-glass shadow-neon text-right">
+        <p className="neon-text-primary font-semibold mb-3 text-base">{`${label}`}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-procurement-text-primary text-sm" style={{ color: entry.color }}>
+          <p key={index} className="text-base mb-1 font-medium" style={{ color: entry.color }}>
             {`${entry.name}: ₪${entry.value.toLocaleString()}`}
           </p>
         ))}
@@ -38,22 +38,24 @@ export default function CostTrendsChart() {
         <XAxis 
           dataKey="month" 
           tick={{ 
-            fill: '#8892b0', 
-            fontSize: 12,
-            fontWeight: 500,
+            fill: '#cbd5e1', 
+            fontSize: 14,
+            fontWeight: 600,
           }}
-          stroke="rgba(59, 130, 246, 0.3)"
-          tickMargin={10}
+          stroke="rgba(0, 255, 255, 0.4)"
+          tickMargin={15}
+          height={60}
         />
         <YAxis 
           tick={{ 
-            fill: '#8892b0', 
-            fontSize: 12,
-            fontWeight: 500,
+            fill: '#cbd5e1', 
+            fontSize: 14,
+            fontWeight: 600,
           }}
-          stroke="rgba(59, 130, 246, 0.3)"
+          stroke="rgba(0, 255, 255, 0.4)"
           tickFormatter={(value) => `₪${(value / 1000).toFixed(0)}K`}
-          tickMargin={10}
+          tickMargin={15}
+          width={80}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend 

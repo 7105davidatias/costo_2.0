@@ -56,8 +56,8 @@ export default function Header() {
           <Link
             href="/market-research"
             className={cn(
-              "text-base font-medium transition-all duration-300 hover:neon-text-primary hover:shadow-neon px-3 py-2 rounded-lg",
-              pathname === "/market-research" ? "neon-text-primary bg-procurement-primary-neon/10 border border-procurement-primary-neon/30" : "neon-text-muted hover:bg-procurement-background-glass"
+              "text-base font-medium transition-all duration-300 hover:text-purple-400 hover:shadow-neon px-3 py-2 rounded-lg",
+              pathname === "/market-research" ? "text-purple-400 bg-purple-400/10 border border-purple-400/30" : "neon-text-muted hover:bg-procurement-background-glass"
             )}
           >
             מחקר שוק
@@ -81,18 +81,18 @@ export default function Header() {
             תבניות
           </Link>
         </nav>
-        <div className="flex items-center space-x-6">
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="w-6 h-6 neon-text-primary" />
-            <Badge variant="destructive" className="absolute -top-1 -left-1 h-6 w-6 text-xs p-0 flex items-center justify-center rounded-full neon-badge">
+        <div className="flex items-center gap-6">
+          <Button variant="ghost" size="sm" className="relative p-2">
+            <Bell className="w-5 h-5 neon-text-primary" />
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center rounded-full bg-red-500 text-white border-0">
               3
             </Badge>
           </Button>
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full flex items-center justify-center shadow-glow">
-              <User className="text-white w-6 h-6" />
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full flex items-center justify-center shadow-glow">
+              <User className="text-white w-5 h-5" />
             </div>
-            <span className="text-lg font-semibold neon-text-primary">אהרון כהן</span>
+            <span className="text-base font-medium neon-text-primary whitespace-nowrap">אהרון כהן</span>
           </div>
         </div>
       </div>

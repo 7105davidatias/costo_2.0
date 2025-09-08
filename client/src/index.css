@@ -483,19 +483,21 @@
 
 /* Chart text readability improvements */
 .recharts-text {
-  fill: #e2e8f0 !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
+  fill: #cbd5e1 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
 }
 
 .recharts-cartesian-axis-tick-value {
-  fill: #8892b0 !important;
-  font-size: 11px !important;
+  fill: #cbd5e1 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
 }
 
 .recharts-legend-item-text {
   color: #e2e8f0 !important;
-  font-size: 13px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
 }
 
 .recharts-tooltip-wrapper {

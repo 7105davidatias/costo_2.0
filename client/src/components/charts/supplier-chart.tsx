@@ -44,18 +44,18 @@ export default function SupplierChart({ data }: SupplierChartProps) {
   });
 
   const colors = [
-    '#60a5fa',
-    '#34d399', 
-    '#fbbf24',
+    '#00ffff', // cyan neon
+    '#00ff88', // green neon  
+    '#ffaa00', // yellow neon
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card border border-primary/20 p-3 rounded-lg shadow-lg" dir="rtl">
-          <p className="text-foreground font-medium mb-2">{label}</p>
+        <div className="glass-panel backdrop-filter backdrop-blur-[25px] bg-black/60 p-4 border border-procurement-primary-neon/40 rounded-glass shadow-neon text-right" dir="rtl">
+          <p className="neon-text-primary font-semibold mb-3 text-base">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }}>
+            <p key={index} className="text-base mb-1 font-medium" style={{ color: entry.color }}>
               {`${entry.dataKey}: ${entry.value}`}
             </p>
           ))}
@@ -71,12 +71,12 @@ export default function SupplierChart({ data }: SupplierChartProps) {
         <PolarGrid stroke="hsl(var(--muted))" />
         <PolarAngleAxis 
           dataKey="category" 
-          tick={{ fill: '#FFFFFF', fontSize: 12 }}
+          tick={{ fill: '#cbd5e1', fontSize: 14, fontWeight: 600 }}
         />
         <PolarRadiusAxis 
           angle={90} 
           domain={[0, 100]} 
-          tick={{ fill: '#E0E0E0', fontSize: 10 }}
+          tick={{ fill: '#8892b0', fontSize: 12, fontWeight: 500 }}
         />
         {data.map((supplier, index) => (
           <Radar
