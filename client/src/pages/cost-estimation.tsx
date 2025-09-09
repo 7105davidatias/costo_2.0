@@ -12,13 +12,15 @@ import { useEffect, useState } from "react";
 
 // Component for displaying list of all cost estimations
 function CostEstimationsList() {
-  const { data: completedRequests, isLoading } = useQuery({
-    queryKey: ["/api/procurement-requests/completed"],
+  const { data: allRequests, isLoading: requestsLoading } = useQuery({
+    queryKey: ["/api/procurement-requests"],
   });
 
-  const { data: estimations } = useQuery({
+  const { data: estimations, isLoading: estimationsLoading } = useQuery({
     queryKey: ["/api/cost-estimations"],
   });
+
+  const isLoading = requestsLoading || estimationsLoading;
 
   if (isLoading) {
     return (
@@ -31,9 +33,14 @@ function CostEstimationsList() {
     );
   }
 
-  const requestsWithEstimations = (completedRequests as any[] || []).filter((req: any) => 
+  // Get all requests that have cost estimations
+  const requestsWithEstimations = (allRequests as any[] || []).filter((req: any) => 
     (estimations as any[] || []).some((est: any) => est.procurementRequestId === req.id)
-  );
+  ).map((req: any) => ({
+    ...req,
+    estimation: (estimations as any[] || []).find((est: any) => est.procurementRequestId === req.id),
+    approvalStatus: req.status === 'completed' ? 'approved' : 'pending'
+  }));
 
   // Calculate summary statistics
   const totalEstimations = (estimations as any[] || []).length;
@@ -128,7 +135,24 @@ function CostEstimationsList() {
       ) : (
         <div className="grid gap-6">
           {requestsWithEstimations.map((request: any) => {
-            const estimation = (estimations as any[] || []).find((est: any) => est.procurementRequestId === request.id);
+            const getStatusBadge = (approvalStatus: string) => {
+              if (approvalStatus === 'approved') {
+                return (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700">
+                    <CheckCircle className="w-3 h-3 ml-1" />
+                    אושר
+                  </Badge>
+                );
+              } else {
+                return (
+                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-700">
+                    <TriangleAlert className="w-3 h-3 ml-1" />
+                    ממתין לאישור
+                  </Badge>
+                );
+              }
+            };
+
             return (
               <Card key={request.id} className="border-l-4 border-l-primary">
                 <CardContent className="p-6">
@@ -141,9 +165,7 @@ function CostEstimationsList() {
                           <p className="text-sm text-muted-foreground mb-2">{request.requestNumber}</p>
                           <Badge variant="secondary" className="text-xs">{request.category}</Badge>
                         </div>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          מאושר
-                        </Badge>
+                        {getStatusBadge(request.approvalStatus)}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">{request.description}</p>
                     </div>
@@ -152,13 +174,13 @@ function CostEstimationsList() {
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm text-muted-foreground">סכום אומדן</p>
-                        <p className="text-lg font-bold text-primary">{formatCurrency(parseFloat(estimation?.totalCost || '0'))}</p>
+                        <p className="text-lg font-bold text-primary">{formatCurrency(parseFloat(request.estimation?.totalCost || '0'))}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">רמת ביטחון</p>
                         <div className="flex items-center gap-2">
-                          <Progress value={estimation?.confidenceLevel || 0} className="flex-1 h-2" />
-                          <span className="text-sm font-medium">{estimation?.confidenceLevel || 0}%</span>
+                          <Progress value={request.estimation?.confidenceLevel || 0} className="flex-1 h-2" />
+                          <span className="text-sm font-medium">{request.estimation?.confidenceLevel || 0}%</span>
                         </div>
                       </div>
                     </div>
@@ -179,7 +201,7 @@ function CostEstimationsList() {
                   </div>
                   
                   <div className="mt-4 pt-4 border-t border-muted flex justify-between items-center text-xs text-muted-foreground">
-                    <span>נוצר ב־{new Date(estimation?.createdAt).toLocaleDateString('he-IL')}</span>
+                    <span>נוצר ב־{new Date(request.estimation?.createdAt).toLocaleDateString('he-IL')}</span>
                     <span>עודכן ב־{new Date(request.updatedAt).toLocaleDateString('he-IL')}</span>
                   </div>
                 </CardContent>
