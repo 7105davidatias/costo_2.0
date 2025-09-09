@@ -401,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let totalWeight = 0;
       
       for (const methodId of selectedMethods) {
-        const result = calculateByMethod(methodId, request);
+        const result = await calculateByMethod(methodId, request);
         methodResults.push(result);
         totalWeightedEstimate += result.estimate * result.weight;
         totalWeight += result.weight;
@@ -885,7 +885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 // Helper functions for estimation calculations
-function calculateByMethod(methodId: string, request: any) {
+async function calculateByMethod(methodId: string, request: any) {
   switch(methodId) {
     case 'time_based':
       return calculateTimeBased(request);
@@ -896,7 +896,7 @@ function calculateByMethod(methodId: string, request: any) {
     case 'three_point':
       return calculateThreePoint(request);
     case 'analogous':
-      return calculateAnalogous(request);
+      return await calculateAnalogous(request);
     case 'parametric':
       return calculateParametric(request);
     case 'bottom_up':
@@ -1028,25 +1028,148 @@ function calculateThreePoint(request: any) {
   };
 }
 
-// Product estimation methods
-function calculateAnalogous(request: any) {
-  const quantity = request.quantity || 50;
-  const unitPrice = 4500; // Based on historical data
-  const totalCost = quantity * unitPrice;
+// Product estimation methods  
+async function calculateAnalogous(request: any) {
+  const quantity = request.quantity || 1;
+  
+  // Get historical data from storage
+  const historicalData = await storage.getHistoricalData();
+  
+  // Find relevant historical purchases based on category and item name
+  const relevantPurchases = findRelevantHistoricalPurchases(request, historicalData);
+  
+  if (relevantPurchases.length === 0) {
+    // Fallback to default estimate if no historical data found
+    const fallbackPrice = 4500;
+    const totalCost = quantity * fallbackPrice;
+    
+    return {
+      methodName: 'אומדן אנלוגי',
+      estimate: totalCost,
+      confidence: 60,
+      weight: 0.5,
+      breakdown: [
+        { reference: 'ללא נתונים', originalQuantity: 1, originalUnitCost: fallbackPrice, adjustedCost: totalCost, weight: 0.5 }
+      ],
+      reasoning: 'לא נמצאו רכישות דומות בעבר - משתמש באומדן כללי',
+      sources: ['אומדן כללי'],
+      assumptions: ['אין נתונים היסטוריים זמינים']
+    };
+  }
+  
+  // Calculate weighted average based on similarity and recency
+  let weightedSum = 0;
+  let totalWeight = 0;
+  const breakdown = [];
+  
+  relevantPurchases.forEach(purchase => {
+    const similarity = calculateSimilarity(request, purchase);
+    const recencyWeight = calculateRecencyWeight(purchase.year);
+    const weight = similarity * recencyWeight;
+    
+    weightedSum += purchase.unitPrice * weight;
+    totalWeight += weight;
+    
+    breakdown.push({
+      reference: `${purchase.year} - ${purchase.item}`,
+      originalQuantity: purchase.quantity,
+      originalUnitCost: purchase.unitPrice,
+      adjustedCost: purchase.unitPrice * quantity,
+      weight: Math.round(weight * 100) / 100
+    });
+  });
+  
+  const avgUnitPrice = weightedSum / totalWeight;
+  const totalCost = avgUnitPrice * quantity;
+  const confidence = Math.min(95, 70 + (relevantPurchases.length * 8));
   
   return {
     methodName: 'אומדן אנלוגי',
-    estimate: totalCost,
-    confidence: 95,
+    estimate: Math.round(totalCost),
+    confidence: confidence,
     weight: 0.8,
-    breakdown: [
-      { reference: '2023-06', originalQuantity: 30, originalUnitCost: 4200, adjustedCost: totalCost, weight: 0.8 },
-      { reference: '2023-03', originalQuantity: 25, originalUnitCost: 4100, adjustedCost: totalCost, weight: 0.6 }
-    ],
-    reasoning: 'האומדן מבוסס על רכישות דומות שבוצעו בעבר עם התאמה לכמות נוכחית',
+    breakdown: breakdown.slice(0, 3), // Show top 3 most relevant
+    reasoning: `האומדן מבוסס על ${relevantPurchases.length} רכישות דומות שבוצעו בעבר עם התאמה לכמות נוכחית`,
     sources: ['נתוני רכישות היסטוריים', 'מערכת ניהול רכש'],
     assumptions: ['דמיון גבוה בין הרכישות', 'יציבות יחסית במחירי שוק']
   };
+}
+
+// Helper function to find relevant historical purchases
+function findRelevantHistoricalPurchases(request: any, historicalData: any[]): any[] {
+  const requestCategory = request.category?.toLowerCase() || '';
+  const requestItemName = request.itemName?.toLowerCase() || '';
+  
+  return historicalData.filter(purchase => {
+    const purchaseItem = purchase.item?.toLowerCase() || '';
+    
+    // Direct category matching
+    if (requestCategory.includes('חומרה')) {
+      return purchaseItem.includes('dell') || purchaseItem.includes('hp') || 
+             purchaseItem.includes('latitude') || purchaseItem.includes('optiplex') || 
+             purchaseItem.includes('probook') || purchaseItem.includes('poweredge');
+    }
+    
+    if (requestCategory.includes('ריהוט')) {
+      return purchaseItem.includes('כסא') || purchaseItem.includes('ריהוט');
+    }
+    
+    if (requestCategory.includes('רכב')) {
+      return purchaseItem.includes('סוזוקי') || purchaseItem.includes('פיאט') || 
+             purchaseItem.includes('פורד') || purchaseItem.includes('טרנזיט');
+    }
+    
+    // Item name similarity
+    if (requestItemName.includes('מחשב') || requestItemName.includes('laptop')) {
+      return purchaseItem.includes('dell') || purchaseItem.includes('hp') || 
+             purchaseItem.includes('latitude') || purchaseItem.includes('elitebook');
+    }
+    
+    if (requestItemName.includes('שרת') || requestItemName.includes('server')) {
+      return purchaseItem.includes('poweredge') || purchaseItem.includes('proliant');
+    }
+    
+    if (requestItemName.includes('כסא')) {
+      return purchaseItem.includes('כסא');
+    }
+    
+    if (requestItemName.includes('רכב') || requestItemName.includes('צי')) {
+      return purchaseItem.includes('סוזוקי') || purchaseItem.includes('פיאט') || 
+             purchaseItem.includes('פורד');
+    }
+    
+    return false;
+  });
+}
+
+// Helper function to calculate similarity score
+function calculateSimilarity(request: any, purchase: any): number {
+  let similarity = 0.5; // Base similarity
+  
+  const requestItem = request.itemName?.toLowerCase() || '';
+  const purchaseItem = purchase.item?.toLowerCase() || '';
+  
+  // Brand matching
+  if (requestItem.includes('dell') && purchaseItem.includes('dell')) similarity += 0.3;
+  if (requestItem.includes('hp') && purchaseItem.includes('hp')) similarity += 0.3;
+  
+  // Type matching  
+  if (requestItem.includes('latitude') && purchaseItem.includes('latitude')) similarity += 0.2;
+  if (requestItem.includes('poweredge') && purchaseItem.includes('poweredge')) similarity += 0.2;
+  
+  return Math.min(1.0, similarity);
+}
+
+// Helper function to calculate recency weight
+function calculateRecencyWeight(year: number): number {
+  const currentYear = new Date().getFullYear();
+  const yearsDiff = currentYear - year;
+  
+  // More recent data gets higher weight
+  if (yearsDiff <= 1) return 1.0;
+  if (yearsDiff <= 2) return 0.8;
+  if (yearsDiff <= 3) return 0.6;
+  return 0.4;
 }
 
 function calculateParametric(request: any) {
