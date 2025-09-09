@@ -486,31 +486,46 @@ export default function CostEstimation() {
                       <tr>
                         <th className="px-4 py-2 text-right font-medium text-muted-foreground">רכיב</th>
                         <th className="px-4 py-2 text-right font-medium text-muted-foreground">פירוט</th>
+                        {/* Show unit column only if items have relevant units */}
+                        {method.breakdown.some((item: any) => item.unit || (item.quantity && !item.reference)) && (
+                          <th className="px-4 py-2 text-right font-medium text-muted-foreground">יחידה</th>
+                        )}
                         <th className="px-4 py-2 text-right font-medium text-muted-foreground">עלות</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-muted/10">
-                      {method.breakdown.map((item: any, itemIndex: number) => (
-                        <tr key={itemIndex} className="hover:bg-muted/5">
-                          <td className="px-4 py-2 font-medium">
-                            {item.reference || item.component || item.parameter || item.name || item.scenario}
-                          </td>
-                          <td className="px-4 py-2 text-muted-foreground">
-                            {item.reference ? (
-                              `כמות מקורית: ${item.originalQuantity} × ₪${item.originalUnitCost?.toLocaleString()} (משקל: ${item.weight})`
-                            ) : (
-                              item.description || 
-                              (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
-                              (item.quantity && `${item.quantity} ${item.unit}`) ||
-                              item.probability || 
-                              item.value
+                      {method.breakdown.map((item: any, itemIndex: number) => {
+                        const showUnitColumn = method.breakdown.some((item: any) => item.unit || (item.quantity && !item.reference));
+                        
+                        return (
+                          <tr key={itemIndex} className="hover:bg-muted/5">
+                            <td className="px-4 py-2 font-medium">
+                              {item.reference || item.component || item.parameter || item.name || item.scenario}
+                            </td>
+                            <td className="px-4 py-2 text-muted-foreground">
+                              {item.reference ? (
+                                `כמות מקורית: ${item.originalQuantity} × ₪${item.originalUnitCost?.toLocaleString()} - רמת אמינות: ${Math.round((item.weight || 0) * 100)}%`
+                              ) : (
+                                item.description || 
+                                (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
+                                (item.quantity && item.unit && `${item.quantity} ${item.unit}`) ||
+                                (item.quantity && !item.unit && `כמות: ${item.quantity}`) ||
+                                item.probability || 
+                                item.value || 'פרטים נוספים'
+                              )}
+                            </td>
+                            {/* Show unit cell only if unit column is displayed */}
+                            {showUnitColumn && (
+                              <td className="px-4 py-2 text-muted-foreground text-center">
+                                {item.unit || (item.quantity && !item.reference ? 'יחידות' : '-')}
+                              </td>
                             )}
-                          </td>
-                          <td className="px-4 py-2 font-medium">
-                            {formatCurrency(item.adjustedCost || item.cost || item.totalCost || item.estimate || 0)}
-                          </td>
-                        </tr>
-                      ))}
+                            <td className="px-4 py-2 font-medium">
+                              {formatCurrency(item.adjustedCost || item.cost || item.totalCost || item.estimate || 0)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
