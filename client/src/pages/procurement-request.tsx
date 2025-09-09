@@ -3903,18 +3903,20 @@ export default function ProcurementRequest() {
           <p className="text-muted-foreground">{request.itemName}</p>
         </div>
         <div className="flex space-x-reverse space-x-4">
-          <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
-            <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
-              <FileText className="w-4 h-4 ml-2" />
-              מחקר שוק
-            </Button>
-          </Link>
-          <Link href={`/cost-estimation/${request?.id || id}`}>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Bot className="w-4 h-4 ml-2" />
-              צור אומדן עלות
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            className="border-secondary text-secondary hover:bg-secondary/10"
+            onClick={() => {
+              console.log('Market Research button clicked with ID:', id);
+              // Store the request ID in localStorage for context
+              localStorage.setItem('currentRequestId', id.toString());
+              // Navigate directly with the ID in the URL
+              window.location.href = `/market-research/${id}`;
+            }}
+          >
+            <Bot className="w-4 h-4 ml-2" />
+            מחקר שוק
+          </Button>
         </div>
       </div>
 
@@ -4066,20 +4068,6 @@ export default function ProcurementRequest() {
               >
                 <Play className="w-4 h-4 ml-2" />
                 {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full border-secondary text-secondary hover:bg-secondary/10"
-                onClick={() => {
-                  console.log('Market Research button clicked with ID:', id);
-                  // Store the request ID in localStorage for context
-                  localStorage.setItem('currentRequestId', id.toString());
-                  // Navigate directly with the ID in the URL
-                  window.location.href = `/market-research/${id}`;
-                }}
-              >
-                <Bot className="w-4 h-4 ml-2" />
-                מחקר שוק
               </Button>
               <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
                 <Download className="w-4 h-4 ml-2" />
