@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";  
@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Share, Download, TrendingUp, PiggyBank, TriangleAlert, Lightbulb, Calculator, BarChart3, ArrowRight, CheckCircle, Edit3, ExternalLink, Database } from "lucide-react";
 import { CostEstimation as CostEstimationType, ProcurementRequest } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
 export default function CostEstimation() {
@@ -14,6 +15,7 @@ export default function CostEstimation() {
   const [location] = useLocation();
   const [estimation, setEstimation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   // Extract selected methods from URL - use window.location to get full URL with params
   const fullUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -29,6 +31,34 @@ export default function CostEstimation() {
   const { data: request } = useQuery<ProcurementRequest>({
     queryKey: ["/api/procurement-requests", id],
     enabled: !!id,
+  });
+
+  // Mutation for approving cost estimation
+  const approveMutation = useMutation({
+    mutationFn: async (estimationData: any) => {
+      const response = await apiRequest('POST', '/api/cost-estimations/approve', {
+        requestId: parseInt(id!),
+        estimationData
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "אומדן אושר בהצלחה",
+        description: "האומדן נשמר והבקשה עודכנה לסטטוס 'הושלם'",
+        variant: "default",
+      });
+      // Invalidate dashboard queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/procurement-requests"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "שגיאה באישור האומדן",
+        description: error?.message || "אירעה שגיאה בעת אישור האומדן",
+        variant: "destructive",
+      });
+    }
   });
 
   // Calculate dynamic estimation based on selected methods
@@ -465,13 +495,28 @@ export default function CostEstimation() {
               </Button>
               <Button 
                 className="bg-success text-white hover:bg-success/90"
+                disabled={approveMutation.isPending}
                 onClick={() => {
-                  // TODO: Implement approval functionality
-                  alert('אומדן אושר בהצלחה! התמחור יועבר לאישור סופי.');
+                  if (!estimation) return;
+                  
+                  // Prepare estimation data for approval
+                  const estimationData = {
+                    totalCost: estimation.totalCost || "0",
+                    basePrice: estimation.basePrice || "0", 
+                    tax: estimation.tax || "0",
+                    shippingCost: estimation.shippingCost || "0",
+                    discountAmount: estimation.discountAmount || "0",
+                    confidenceLevel: estimation.confidenceLevel || 85,
+                    marketPrice: estimation.marketPrice || "0",
+                    potentialSavings: estimation.potentialSavings || "0",
+                    aiAnalysisResults: estimation.aiAnalysisResults || {}
+                  };
+                  
+                  approveMutation.mutate(estimationData);
                 }}
               >
                 <CheckCircle className="w-4 h-4 ml-2" />
-                אשר אומדן
+                {approveMutation.isPending ? "מאשר..." : "אשר אומדן"}
               </Button>
             </div>
           </div>
