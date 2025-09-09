@@ -516,8 +516,6 @@ export default function CostEstimation() {
                     aiAnalysisResults: estimation || {}
                   };
                   
-                  console.log('Sending estimation data for approval:', estimationData);
-                  
                   approveMutation.mutate(estimationData);
                 }}
               >
