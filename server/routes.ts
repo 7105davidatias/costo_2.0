@@ -183,6 +183,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Approve cost estimation and update procurement request status
+  app.post("/api/cost-estimations/approve", async (req, res) => {
+    try {
+      const { requestId, estimationData } = req.body;
+      
+      if (!requestId || !estimationData) {
+        return res.status(400).json({ message: "Missing requestId or estimation data" });
+      }
+
+      // Get the procurement request
+      const request = await storage.getProcurementRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Procurement request not found" });
+      }
+
+      // Create the cost estimation
+      const estimation = await storage.createCostEstimation({
+        procurementRequestId: requestId,
+        totalCost: estimationData.totalCost,
+        basePrice: estimationData.basePrice,
+        tax: estimationData.tax,
+        shippingCost: estimationData.shippingCost || "0",
+        discountAmount: estimationData.discountAmount || "0",
+        confidenceLevel: estimationData.confidenceLevel,
+        marketPrice: estimationData.marketPrice,
+        potentialSavings: estimationData.potentialSavings || "0",
+        aiAnalysisResults: estimationData.aiAnalysisResults
+      });
+
+      // Update procurement request status to completed and set estimated cost
+      await storage.updateProcurementRequest(requestId, {
+        status: 'completed',
+        estimatedCost: parseFloat(estimationData.totalCost)
+      });
+
+      res.status(200).json({ 
+        success: true, 
+        message: "אומדן אושר בהצלחה והבקשה עודכנה",
+        estimation,
+        requestId
+      });
+    } catch (error) {
+      console.error('Cost estimation approval error:', error);
+      res.status(500).json({ message: "Failed to approve cost estimation", error: error.message });
+    }
+  });
+
   // Supplier Quotes
   app.get("/api/supplier-quotes/request/:requestId", async (req, res) => {
     try {
