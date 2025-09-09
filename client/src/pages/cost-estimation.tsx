@@ -500,17 +500,23 @@ export default function CostEstimation() {
                   if (!estimation) return;
                   
                   // Prepare estimation data for approval
+                  const totalCost = estimation.finalEstimate?.amount || 0;
+                  const marketPrice = estimation.marketComparison?.marketPrice || totalCost * 1.15;
+                  const potentialSavings = estimation.marketComparison?.savings || (marketPrice - totalCost);
+                  
                   const estimationData = {
-                    totalCost: estimation.totalCost || "0",
-                    basePrice: estimation.basePrice || "0", 
-                    tax: estimation.tax || "0",
-                    shippingCost: estimation.shippingCost || "0",
-                    discountAmount: estimation.discountAmount || "0",
-                    confidenceLevel: estimation.confidenceLevel || 85,
-                    marketPrice: estimation.marketPrice || "0",
-                    potentialSavings: estimation.potentialSavings || "0",
-                    aiAnalysisResults: estimation.aiAnalysisResults || {}
+                    totalCost: totalCost.toString(),
+                    basePrice: (totalCost * 0.85).toString(), // Estimate base price as 85% of total
+                    tax: (totalCost * 0.15).toString(), // Estimate tax as 15% of total
+                    shippingCost: "0",
+                    discountAmount: "0",
+                    confidenceLevel: estimation.finalEstimate?.confidence || 85,
+                    marketPrice: marketPrice.toString(),
+                    potentialSavings: potentialSavings.toString(),
+                    aiAnalysisResults: estimation || {}
                   };
+                  
+                  console.log('Sending estimation data for approval:', estimationData);
                   
                   approveMutation.mutate(estimationData);
                 }}
