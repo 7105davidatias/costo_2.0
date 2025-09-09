@@ -480,8 +480,26 @@ export default function CostEstimation() {
               </div>
               
               {method.breakdown && method.breakdown.length > 0 && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="space-y-3">
+                  {/* Legend for Analogous Estimation */}
+                  {method.method === "אומדן אנלוגי" && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">מקרא רמת אמינות</span>
+                      </div>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        <strong>רמת אמינות גבוהה (70-100%)</strong>: נתונים דומים מאוד לבקשה הנוכחית
+                        <br />
+                        <strong>רמת אמינות בינונית (40-69%)</strong>: נתונים דומים חלקית עם התאמות
+                        <br />
+                        <strong>רמת אמינות נמוכה (0-39%)</strong>: נתונים כלליים הדורשים התאמות גדולות
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
                     <thead className="bg-muted/10">
                       <tr>
                         <th className="px-4 py-2 text-right font-medium text-muted-foreground">רכיב</th>
@@ -528,6 +546,7 @@ export default function CostEstimation() {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </div>
