@@ -62,6 +62,7 @@ export class MemStorage implements IStorage {
   private supplierQuotes: Map<number, SupplierQuote>;
   private documents: Map<number, Document>;
   private marketInsights: Map<number, MarketInsight>;
+  private historicalData: any[];
   private currentId: number;
 
   constructor() {
@@ -72,6 +73,7 @@ export class MemStorage implements IStorage {
     this.supplierQuotes = new Map();
     this.documents = new Map();
     this.marketInsights = new Map();
+    this.historicalData = [];
     this.currentId = 1;
     this.seedData();
   }
@@ -147,9 +149,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-03-15"),
         requestedBy: "שרה לוי",
         department: "IT",
-        status: "processing",
+        status: "new",
         emf: "130000",
-        estimatedCost: "125000",
+        estimatedCost: null,
         specifications: {
           processor: "Intel Core i7-1165G7",
           memory: "16GB DDR4",
@@ -173,9 +175,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-04-01"),
         requestedBy: "מיכל כהן",
         department: "משאבי אנוש",
-        status: "completed",
+        status: "new",
         emf: "80000",
-        estimatedCost: "75000",
+        estimatedCost: null,
         specifications: {
           type: "ארגונומי מתכוונן",
           material: "בד נושם",
@@ -223,9 +225,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-10-15"),
         requestedBy: "דני כהן",
         department: "משאבי אנוש",
-        status: "processing",
+        status: "new",
         emf: "1000000",
-        estimatedCost: "960000",
+        estimatedCost: null,
         specifications: {
           estimatedHours: 2400,
           teamSize: 6,
@@ -249,9 +251,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-08-15"),
         requestedBy: "מיכל לוי",
         department: "הנהלה",
-        status: "completed",
+        status: "new",
         emf: "650000",
-        estimatedCost: "630000",
+        estimatedCost: null,
         specifications: {
           deliverables: [
             "מיפוי תהליכים נוכחיים",
@@ -278,9 +280,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-12-31"),
         requestedBy: "אבי רוזן",
         department: "IT",
-        status: "processing",
+        status: "new",
         emf: "2500000",
-        estimatedCost: "2400000",
+        estimatedCost: null,
         specifications: {
           serviceLevel: "24/7",
           coverage: "מלא",
@@ -328,9 +330,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-06-15"),
         requestedBy: "יוסי אברהם",
         department: "משאבי אנוש",
-        status: "processing",
+        status: "new",
         emf: "250000",
-        estimatedCost: "225000",
+        estimatedCost: null,
         specifications: {
           processor: "Intel i7 או AMD Ryzen 7",
           ram: "16GB",
@@ -380,9 +382,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-12-15"),
         requestedBy: "שלמה כהן",
         department: "תפעול",
-        status: "completed",
+        status: "new",
         emf: "1400000",
-        estimatedCost: "1336000",
+        estimatedCost: null,
         specifications: {
           area: 1000,
           height: 8,
@@ -405,9 +407,9 @@ export class MemStorage implements IStorage {
         targetDate: new Date("2024-07-15"),
         requestedBy: "נועה גולד",
         department: "ייצור",
-        status: "processing",
+        status: "new",
         emf: "350000",
-        estimatedCost: "330000",
+        estimatedCost: null,
         specifications: {
           materials: [
             { name: "פלדה", quantity: 50, unit: "טון", grade: "ST37" },
@@ -423,210 +425,376 @@ export class MemStorage implements IStorage {
 
     requests.forEach(request => this.procurementRequests.set(request.id, request));
 
-    // Create cost estimations for requests that have estimated costs
-    const costEstimations: CostEstimation[] = [
-      // Dell Laptops - REQ-2024-001
+    // Clean start - no cost estimations for demo
+    // Cost estimations will be created during the demo
+
+    // Create technical documents for each request (not analyzed yet)
+    const documents: Document[] = [
+      // REQ-2024-001 - Dell Laptops
       {
         id: this.currentId++,
-        procurementRequestId: 5, // Dell Laptops
-        totalCost: "125000",
-        basePrice: "106800",
-        tax: "18156",
-        shippingCost: "0",
-        discountAmount: "0",
-        confidenceLevel: 96,
-        marketPrice: "135000",
-        potentialSavings: "10000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "מחיר יחידה", impact: "סטנדרט", description: "₪4,272 ליחידה - תחרותי" },
-            { factor: "זמינות", impact: "מעולה", description: "במלאי, משלוח מיידי" },
-            { factor: "איכות ספק", impact: "גבוהה", description: "Dell - ספק מהימן" }
-          ],
-          sources: [
-            { name: "מחירון Dell Israel", price: "₪125,000", date: "2024-01-15" },
-            { name: "השוואת מחירים", price: "₪120,000-₪130,000", date: "2024-01-10" }
-          ]
-        },
-        createdAt: new Date("2024-01-20"),
+        procurementRequestId: 5,
+        fileName: "מפרט טכני Dell Latitude 5520.pdf",
+        fileType: "pdf",
+        fileSize: 2457600,
+        filePath: "/documents/dell_latitude_5520_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-15"),
       },
-      // Office Chairs - REQ-2024-002
       {
         id: this.currentId++,
-        procurementRequestId: 6, // Office Chairs
-        totalCost: "75000",
-        basePrice: "64100",
-        tax: "10897",
-        shippingCost: "103",
-        discountAmount: "0",
-        confidenceLevel: 89,
-        marketPrice: "82000",
-        potentialSavings: "7000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "מחיר יחידה", impact: "תחרותי", description: "₪1,282 ליחידה - מתחת לממוצע שוק" },
-            { factor: "איכות", impact: "גבוהה", description: "כסאות ארגונומיים עם אחריות 5 שנים" },
-            { factor: "זמן משלוח", impact: "ארוך", description: "4 שבועות - ייצור לפי הזמנה" }
-          ],
-          sources: [
-            { name: "ספק ריהוט משרדי", price: "₪75,000", date: "2024-01-18" }
-          ]
-        },
-        createdAt: new Date("2024-02-10"),
+        procurementRequestId: 5,
+        fileName: "דרישות אבטחה ותוכנה.pdf",
+        fileType: "pdf",
+        fileSize: 1834567,
+        filePath: "/documents/security_software_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-15"),
       },
-      // HR System Development - REQ-2024-010
       {
         id: this.currentId++,
-        procurementRequestId: 8, // HR System
-        totalCost: "960000",
-        basePrice: "820000",
-        tax: "139400",
-        shippingCost: "600",
-        discountAmount: "0",
-        confidenceLevel: 92,
-        marketPrice: "1100000",
-        potentialSavings: "140000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "מורכבות פרויקט", impact: "גבוהה", description: "מערכת HR מקיפה עם מודולים רבים" },
-            { factor: "זמן פיתוח", impact: "אמצעי", description: "8 חודשים - זמן סביר לפרויקט בסדר גודל זה" },
-            { factor: "צוות מפתחים", impact: "מתאים", description: "6 מפתחים - צוות אופטימלי" }
-          ],
-          sources: [
-            { name: "חברת פיתוח A", price: "₪960,000", date: "2024-01-25" },
-            { name: "חברת פיתוח B", price: "₪1,200,000", date: "2024-01-26" }
-          ]
-        },
-        createdAt: new Date("2024-02-01"),
+        procurementRequestId: 5,
+        fileName: "תכנית פריסה ותמיכה.pdf",
+        fileType: "pdf",
+        fileSize: 1567890,
+        filePath: "/documents/deployment_support_plan.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-15"),
       },
-      // Strategic Consulting - REQ-2024-011
+      // REQ-2024-002 - Office Chairs
       {
         id: this.currentId++,
-        procurementRequestId: 9, // Strategic Consulting
-        totalCost: "630000",
-        basePrice: "538500",
-        tax: "91550",
-        shippingCost: "0",
-        discountAmount: "0",
-        confidenceLevel: 95,
-        marketPrice: "720000",
-        potentialSavings: "90000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "ניסיון יועצים", impact: "מעולה", description: "יועצים בכירים עם ניסיון רב בתחום" },
-            { factor: "מחיר תחרותי", impact: "גבוה", description: "מחיר נמוך משמעותית מהשוק" },
-            { factor: "זמני ביצוע", impact: "מהיר", description: "6 חודשים - מהיר יחסית" }
-          ],
-          sources: [
-            { name: "חברת ייעוץ מובילה", price: "₪630,000", date: "2024-01-26" },
-            { name: "ממוצע שוק", price: "₪720,000", date: "2024-01-20" }
-          ]
-        },
-        createdAt: new Date("2024-02-15"),
+        procurementRequestId: 6,
+        fileName: "מפרט ארגונומי ואיכות.pdf",
+        fileType: "pdf",
+        fileSize: 1923456,
+        filePath: "/documents/ergonomic_quality_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-18"),
       },
-      // Security Services - REQ-2024-012
       {
         id: this.currentId++,
-        procurementRequestId: 10, // Security Services
-        totalCost: "2400000",
-        basePrice: "2051282",
-        tax: "348718",
-        shippingCost: "0",
-        discountAmount: "0",
-        confidenceLevel: 88,
-        marketPrice: "2800000",
-        potentialSavings: "400000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "שירות 24/7", impact: "קריטי", description: "שירות רציף עם זמן תגובה של 15 דקות" },
-            { factor: "ציוד מתקדם", impact: "נדרש", description: "מערכות ניטור וזיהוי איומים מתקדמות" },
-            { factor: "צוות מומחים", impact: "גבוה", description: "מומחי אבטחה מוסמכים" }
-          ],
-          sources: [
-            { name: "חברת אבטחה A", price: "₪2,400,000", date: "2024-01-27" },
-            { name: "חברת אבטחה B", price: "₪2,900,000", date: "2024-01-28" }
-          ]
-        },
-        createdAt: new Date("2024-02-05"),
+        procurementRequestId: 6,
+        fileName: "דרישות עמידות ואחריות.pdf",
+        fileType: "pdf",
+        fileSize: 1234567,
+        filePath: "/documents/durability_warranty_req.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-18"),
       },
-      // Workstations - REQ-2024-014
+      // REQ-2024-003 - Dell Servers
       {
         id: this.currentId++,
-        procurementRequestId: 12, // Workstations
-        totalCost: "225000",
-        basePrice: "192308",
-        tax: "32692",
-        shippingCost: "0",
-        discountAmount: "0",
-        confidenceLevel: 94,
-        marketPrice: "260000",
-        potentialSavings: "35000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "כמות גדולה", impact: "חיובי", description: "50 יחידות - הנחה לכמות" },
-            { factor: "מפרט סטנדרטי", impact: "יעיל", description: "מפרט אחיד מפשט את הרכש" },
-            { factor: "זמינות", impact: "טובה", description: "זמינות מיידית במלאי" }
-          ],
-          sources: [
-            { name: "ספק מחשבים עיקרי", price: "₪225,000", date: "2024-01-29" },
-            { name: "ספק משני", price: "₪260,000", date: "2024-01-30" }
-          ]
-        },
-        createdAt: new Date("2024-02-03"),
+        procurementRequestId: 7,
+        fileName: "מפרט שרתי PowerEdge R750.pdf",
+        fileType: "pdf",
+        fileSize: 3145728,
+        filePath: "/documents/poweredge_r750_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-20"),
       },
-      // Warehouse Construction - REQ-2024-016
       {
         id: this.currentId++,
-        procurementRequestId: 14, // Warehouse
-        totalCost: "1336000",
-        basePrice: "1142735",
-        tax: "194265",
-        shippingCost: "0",
-        discountAmount: "1000",
-        confidenceLevel: 85,
-        marketPrice: "1500000",
-        potentialSavings: "164000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "עבודות עפר", impact: "סטנדרט", description: "עבודות הכנה סטנדרטיות לאתר" },
-            { factor: "מבנה פלדה", impact: "יעיל", description: "מבנה פלדה מותאם לדרישות" },
-            { factor: "זמני בניה", impact: "סבירים", description: "8 חודשי בניה כולל גימור" }
-          ],
-          sources: [
-            { name: "קבלן בניה ראשי", price: "₪1,336,000", date: "2024-01-31" },
-            { name: "קבלן משני", price: "₪1,550,000", date: "2024-02-01" }
-          ]
-        },
-        createdAt: new Date("2024-02-20"),
+        procurementRequestId: 7,
+        fileName: "דרישות מרכז נתונים ותשתיות.pdf",
+        fileType: "pdf",
+        fileSize: 2678901,
+        filePath: "/documents/datacenter_infrastructure_req.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-20"),
       },
-      // Raw Materials - REQ-2024-017
       {
         id: this.currentId++,
-        procurementRequestId: 15, // Raw Materials
-        totalCost: "330000",
-        basePrice: "282051",
-        tax: "47949",
-        shippingCost: "0",
-        discountAmount: "0",
-        confidenceLevel: 91,
-        marketPrice: "375000",
-        potentialSavings: "45000",
-        aiAnalysisResults: {
-          reasoning: [
-            { factor: "מחירי חומרי גלם", impact: "יציב", description: "מחירים יציבים ברבעון האחרון" },
-            { factor: "איכות חומרים", impact: "גבוהה", description: "חומרים בדרגת איכות נדרשת" },
-            { factor: "זמני אספקה", impact: "סבירים", description: "אספקה תוך 4-6 שבועות" }
-          ],
-          sources: [
-            { name: "ספק חומרי גלם עיקרי", price: "₪330,000", date: "2024-02-01" },
-            { name: "ספק משני", price: "₪375,000", date: "2024-02-02" }
-          ]
-        },
-        createdAt: new Date("2024-02-07"),
+        procurementRequestId: 7,
+        fileName: "תרשים רשת ואבטחה.pdf",
+        fileType: "pdf",
+        fileSize: 2345678,
+        filePath: "/documents/network_security_diagram.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-20"),
       },
+      // REQ-2024-010 - HR System
+      {
+        id: this.currentId++,
+        procurementRequestId: 8,
+        fileName: "SOW פיתוח מערכת HR.pdf",
+        fileType: "pdf",
+        fileSize: 4567890,
+        filePath: "/documents/hr_system_sow.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-25"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 8,
+        fileName: "דרישות פונקציונליות מפורטות.pdf",
+        fileType: "pdf",
+        fileSize: 3456789,
+        filePath: "/documents/functional_requirements_detailed.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-25"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 8,
+        fileName: "מפרט טכני ואינטגרציה.pdf",
+        fileType: "pdf",
+        fileSize: 2789012,
+        filePath: "/documents/technical_integration_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-25"),
+      },
+      // REQ-2024-011 - Strategic Consulting
+      {
+        id: this.currentId++,
+        procurementRequestId: 9,
+        fileName: "SOW ייעוץ ושיפור תהליכים.pdf",
+        fileType: "pdf",
+        fileSize: 3890123,
+        filePath: "/documents/consulting_improvement_sow.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-26"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 9,
+        fileName: "תחומי עבודה ותוצרים.pdf",
+        fileType: "pdf",
+        fileSize: 2456789,
+        filePath: "/documents/work_areas_deliverables.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-26"),
+      },
+      // REQ-2024-012 - Security Services
+      {
+        id: this.currentId++,
+        procurementRequestId: 10,
+        fileName: "SOW שירותי אבטחה 24-7.pdf",
+        fileType: "pdf",
+        fileSize: 4123456,
+        filePath: "/documents/security_services_24_7_sow.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-27"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 10,
+        fileName: "דרישות SOC וניטור.pdf",
+        fileType: "pdf",
+        fileSize: 3567890,
+        filePath: "/documents/soc_monitoring_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-27"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 10,
+        fileName: "מפרט ציוד ומערכות.pdf",
+        fileType: "pdf",
+        fileSize: 2789123,
+        filePath: "/documents/equipment_systems_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-27"),
+      },
+      // REQ-2024-013 - IT Maintenance
+      {
+        id: this.currentId++,
+        procurementRequestId: 11,
+        fileName: "SOW תחזוקה שנתית.pdf",
+        fileType: "pdf",
+        fileSize: 3234567,
+        filePath: "/documents/annual_maintenance_sow.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-28"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 11,
+        fileName: "רשימת מערכות ומדריכים.pdf",
+        fileType: "pdf",
+        fileSize: 2678912,
+        filePath: "/documents/systems_list_guides.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-28"),
+      },
+      // REQ-2024-014 - Workstations
+      {
+        id: this.currentId++,
+        procurementRequestId: 12,
+        fileName: "מפרט תחנות עבודה סטנדרטיות.pdf",
+        fileType: "pdf",
+        fileSize: 2345678,
+        filePath: "/documents/standard_workstations_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-29"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 12,
+        fileName: "דרישות תוכנה ורשיונות.pdf",
+        fileType: "pdf",
+        fileSize: 1890123,
+        filePath: "/documents/software_licenses_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-29"),
+      },
+      // REQ-2024-015 - Vehicles
+      {
+        id: this.currentId++,
+        procurementRequestId: 13,
+        fileName: "מפרט רכבים מסחריים.pdf",
+        fileType: "pdf",
+        fileSize: 2567890,
+        filePath: "/documents/commercial_vehicles_spec.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-30"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 13,
+        fileName: "דרישות ביטוח ותחזוקה.pdf",
+        fileType: "pdf",
+        fileSize: 1789123,
+        filePath: "/documents/insurance_maintenance_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-30"),
+      },
+      // REQ-2024-016 - Warehouse Construction
+      {
+        id: this.currentId++,
+        procurementRequestId: 14,
+        fileName: "כתב כמויות מפורט.pdf",
+        fileType: "pdf",
+        fileSize: 4567890,
+        filePath: "/documents/detailed_quantities_list.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-31"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 14,
+        fileName: "תוכניות בנייה ומפרטים.pdf",
+        fileType: "pdf",
+        fileSize: 5123456,
+        filePath: "/documents/building_plans_specifications.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-31"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 14,
+        fileName: "דרישות איכות ובטיחות.pdf",
+        fileType: "pdf",
+        fileSize: 3456789,
+        filePath: "/documents/quality_safety_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-01-31"),
+      },
+      // REQ-2024-017 - Raw Materials
+      {
+        id: this.currentId++,
+        procurementRequestId: 15,
+        fileName: "רשימת חומרים ומפרטים.pdf",
+        fileType: "pdf",
+        fileSize: 2890123,
+        filePath: "/documents/materials_list_specifications.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-02-01"),
+      },
+      {
+        id: this.currentId++,
+        procurementRequestId: 15,
+        fileName: "דרישות איכות ותקנים.pdf",
+        fileType: "pdf",
+        fileSize: 2123456,
+        filePath: "/documents/quality_standards_requirements.pdf",
+        isAnalyzed: false,
+        analysisResults: null,
+        extractedSpecs: null,
+        uploadedAt: new Date("2024-02-01"),
+      }
     ];
 
-    costEstimations.forEach(estimation => this.costEstimations.set(estimation.id, estimation));
+    documents.forEach(doc => this.documents.set(doc.id, doc));
+
+    // Historical procurement data for analogical estimation
+    const historicalProcurements = [
+      // Laptops history
+      { year: 2023, item: "Dell Latitude 5420", quantity: 30, unitPrice: 3850, totalCost: 115500 },
+      { year: 2022, item: "Dell Latitude 5410", quantity: 15, unitPrice: 3650, totalCost: 54750 },
+      { year: 2021, item: "HP EliteBook 840", quantity: 20, unitPrice: 3900, totalCost: 78000 },
+      // Servers history
+      { year: 2023, item: "Dell PowerEdge R740", quantity: 2, unitPrice: 62000, totalCost: 124000 },
+      { year: 2022, item: "HPE ProLiant DL380", quantity: 1, unitPrice: 58500, totalCost: 58500 },
+      { year: 2021, item: "Dell PowerEdge R630", quantity: 3, unitPrice: 55000, totalCost: 165000 },
+      // Workstations history
+      { year: 2023, item: "HP ProDesk 600", quantity: 25, unitPrice: 3200, totalCost: 80000 },
+      { year: 2022, item: "Dell OptiPlex 7090", quantity: 40, unitPrice: 3400, totalCost: 136000 },
+      { year: 2021, item: "Lenovo ThinkCentre", quantity: 35, unitPrice: 3100, totalCost: 108500 },
+      // Office chairs history
+      { year: 2023, item: "כסאות ארגונומיים", quantity: 60, unitPrice: 1150, totalCost: 69000 },
+      { year: 2022, item: "כסאות מנהלים", quantity: 25, unitPrice: 1350, totalCost: 33750 },
+      { year: 2020, item: "ריהוט משרדי מלא", quantity: 100, unitPrice: 950, totalCost: 95000 },
+      // Vehicles history
+      { year: 2022, item: "סוזוקי קארי", quantity: 5, unitPrice: 85000, totalCost: 425000 },
+      { year: 2021, item: "פיאט דובלו קארגו", quantity: 8, unitPrice: 75000, totalCost: 600000 },
+      { year: 2020, item: "פורד טרנזיט", quantity: 3, unitPrice: 95000, totalCost: 285000 },
+    ];
+
+    // Store historical data for AI analysis
+    this.historicalData = historicalProcurements;
   }
 
   // Users
