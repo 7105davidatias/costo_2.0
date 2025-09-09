@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shippingCost: "540",
         discountAmount: "0",
         confidenceLevel: 92,
-        estimatedDelivery: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // 21 days from now
+        // estimatedDelivery: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // Field not in schema
         marketPrice: "52000",
         aiAnalysisResults: {
           reasoning: [
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update procurement request status to completed and set estimated cost
       await storage.updateProcurementRequest(requestId, {
         status: 'completed',
-        estimatedCost: parseFloat(estimationData.totalCost)
+        estimatedCost: estimationData.totalCost
       });
 
       res.status(200).json({ 
@@ -226,7 +226,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Cost estimation approval error:', error);
-      res.status(500).json({ message: "Failed to approve cost estimation", error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: "Failed to approve cost estimation", error: errorMessage });
     }
   });
 
@@ -234,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/supplier-quotes/request/:requestId", async (req, res) => {
     try {
       const requestId = parseInt(req.params.requestId);
-      const quotes = await storage.getSupplierQuotesByRequestId(requestId);
+      const quotes = await storage.getQuotesByRequestId(requestId);
       res.json(quotes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch supplier quotes" });
@@ -502,9 +503,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         requestId: requestId,
         requestDetails: {
-          title: request.title,
+          title: request.itemName,
           category: request.category,
-          subcategory: request.subcategory
+          subcategory: request.category
         },
         supplierComparison: marketResearch.supplierComparison,
         marketInsights: marketResearch.marketInsights,
@@ -531,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/market-insights/:category", async (req, res) => {
     try {
       const category = decodeURIComponent(req.params.category);
-      const insight = await storage.getMarketInsightByCategory(category);
+      const insight = await storage.getMarketInsightsByCategory(category);
       if (!insight) {
         return res.status(404).json({ message: "Market insight not found" });
       }
