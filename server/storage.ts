@@ -52,6 +52,9 @@ export interface IStorage {
 
   // Admin functions for demo reset
   resetAllRequestsStatus(): Promise<{ totalRequests: number; updatedRequests: number }>;
+
+  // Historical data access
+  getHistoricalData(): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -986,6 +989,11 @@ export class MemStorage implements IStorage {
   async resetAllCostEstimations(): Promise<{ totalEstimations: number }> {
     this.costEstimations.clear();
     return { totalEstimations: 0 };
+  }
+
+  // Historical data access
+  async getHistoricalData(): Promise<any[]> {
+    return this.historicalData;
   }
 }
 
