@@ -133,11 +133,295 @@ export class MemStorage implements IStorage {
 
     suppliers.forEach(supplier => this.suppliers.set(supplier.id, supplier));
 
-    // Clean start - no procurement requests for demo
+    // Create comprehensive procurement requests for demo
+    const requests: ProcurementRequest[] = [
+      // 1. חומרה טכנולוגית - מחשבים ניידים Dell Latitude 5520 (בעיבוד)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-001",
+        itemName: "מחשבים ניידים Dell Latitude 5520",
+        description: "רכש 25 מחשבים ניידים למשרדי פיתוח החדשים",
+        category: "חומרה",
+        quantity: 25,
+        priority: "medium",
+        targetDate: new Date("2024-03-15"),
+        requestedBy: "שרה לוי",
+        department: "IT",
+        status: "processing",
+        emf: "130000",
+        estimatedCost: "125000",
+        specifications: {
+          processor: "Intel Core i7-1165G7",
+          memory: "16GB DDR4",
+          storage: "512GB SSD",
+          display: "15.6 FHD",
+          warranty: "3 שנים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-15"),
+        updatedAt: new Date("2024-01-20"),
+      },
+      // 2. ריהוט משרדי - כסאות משרד ארגונומיים (הושלם)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-002",
+        itemName: "כסאות משרד ארגונומיים",
+        description: "כסאות משרד איכותיים עם תמיכה ארגונומית מלאה",
+        category: "ריהוט",
+        quantity: 50,
+        priority: "low",
+        targetDate: new Date("2024-04-01"),
+        requestedBy: "מיכל כהן",
+        department: "משאבי אנוש",
+        status: "completed",
+        emf: "80000",
+        estimatedCost: "75000",
+        specifications: {
+          type: "ארגונומי מתכוונן",
+          material: "בד נושם",
+          adjustable: true,
+          warranty: "5 שנים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-18"),
+        updatedAt: new Date("2024-02-10"),
+      },
+      // 3. חומרה - שרתי Dell PowerEdge R750 (חדש)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-003",
+        itemName: "שרתי Dell PowerEdge R750",
+        description: "שרתים עבור הרחבת מרכז הנתונים",
+        category: "חומרה",
+        quantity: 3,
+        priority: "high",
+        targetDate: new Date("2024-03-15"),
+        requestedBy: "דוד לוי",
+        department: "IT",
+        status: "new",
+        emf: "200000",
+        estimatedCost: null,
+        specifications: {
+          processor: "Intel Xeon Silver 4314 (16 cores)",
+          memory: "64GB DDR4 ECC",
+          storage: "2x 1TB NVMe SSD",
+          network: "4x 1GbE + 2x 10GbE"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-20"),
+        updatedAt: new Date("2024-01-20"),
+      },
+      // 4. שירותים - פיתוח מערכת ניהול משאבי אנוש (בעיבוד)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-010",
+        itemName: "פיתוח מערכת ניהול משאבי אנוש",
+        description: "פיתוח מערכת HR מקיפה הכוללת ניהול עובדים, נוכחות, שכר וגיוס",
+        category: "שירותים",
+        quantity: 1,
+        priority: "medium",
+        targetDate: new Date("2024-10-15"),
+        requestedBy: "דני כהן",
+        department: "משאבי אנוש",
+        status: "processing",
+        emf: "1000000",
+        estimatedCost: "960000",
+        specifications: {
+          estimatedHours: 2400,
+          teamSize: 6,
+          duration: "8 חודשים",
+          technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
+          complexity: "גבוהה"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-25"),
+        updatedAt: new Date("2024-02-01"),
+      },
+      // 5. שירותים - ייעוץ אסטרטגי (הושלם)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-011",
+        itemName: "ייעוץ אסטרטגי לשיפור תהליכים",
+        description: "ייעוץ מקצועי לשיפור תהליכים עסקיים ויעילות ארגונית",
+        category: "שירותים",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-08-15"),
+        requestedBy: "מיכל לוי",
+        department: "הנהלה",
+        status: "completed",
+        emf: "650000",
+        estimatedCost: "630000",
+        specifications: {
+          deliverables: [
+            "מיפוי תהליכים נוכחיים",
+            "ניתוח פערים וזיהוי הזדמנויות",
+            "תכנית יישום מפורטת",
+            "הדרכה וליווי יישום"
+          ],
+          duration: "6 חודשים",
+          consultantLevel: "senior"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-26"),
+        updatedAt: new Date("2024-02-15"),
+      },
+      // 6. שירותים - אבטחת מידע ו-SOC (בעיבוד)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-012",
+        itemName: "שירותי אבטחת מידע ו-SOC",
+        description: "שירותי ניטור אבטחה 24/7, ניהול אירועי אבטחה ותגובה מהירה",
+        category: "שירותים",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-12-31"),
+        requestedBy: "אבי רוזן",
+        department: "IT",
+        status: "processing",
+        emf: "2500000",
+        estimatedCost: "2400000",
+        specifications: {
+          serviceLevel: "24/7",
+          coverage: "מלא",
+          responseTime: "15 דקות",
+          duration: "12 חודשים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-27"),
+        updatedAt: new Date("2024-02-05"),
+      },
+      // 7. שירותים - תחזוקה שנתית IT (חדש)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-013",
+        itemName: "תחזוקה שנתית למערכות IT",
+        description: "תחזוקה מונעת ותיקונית למערכות IT, שרתים, רשת ותוכנות",
+        category: "שירותים",
+        quantity: 1,
+        priority: "medium",
+        targetDate: new Date("2024-12-31"),
+        requestedBy: "רונית ברק",
+        department: "IT",
+        status: "new",
+        emf: "700000",
+        estimatedCost: null,
+        specifications: {
+          systemsCount: 45,
+          uncertainty: "גבוהה",
+          duration: "12 חודשים",
+          coverage: "מערכות קריטיות"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-28"),
+        updatedAt: new Date("2024-01-28"),
+      },
+      // 8. חומרה - מחשבי עבודה (בעיבוד)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-014",
+        itemName: "רכש 50 מחשבי עבודה",
+        description: "מחשבי עבודה חדשים למשרדי החברה החדשים ברמת גן",
+        category: "חומרה",
+        quantity: 50,
+        priority: "medium",
+        targetDate: new Date("2024-06-15"),
+        requestedBy: "יוסי אברהם",
+        department: "משאבי אנוש",
+        status: "processing",
+        emf: "250000",
+        estimatedCost: "225000",
+        specifications: {
+          processor: "Intel i7 או AMD Ryzen 7",
+          ram: "16GB",
+          storage: "512GB SSD",
+          graphics: "מובנה",
+          warranty: "3 שנים"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-29"),
+        updatedAt: new Date("2024-02-03"),
+      },
+      // 9. רכבים - רכש צי רכבים (חדש)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-015",
+        itemName: "רכש 10 רכבי צי",
+        description: "רכש 10 רכבים מסחריים קלים להרחבת צי החברה",
+        category: "רכבים",
+        quantity: 10,
+        priority: "medium",
+        targetDate: new Date("2024-09-15"),
+        requestedBy: "עמית שמעון",
+        department: "לוגיסטיקה",
+        status: "new",
+        emf: "950000",
+        estimatedCost: null,
+        specifications: {
+          vehicleType: "מסחרי קל",
+          engineSize: 1600,
+          fuelType: "בנזין",
+          cargoCapacity: 800,
+          seatingCapacity: 2
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-30"),
+        updatedAt: new Date("2024-01-30"),
+      },
+      // 10. בנייה - בניית מחסן (הושלם)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-016",
+        itemName: "בניית מחסן חדש",
+        description: "בניית מחסן לוגיסטי חדש בשטח 1000 מ\"ר באזור התעשייה",
+        category: "בנייה",
+        quantity: 1,
+        priority: "high",
+        targetDate: new Date("2024-12-15"),
+        requestedBy: "שלמה כהן",
+        department: "תפעול",
+        status: "completed",
+        emf: "1400000",
+        estimatedCost: "1336000",
+        specifications: {
+          area: 1000,
+          height: 8,
+          components: "עבודות עפר, יציקת בטון, מבנה פלדה, קירות וגגות",
+          contingency: "15%"
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-01-31"),
+        updatedAt: new Date("2024-02-20"),
+      },
+      // 11. חומרי גלם - רכש לייצור (בעיבוד)
+      {
+        id: this.currentId++,
+        requestNumber: "REQ-2024-017",
+        itemName: "רכש חומרי גלם לייצור",
+        description: "רכש חומרי גלם לייצור רבעוני: פלדה, אלומיניום, פלסטיק",
+        category: "חומרי גלם",
+        quantity: 80,
+        priority: "medium",
+        targetDate: new Date("2024-07-15"),
+        requestedBy: "נועה גולד",
+        department: "ייצור",
+        status: "processing",
+        emf: "350000",
+        estimatedCost: "330000",
+        specifications: {
+          materials: [
+            { name: "פלדה", quantity: 50, unit: "טון", grade: "ST37" },
+            { name: "אלומיניום", quantity: 20, unit: "טון", grade: "6061" },
+            { name: "פלסטיק PVC", quantity: 10, unit: "טון", grade: "רגיל" }
+          ]
+        },
+        userId: defaultUser.id,
+        createdAt: new Date("2024-02-01"),
+        updatedAt: new Date("2024-02-07"),
+      },
+    ];
 
-    // Clean start - no cost estimations for demo
-
-    // Clean start - no documents, cost estimations, or market insights for demo
+    requests.forEach(request => this.procurementRequests.set(request.id, request));
   }
 
   // Users
