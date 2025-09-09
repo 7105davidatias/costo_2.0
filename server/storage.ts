@@ -422,6 +422,211 @@ export class MemStorage implements IStorage {
     ];
 
     requests.forEach(request => this.procurementRequests.set(request.id, request));
+
+    // Create cost estimations for requests that have estimated costs
+    const costEstimations: CostEstimation[] = [
+      // Dell Laptops - REQ-2024-001
+      {
+        id: this.currentId++,
+        procurementRequestId: 5, // Dell Laptops
+        totalCost: "125000",
+        basePrice: "106800",
+        tax: "18156",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 96,
+        marketPrice: "135000",
+        potentialSavings: "10000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר יחידה", impact: "סטנדרט", description: "₪4,272 ליחידה - תחרותי" },
+            { factor: "זמינות", impact: "מעולה", description: "במלאי, משלוח מיידי" },
+            { factor: "איכות ספק", impact: "גבוהה", description: "Dell - ספק מהימן" }
+          ],
+          sources: [
+            { name: "מחירון Dell Israel", price: "₪125,000", date: "2024-01-15" },
+            { name: "השוואת מחירים", price: "₪120,000-₪130,000", date: "2024-01-10" }
+          ]
+        },
+        createdAt: new Date("2024-01-20"),
+      },
+      // Office Chairs - REQ-2024-002
+      {
+        id: this.currentId++,
+        procurementRequestId: 6, // Office Chairs
+        totalCost: "75000",
+        basePrice: "64100",
+        tax: "10897",
+        shippingCost: "103",
+        discountAmount: "0",
+        confidenceLevel: 89,
+        marketPrice: "82000",
+        potentialSavings: "7000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחיר יחידה", impact: "תחרותי", description: "₪1,282 ליחידה - מתחת לממוצע שוק" },
+            { factor: "איכות", impact: "גבוהה", description: "כסאות ארגונומיים עם אחריות 5 שנים" },
+            { factor: "זמן משלוח", impact: "ארוך", description: "4 שבועות - ייצור לפי הזמנה" }
+          ],
+          sources: [
+            { name: "ספק ריהוט משרדי", price: "₪75,000", date: "2024-01-18" }
+          ]
+        },
+        createdAt: new Date("2024-02-10"),
+      },
+      // HR System Development - REQ-2024-010
+      {
+        id: this.currentId++,
+        procurementRequestId: 8, // HR System
+        totalCost: "960000",
+        basePrice: "820000",
+        tax: "139400",
+        shippingCost: "600",
+        discountAmount: "0",
+        confidenceLevel: 92,
+        marketPrice: "1100000",
+        potentialSavings: "140000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מורכבות פרויקט", impact: "גבוהה", description: "מערכת HR מקיפה עם מודולים רבים" },
+            { factor: "זמן פיתוח", impact: "אמצעי", description: "8 חודשים - זמן סביר לפרויקט בסדר גודל זה" },
+            { factor: "צוות מפתחים", impact: "מתאים", description: "6 מפתחים - צוות אופטימלי" }
+          ],
+          sources: [
+            { name: "חברת פיתוח A", price: "₪960,000", date: "2024-01-25" },
+            { name: "חברת פיתוח B", price: "₪1,200,000", date: "2024-01-26" }
+          ]
+        },
+        createdAt: new Date("2024-02-01"),
+      },
+      // Strategic Consulting - REQ-2024-011
+      {
+        id: this.currentId++,
+        procurementRequestId: 9, // Strategic Consulting
+        totalCost: "630000",
+        basePrice: "538500",
+        tax: "91550",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 95,
+        marketPrice: "720000",
+        potentialSavings: "90000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "ניסיון יועצים", impact: "מעולה", description: "יועצים בכירים עם ניסיון רב בתחום" },
+            { factor: "מחיר תחרותי", impact: "גבוה", description: "מחיר נמוך משמעותית מהשוק" },
+            { factor: "זמני ביצוע", impact: "מהיר", description: "6 חודשים - מהיר יחסית" }
+          ],
+          sources: [
+            { name: "חברת ייעוץ מובילה", price: "₪630,000", date: "2024-01-26" },
+            { name: "ממוצע שוק", price: "₪720,000", date: "2024-01-20" }
+          ]
+        },
+        createdAt: new Date("2024-02-15"),
+      },
+      // Security Services - REQ-2024-012
+      {
+        id: this.currentId++,
+        procurementRequestId: 10, // Security Services
+        totalCost: "2400000",
+        basePrice: "2051282",
+        tax: "348718",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 88,
+        marketPrice: "2800000",
+        potentialSavings: "400000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "שירות 24/7", impact: "קריטי", description: "שירות רציף עם זמן תגובה של 15 דקות" },
+            { factor: "ציוד מתקדם", impact: "נדרש", description: "מערכות ניטור וזיהוי איומים מתקדמות" },
+            { factor: "צוות מומחים", impact: "גבוה", description: "מומחי אבטחה מוסמכים" }
+          ],
+          sources: [
+            { name: "חברת אבטחה A", price: "₪2,400,000", date: "2024-01-27" },
+            { name: "חברת אבטחה B", price: "₪2,900,000", date: "2024-01-28" }
+          ]
+        },
+        createdAt: new Date("2024-02-05"),
+      },
+      // Workstations - REQ-2024-014
+      {
+        id: this.currentId++,
+        procurementRequestId: 12, // Workstations
+        totalCost: "225000",
+        basePrice: "192308",
+        tax: "32692",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 94,
+        marketPrice: "260000",
+        potentialSavings: "35000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "כמות גדולה", impact: "חיובי", description: "50 יחידות - הנחה לכמות" },
+            { factor: "מפרט סטנדרטי", impact: "יעיל", description: "מפרט אחיד מפשט את הרכש" },
+            { factor: "זמינות", impact: "טובה", description: "זמינות מיידית במלאי" }
+          ],
+          sources: [
+            { name: "ספק מחשבים עיקרי", price: "₪225,000", date: "2024-01-29" },
+            { name: "ספק משני", price: "₪260,000", date: "2024-01-30" }
+          ]
+        },
+        createdAt: new Date("2024-02-03"),
+      },
+      // Warehouse Construction - REQ-2024-016
+      {
+        id: this.currentId++,
+        procurementRequestId: 14, // Warehouse
+        totalCost: "1336000",
+        basePrice: "1142735",
+        tax: "194265",
+        shippingCost: "0",
+        discountAmount: "1000",
+        confidenceLevel: 85,
+        marketPrice: "1500000",
+        potentialSavings: "164000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "עבודות עפר", impact: "סטנדרט", description: "עבודות הכנה סטנדרטיות לאתר" },
+            { factor: "מבנה פלדה", impact: "יעיל", description: "מבנה פלדה מותאם לדרישות" },
+            { factor: "זמני בניה", impact: "סבירים", description: "8 חודשי בניה כולל גימור" }
+          ],
+          sources: [
+            { name: "קבלן בניה ראשי", price: "₪1,336,000", date: "2024-01-31" },
+            { name: "קבלן משני", price: "₪1,550,000", date: "2024-02-01" }
+          ]
+        },
+        createdAt: new Date("2024-02-20"),
+      },
+      // Raw Materials - REQ-2024-017
+      {
+        id: this.currentId++,
+        procurementRequestId: 15, // Raw Materials
+        totalCost: "330000",
+        basePrice: "282051",
+        tax: "47949",
+        shippingCost: "0",
+        discountAmount: "0",
+        confidenceLevel: 91,
+        marketPrice: "375000",
+        potentialSavings: "45000",
+        aiAnalysisResults: {
+          reasoning: [
+            { factor: "מחירי חומרי גלם", impact: "יציב", description: "מחירים יציבים ברבעון האחרון" },
+            { factor: "איכות חומרים", impact: "גבוהה", description: "חומרים בדרגת איכות נדרשת" },
+            { factor: "זמני אספקה", impact: "סבירים", description: "אספקה תוך 4-6 שבועות" }
+          ],
+          sources: [
+            { name: "ספק חומרי גלם עיקרי", price: "₪330,000", date: "2024-02-01" },
+            { name: "ספק משני", price: "₪375,000", date: "2024-02-02" }
+          ]
+        },
+        createdAt: new Date("2024-02-07"),
+      },
+    ];
+
+    costEstimations.forEach(estimation => this.costEstimations.set(estimation.id, estimation));
   }
 
   // Users
@@ -580,6 +785,39 @@ export class MemStorage implements IStorage {
     }
     
     return { totalRequests: requests.length, updatedRequests: updatedCount };
+  }
+
+  // Extracted Data
+  private extractedData = new Map<number, any>();
+
+  async getExtractedData(requestId: number): Promise<any> {
+    return this.extractedData.get(requestId);
+  }
+
+  async saveExtractedData(requestId: number, data: any): Promise<void> {
+    this.extractedData.set(requestId, {
+      data,
+      extractionDate: new Date(),
+      status: 'completed'
+    });
+  }
+
+  async clearExtractedData(requestId: number): Promise<void> {
+    this.extractedData.delete(requestId);
+  }
+
+  async updateDocument(id: number, updateData: any): Promise<Document | undefined> {
+    const existing = this.documents.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Document = { ...existing, ...updateData };
+    this.documents.set(id, updated);
+    return updated;
+  }
+
+  async resetAllCostEstimations(): Promise<{ totalEstimations: number }> {
+    this.costEstimations.clear();
+    return { totalEstimations: 0 };
   }
 }
 
