@@ -493,17 +493,21 @@ export default function CostEstimation() {
                       {method.breakdown.map((item: any, itemIndex: number) => (
                         <tr key={itemIndex} className="hover:bg-muted/5">
                           <td className="px-4 py-2 font-medium">
-                            {item.component || item.parameter || item.name || item.scenario}
+                            {item.reference || item.component || item.parameter || item.name || item.scenario}
                           </td>
                           <td className="px-4 py-2 text-muted-foreground">
-                            {item.description || 
-                             (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
-                             (item.quantity && `${item.quantity} ${item.unit}`) ||
-                             item.probability || 
-                             item.value}
+                            {item.reference ? (
+                              `כמות מקורית: ${item.originalQuantity} × ₪${item.originalUnitCost?.toLocaleString()} (משקל: ${item.weight})`
+                            ) : (
+                              item.description || 
+                              (item.hours && `${item.hours} שעות × ₪${item.rate}`) ||
+                              (item.quantity && `${item.quantity} ${item.unit}`) ||
+                              item.probability || 
+                              item.value
+                            )}
                           </td>
                           <td className="px-4 py-2 font-medium">
-                            {formatCurrency(item.cost || item.totalCost || item.estimate)}
+                            {formatCurrency(item.adjustedCost || item.cost || item.totalCost || item.estimate || 0)}
                           </td>
                         </tr>
                       ))}
