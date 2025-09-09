@@ -72,50 +72,74 @@ function CostEstimationsList() {
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700">
+        <Card className="bg-card border-primary/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">סה״כ אומדנים</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalEstimations}</p>
+                <p className="text-muted-foreground text-sm mb-1">סה״כ אומדנים</p>
+                <p className="text-2xl font-bold text-foreground">{totalEstimations}</p>
+                <p className="text-primary text-sm mt-1 flex items-center">
+                  <Calculator className="w-3 h-3 ml-1" />
+                  {approvedCount} אושרו, {pendingCount} ממתינים
+                </p>
               </div>
-              <Calculator className="h-8 w-8 text-blue-500" />
+              <div className="bg-primary/20 p-3 rounded-lg">
+                <Calculator className="text-primary w-6 h-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
+        <Card className="bg-card border-secondary/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">ערך כולל</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalValue)}</p>
+                <p className="text-muted-foreground text-sm mb-1">ערך כולל</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(totalValue)}</p>
+                <p className="text-success text-sm mt-1 flex items-center">
+                  <TrendingUp className="w-3 h-3 ml-1" />
+                  ממוצע {formatCurrency(totalEstimations > 0 ? totalValue / totalEstimations : 0)} לאומדן
+                </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <div className="bg-secondary/20 p-3 rounded-lg">
+                <TrendingUp className="text-secondary w-6 h-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700">
+        <Card className="bg-card border-warning/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 dark:text-purple-400">ממוצע ביטחון</p>
-                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{Math.round(avgConfidence)}%</p>
+                <p className="text-muted-foreground text-sm mb-1">ממוצע ביטחון</p>
+                <p className="text-2xl font-bold text-foreground">{Math.round(avgConfidence)}%</p>
+                <p className="text-warning text-sm mt-1 flex items-center">
+                  <BarChart3 className="w-3 h-3 ml-1" />
+                  {totalEstimations > 0 ? 'רמה גבוהה' : 'אין נתונים'}
+                </p>
               </div>
-              <BarChart3 className="h-8 w-8 text-purple-500" />
+              <div className="bg-warning/20 p-3 rounded-lg">
+                <BarChart3 className="text-warning w-6 h-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-700">
+        <Card className="bg-card border-destructive/20 card-hover dashboard-kpi-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-600 dark:text-orange-400">חסכון פוטנציאלי</p>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{formatCurrency(Math.abs(totalSavings))}</p>
+                <p className="text-muted-foreground text-sm mb-1">חסכון פוטנציאלי</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(Math.abs(totalSavings))}</p>
+                <p className="text-success text-sm mt-1 flex items-center">
+                  <PiggyBank className="w-3 h-3 ml-1" />
+                  {totalSavings >= 0 ? 'חיסכון זוהה' : 'עלות נוספת'}
+                </p>
               </div>
-              <PiggyBank className="h-8 w-8 text-orange-500" />
+              <div className="bg-destructive/20 p-3 rounded-lg">
+                <PiggyBank className="text-destructive w-6 h-6" />
+              </div>
             </div>
           </CardContent>
         </Card>
