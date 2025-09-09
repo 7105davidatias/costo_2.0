@@ -82,6 +82,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get completed procurement requests (requests with status 'completed')
+  app.get("/api/procurement-requests/completed", async (req, res) => {
+    try {
+      const allRequests = await storage.getProcurementRequests();
+      const completedRequests = allRequests.filter(request => request.status === 'completed');
+      res.json(completedRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch completed procurement requests" });
+    }
+  });
+
   // Cost Estimations
   app.get("/api/cost-estimations", async (req, res) => {
     try {

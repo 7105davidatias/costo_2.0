@@ -10,12 +10,199 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
+// Component for displaying list of all cost estimations
+function CostEstimationsList() {
+  const { data: completedRequests, isLoading } = useQuery({
+    queryKey: ["/api/procurement-requests/completed"],
+  });
+
+  const { data: estimations } = useQuery({
+    queryKey: ["/api/cost-estimations"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold mb-2">טוען אומדני עלויות...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  const requestsWithEstimations = (completedRequests as any[] || []).filter((req: any) => 
+    (estimations as any[] || []).some((est: any) => est.procurementRequestId === req.id)
+  );
+
+  // Calculate summary statistics
+  const totalEstimations = (estimations as any[] || []).length;
+  const totalValue = (estimations as any[] || []).reduce((sum: number, est: any) => sum + parseFloat(est.totalCost || '0'), 0);
+  const avgConfidence = totalEstimations > 0 ? 
+    (estimations as any[] || []).reduce((sum: number, est: any) => sum + (est.confidenceLevel || 0), 0) / totalEstimations : 0;
+  const totalSavings = (estimations as any[] || []).reduce((sum: number, est: any) => sum + parseFloat(est.potentialSavings || '0'), 0);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('he-IL', { 
+      style: 'currency', 
+      currency: 'ILS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">אומדני עלויות מאושרים</h1>
+        <p className="text-muted-foreground">צפייה וניהול של כל האומדנים שאושרו במערכת</p>
+      </div>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">סה״כ אומדנים</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalEstimations}</p>
+              </div>
+              <Calculator className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">ערך כולל</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalValue)}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-600 dark:text-purple-400">ממוצע ביטחון</p>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{Math.round(avgConfidence)}%</p>
+              </div>
+              <BarChart3 className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-600 dark:text-orange-400">חסכון פוטנציאלי</p>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{formatCurrency(Math.abs(totalSavings))}</p>
+              </div>
+              <PiggyBank className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Estimations List */}
+      {requestsWithEstimations.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent className="space-y-4">
+            <Calculator className="h-12 w-12 text-muted-foreground mx-auto" />
+            <h3 className="text-xl font-semibold">אין אומדנים מאושרים</h3>
+            <p className="text-muted-foreground">עדיין לא נוצרו אומדנים במערכת. התחל על ידי יצירת אומדן ראשון.</p>
+            <Link href="/procurement-requests">
+              <Button className="mt-4">
+                צור אומדן ראשון
+                <ArrowRight className="w-4 h-4 mr-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6">
+          {requestsWithEstimations.map((request: any) => {
+            const estimation = (estimations as any[] || []).find((est: any) => est.procurementRequestId === request.id);
+            return (
+              <Card key={request.id} className="border-l-4 border-l-primary">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Request Details */}
+                    <div className="lg:col-span-2">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground mb-1">{request.itemName}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{request.requestNumber}</p>
+                          <Badge variant="secondary" className="text-xs">{request.category}</Badge>
+                        </div>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          מאושר
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{request.description}</p>
+                    </div>
+
+                    {/* Financial Details */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">סכום אומדן</p>
+                        <p className="text-lg font-bold text-primary">{formatCurrency(parseFloat(estimation?.totalCost || '0'))}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">רמת ביטחון</p>
+                        <div className="flex items-center gap-2">
+                          <Progress value={estimation?.confidenceLevel || 0} className="flex-1 h-2" />
+                          <span className="text-sm font-medium">{estimation?.confidenceLevel || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2">
+                      <Link href={`/procurement-request/${request.id}`}>
+                        <Button variant="outline" size="sm" className="w-full">
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                          פרטי דרישה
+                        </Button>
+                      </Link>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="w-4 h-4 ml-2" />
+                        הורד דוח
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-muted flex justify-between items-center text-xs text-muted-foreground">
+                    <span>נוצר ב־{new Date(estimation?.createdAt).toLocaleDateString('he-IL')}</span>
+                    <span>עודכן ב־{new Date(request.updatedAt).toLocaleDateString('he-IL')}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CostEstimation() {
   const { id } = useParams();
   const [location] = useLocation();
   const [estimation, setEstimation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // If no ID is provided, show the list view
+  if (!id) {
+    return <CostEstimationsList />;
+  }
 
   // Extract selected methods from URL - use window.location to get full URL with params
   const fullUrl = typeof window !== 'undefined' ? window.location.href : '';
