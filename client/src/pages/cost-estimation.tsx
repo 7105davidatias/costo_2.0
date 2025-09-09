@@ -55,8 +55,8 @@ function CostEstimationsList() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">אומדני עלויות מאושרים</h1>
-        <p className="text-muted-foreground">צפייה וניהול של כל האומדנים שאושרו במערכת</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">אומדני עלויות</h1>
+        <p className="text-muted-foreground">צפייה וניהול של כל האומדנים שנוצרו במערכת</p>
       </div>
 
       {/* Summary Statistics */}
