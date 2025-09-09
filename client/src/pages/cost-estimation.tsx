@@ -43,11 +43,15 @@ function CostEstimationsList() {
   }));
 
   // Calculate summary statistics
-  const totalEstimations = (estimations as any[] || []).length;
-  const totalValue = (estimations as any[] || []).reduce((sum: number, est: any) => sum + parseFloat(est.totalCost || '0'), 0);
+  const totalEstimations = requestsWithEstimations.length;
+  const totalValue = requestsWithEstimations.reduce((sum: number, req: any) => sum + parseFloat(req.estimation?.totalCost || '0'), 0);
   const avgConfidence = totalEstimations > 0 ? 
-    (estimations as any[] || []).reduce((sum: number, est: any) => sum + (est.confidenceLevel || 0), 0) / totalEstimations : 0;
-  const totalSavings = (estimations as any[] || []).reduce((sum: number, est: any) => sum + parseFloat(est.potentialSavings || '0'), 0);
+    requestsWithEstimations.reduce((sum: number, req: any) => sum + (req.estimation?.confidenceLevel || 0), 0) / totalEstimations : 0;
+  const totalSavings = requestsWithEstimations.reduce((sum: number, req: any) => sum + parseFloat(req.estimation?.potentialSavings || '0'), 0);
+  
+  // Calculate approved vs pending statistics
+  const approvedCount = requestsWithEstimations.filter(req => req.approvalStatus === 'approved').length;
+  const pendingCount = requestsWithEstimations.filter(req => req.approvalStatus === 'pending').length;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('he-IL', { 
