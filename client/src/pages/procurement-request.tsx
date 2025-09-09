@@ -380,6 +380,7 @@ export default function ProcurementRequest() {
               פרטי דרישת רכש - {request.requestNumber}
             </h1>
           </div>
+          <p className="text-muted-foreground">{request.itemName}</p>
         </div>
         <div className="flex space-x-reverse space-x-4">
           <Link href={`/market-research/${encodeURIComponent(request.category)}`}>
@@ -458,7 +459,7 @@ export default function ProcurementRequest() {
               <FileUpload requestId={request?.id || parseInt(id || '0')} />
               
               {/* Uploaded Files */}
-              {documents && Array.isArray(documents) && documents.length > 0 ? (
+              {documents && Array.isArray(documents) && documents.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <h4 className="font-medium text-foreground">קבצים שהועלו:</h4>
                   {(documents as any[]).map((doc: any) => (
@@ -466,9 +467,9 @@ export default function ProcurementRequest() {
                       <div className="flex items-center space-x-reverse space-x-3">
                         <FileText className="text-destructive w-5 h-5" />
                         <div className="flex flex-col">
-                          <span className="text-foreground">{doc.fileName || ''}</span>
+                          <span className="text-foreground">{doc.fileName}</span>
                           <span className="text-xs text-muted-foreground">
-                            {doc.fileSize ? `${(doc.fileSize / 1024 / 1024).toFixed(1)} MB` : ''} • {doc.fileType?.toUpperCase() || ''}
+                            {doc.fileSize ? `${(doc.fileSize / 1024 / 1024).toFixed(1)} MB` : ''} • {doc.fileType?.toUpperCase()}
                           </span>
                         </div>
                       </div>
@@ -489,7 +490,7 @@ export default function ProcurementRequest() {
                     </div>
                   ))}
                 </div>
-              ) : null}
+              )}
             </CardContent>
           </Card>
 
@@ -499,62 +500,38 @@ export default function ProcurementRequest() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Combined Cost Overview Card */}
-          <Card className="bg-card border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-center">סקירת עלויות</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* EMF Section */}
-              <div className="text-center p-4 bg-info/10 rounded-lg border border-info/20">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">EMF (תקציב מוקצה)</h4>
-                <span className="text-xl font-bold text-info">
-                  {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
-                </span>
-              </div>
-              
-              {/* Estimated Cost Section */}
-              <div className="text-center p-4 bg-success/10 rounded-lg border border-success/20">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">אומדן עלות (מערכת)</h4>
-                {request.estimatedCost ? (
-                  <span className="text-xl font-bold text-success">
-                    ₪{parseFloat(request.estimatedCost).toLocaleString()}
+          {/* EMF and Cost Cards */}
+          <div className="grid grid-cols-1 gap-4">
+            {/* EMF Card */}
+            <Card className="bg-card border-info/20">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">EMF (תקציב מוקצה)</h3>
+                  <p className="text-muted-foreground text-sm mb-3">התקציב המוקצה למימוש הדרישה</p>
+                  <span className="text-2xl font-bold text-info">
+                    {request.emf ? `₪${parseFloat(request.emf).toLocaleString()}` : 'לא צוין'}
                   </span>
-                ) : (
-                  <span className="text-lg text-muted-foreground">טרם נוצר</span>
-                )}
-              </div>
-
-              {/* Cost Comparison */}
-              {request.emf && request.estimatedCost && (
-                <div className="text-center p-3 bg-muted/20 rounded-lg">
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">השוואה</h4>
-                  {(() => {
-                    const emf = parseFloat(request.emf);
-                    const estimated = parseFloat(request.estimatedCost);
-                    const difference = estimated - emf;
-                    const percentage = ((difference / emf) * 100).toFixed(1);
-                    
-                    if (difference > 0) {
-                      return (
-                        <div className="text-warning">
-                          <span className="text-sm">חריגה: +₪{difference.toLocaleString()} ({percentage}%)</span>
-                        </div>
-                      );
-                    } else if (difference < 0) {
-                      return (
-                        <div className="text-success">
-                          <span className="text-sm">חיסכון: ₪{Math.abs(difference).toLocaleString()} ({Math.abs(parseFloat(percentage))}%)</span>
-                        </div>
-                      );
-                    } else {
-                      return <span className="text-sm text-muted-foreground">תואם לתקציב</span>;
-                    }
-                  })()}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Estimated Cost Card */}
+            <Card className="bg-card border-success/20">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">אומדן עלות</h3>
+                  <p className="text-muted-foreground text-sm mb-3">אומדן שנוצר במערכת</p>
+                  {request.estimatedCost ? (
+                    <span className="text-2xl font-bold text-success">
+                      ₪{parseFloat(request.estimatedCost).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-xl text-muted-foreground">טרם נוצר</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Quick Actions */}
           <Card className="bg-card border-primary/20">
@@ -570,6 +547,20 @@ export default function ProcurementRequest() {
                 <Play className="w-4 h-4 ml-2" />
                 {aiAnalysisMutation.isPending ? 'מפעיל ניתוח...' : 'התחל ניתוח AI'}
               </Button>
+              <Button 
+                variant="outline" 
+                className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                onClick={() => {
+                  console.log('Market Research button clicked with ID:', id);
+                  // Store the request ID in localStorage for context
+                  localStorage.setItem('currentRequestId', id.toString());
+                  // Navigate directly with the ID in the URL
+                  window.location.href = `/market-research/${id}`;
+                }}
+              >
+                <Bot className="w-4 h-4 ml-2" />
+                מחקר שוק
+              </Button>
               <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary/10">
                 <Download className="w-4 h-4 ml-2" />
                 ייצא דוח
@@ -581,81 +572,53 @@ export default function ProcurementRequest() {
             </CardContent>
           </Card>
 
-          {/* Horizontal Progress Tracker */}
+          {/* Status Timeline */}
           <Card className="bg-card border-warning/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between relative">
-                {/* Progress Line */}
-                <div className="absolute top-1/2 left-6 right-6 h-0.5 bg-muted -translate-y-1/2 z-0"></div>
-                <div 
-                  className="absolute top-1/2 left-6 h-0.5 bg-success -translate-y-1/2 z-0 transition-all duration-500"
-                  style={{ 
-                    width: `${Math.min(
-                      ((documents && Array.isArray(documents) && documents.length > 0 ? 1 : 0) + 
-                       (request.status === 'processing' || request.status === 'completed' ? 1 : 0) + 
-                       (request.status === 'completed' ? 1 : 0)) * 25, 75
-                    )}%` 
-                  }}
-                ></div>
+            <CardHeader>
+              <CardTitle>סטטוס בקשה</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-reverse space-x-3">
+                  <div className="w-3 h-3 bg-success rounded-full"></div>
+                  <div>
+                    <p className="text-sm text-foreground font-medium">בקשה נוצרה</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(request.createdAt!).toLocaleString('he-IL')}
+                    </p>
+                  </div>
+                </div>
                 
-                {/* Step 1: בקשה נוצרה */}
-                <div className="flex flex-col items-center relative z-10">
-                  <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-white" />
+                {documents && Array.isArray(documents) && documents.length > 0 && (
+                  <div className="flex items-center space-x-reverse space-x-3">
+                    <div className="w-3 h-3 bg-success rounded-full"></div>
+                    <div>
+                      <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
+                      <p className="text-xs text-muted-foreground">
+                        {documents.length} קבצים
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-center font-medium">בקשה נוצרה</span>
+                )}
+
+                <div className="flex items-center space-x-reverse space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${request.status === 'processing' ? 'bg-warning animate-pulse' : 'bg-muted'}`}></div>
+                  <div>
+                    <p className="text-sm text-foreground font-medium">ניתוח AI</p>
+                    <p className="text-xs text-muted-foreground">
+                      {request.status === 'processing' ? 'בתהליך' : 'ממתין'}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Step 2: מסמכים הועלו */}
-                <div className="flex flex-col items-center relative z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                    documents && Array.isArray(documents) && documents.length > 0 
-                      ? 'bg-success' 
-                      : 'bg-muted'
-                  }`}>
-                    {documents && Array.isArray(documents) && documents.length > 0 ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    ) : (
-                      <Upload className="w-4 h-4 text-muted-foreground" />
-                    )}
+                <div className="flex items-center space-x-reverse space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${request.status === 'completed' ? 'bg-success' : 'bg-muted'}`}></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">הערכת עלות</p>
+                    <p className="text-xs text-muted-foreground">
+                      {request.status === 'completed' ? 'הושלם' : 'ממתין'}
+                    </p>
                   </div>
-                  <span className="text-xs text-center font-medium">מסמכים הועלו</span>
-                </div>
-
-                {/* Step 3: ניתוח AI */}
-                <div className="flex flex-col items-center relative z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                    request.status === 'completed' 
-                      ? 'bg-success' 
-                      : request.status === 'processing' 
-                        ? 'bg-warning animate-pulse' 
-                        : 'bg-muted'
-                  }`}>
-                    {request.status === 'completed' ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    ) : request.status === 'processing' ? (
-                      <Clock className="w-4 h-4 text-white" />
-                    ) : (
-                      <Bot className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <span className="text-xs text-center font-medium">ניתוח AI</span>
-                </div>
-
-                {/* Step 4: הערכת עלות */}
-                <div className="flex flex-col items-center relative z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                    request.status === 'completed' 
-                      ? 'bg-success' 
-                      : 'bg-muted'
-                  }`}>
-                    {request.status === 'completed' ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">₪</span>
-                    )}
-                  </div>
-                  <span className="text-xs text-center font-medium">הערכת עלות</span>
                 </div>
               </div>
             </CardContent>
