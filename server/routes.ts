@@ -1103,11 +1103,18 @@ function findRelevantHistoricalPurchases(request: any, historicalData: any[]): a
   return historicalData.filter(purchase => {
     const purchaseItem = purchase.item?.toLowerCase() || '';
     
-    // Direct category matching
+    // Direct category matching - check for servers first within hardware
     if (requestCategory.includes('חומרה')) {
+      // If it's a server request, only match servers
+      if (requestItemName.includes('שרת') || requestItemName.includes('poweredge') || 
+          requestItemName.includes('server') || requestItemName.includes('r750') || 
+          requestItemName.includes('r740') || requestItemName.includes('proliant')) {
+        return purchaseItem.includes('poweredge') || purchaseItem.includes('proliant');
+      }
+      // Otherwise match other hardware
       return purchaseItem.includes('dell') || purchaseItem.includes('hp') || 
              purchaseItem.includes('latitude') || purchaseItem.includes('optiplex') || 
-             purchaseItem.includes('probook') || purchaseItem.includes('poweredge');
+             purchaseItem.includes('probook') || purchaseItem.includes('thinkcentre');
     }
     
     if (requestCategory.includes('ריהוט')) {
@@ -1119,14 +1126,16 @@ function findRelevantHistoricalPurchases(request: any, historicalData: any[]): a
              purchaseItem.includes('פורד') || purchaseItem.includes('טרנזיט');
     }
     
-    // Item name similarity
+    // Item name similarity - prioritize servers first
+    if (requestItemName.includes('שרת') || requestItemName.includes('server') || 
+        requestItemName.includes('poweredge') || requestItemName.includes('proliant') ||
+        requestItemName.includes('r750') || requestItemName.includes('r740')) {
+      return purchaseItem.includes('poweredge') || purchaseItem.includes('proliant');
+    }
+    
     if (requestItemName.includes('מחשב') || requestItemName.includes('laptop')) {
       return purchaseItem.includes('dell') || purchaseItem.includes('hp') || 
              purchaseItem.includes('latitude') || purchaseItem.includes('elitebook');
-    }
-    
-    if (requestItemName.includes('שרת') || requestItemName.includes('server')) {
-      return purchaseItem.includes('poweredge') || purchaseItem.includes('proliant');
     }
     
     if (requestItemName.includes('כסא')) {
