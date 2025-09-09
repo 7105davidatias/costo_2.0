@@ -17,7 +17,7 @@ function Router() {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Switch>
-          <Route path="/" component={Dashboard} />
+          <Route path="/" component={ProcurementRequestsList} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/procurement-requests" component={ProcurementRequestsList} />
           <Route path="/procurement-request/:id?" component={ProcurementRequest} />
