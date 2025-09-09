@@ -199,6 +199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create the cost estimation
+      console.log('Approving estimation with data:', {
+        requestId,
+        totalCost: estimationData.totalCost,
+        basePrice: estimationData.basePrice,
+        confidenceLevel: estimationData.confidenceLevel,
+        potentialSavings: estimationData.potentialSavings
+      });
+      
       const estimation = await storage.createCostEstimation({
         procurementRequestId: requestId,
         totalCost: estimationData.totalCost,
@@ -211,6 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         potentialSavings: estimationData.potentialSavings || "0",
         aiAnalysisResults: estimationData.aiAnalysisResults
       });
+      
+      console.log('Created estimation:', estimation);
 
       // Update procurement request status to completed and set estimated cost
       await storage.updateProcurementRequest(requestId, {
@@ -639,10 +649,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requests = await storage.getProcurementRequests();
       const estimations = await storage.getCostEstimations();
       
-      const totalEstimatedCosts = estimations.reduce((sum, est) => sum + parseFloat(est.totalCost), 0);
-      const totalSavings = estimations.reduce((sum, est) => sum + (est.potentialSavings ? parseFloat(est.potentialSavings) : 0), 0);
+      console.log('Dashboard stats - Found estimations:', estimations.length);
+      console.log('Dashboard stats - Estimations data:', estimations.map(est => ({
+        id: est.id,
+        totalCost: est.totalCost,
+        potentialSavings: est.potentialSavings,
+        confidenceLevel: est.confidenceLevel
+      })));
+      
+      const totalEstimatedCosts = estimations.reduce((sum, est) => {
+        const cost = parseFloat(est.totalCost || '0');
+        console.log(`Adding cost: ${est.totalCost} -> ${cost}`);
+        return sum + cost;
+      }, 0);
+      
+      const totalSavings = estimations.reduce((sum, est) => {
+        const savings = parseFloat(est.potentialSavings || '0');
+        return sum + savings;
+      }, 0);
+      
       const avgConfidence = estimations.length > 0 ? 
-        estimations.reduce((sum, est) => sum + est.confidenceLevel, 0) / estimations.length : 0;
+        estimations.reduce((sum, est) => sum + (est.confidenceLevel || 0), 0) / estimations.length : 0;
 
       const risingCosts = estimations.filter(est => 
         est.marketPrice && parseFloat(est.totalCost) > parseFloat(est.marketPrice) * 0.9
