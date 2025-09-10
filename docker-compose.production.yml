@@ -1,0 +1,244 @@
+version: '3.8'
+
+# Production Docker Compose Configuration
+# מערכת ניהול אומדני עלויות רכש - Production Environment
+
+services:
+  # ==============================================================================
+  # APPLICATION SERVER
+  # ==============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      args:
+        - NODE_ENV=production
+    container_name: procurement-app
+    restart: unless-stopped
+    
+    # Environment variables
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # - REDIS_URL=redis://redis:6379  # Only if Redis is enabled
+    
+    # Port mapping
+    ports:
+      - "5000:5000"
+    
+    # Volume mounts
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/var/log/procurement
+      - /etc/localtime:/etc/localtime:ro
+    
+    # Dependencies
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
+    
+    # Health check using wget (available in alpine)
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/procurement-requests"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=procurement-app"
+
+  # ==============================================================================
+  # POSTGRESQL DATABASE
+  # ==============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: procurement-postgres
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-procurement_prod}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+    
+    # Port mapping (internal only)
+    expose:
+      - "5432"
+    
+    # Volume mounts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/var/lib/postgresql/backups
+      - /etc/localtime:/etc/localtime:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-procurement_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # PostgreSQL configuration
+    command: >
+      postgres 
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_connections=100
+      -c log_statement=errors
+      -c log_min_error_statement=error
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=procurement-postgres"
+
+  # ==============================================================================
+  # REDIS CACHE & SESSIONS (Optional - enable if using Redis for caching)
+  # ==============================================================================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: procurement-redis
+  #   restart: unless-stopped
+  #   expose:
+  #     - "6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   command: redis-server --appendonly yes
+
+  # ==============================================================================
+  # NGINX REVERSE PROXY (Optional - enable when nginx config files exist)
+  # ==============================================================================
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: procurement-nginx
+  #   restart: unless-stopped
+  #   
+  #   # Port mapping
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   
+  #   # Volume mounts (create these files first)
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/sites/:/etc/nginx/conf.d/:ro
+  #     - ./uploads:/var/www/uploads:ro
+  #     - ./ssl:/etc/ssl:ro
+  #     - nginx_logs:/var/log/nginx
+  #   depends_on:
+  #     - app
+
+  # ==============================================================================
+  # MONITORING & LOGGING (Optional - enable when promtail.yml exists)
+  # ==============================================================================
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: procurement-promtail
+  #   restart: unless-stopped
+  #   
+  #   # Volume mounts (create monitoring/promtail.yml first)
+  #   volumes:
+  #     - ./logs:/var/log/procurement:ro
+  #     - nginx_logs:/var/log/nginx:ro
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
+  #   depends_on:
+  #     - app
+
+  # ==============================================================================
+  # BACKUP SERVICE
+  # ==============================================================================
+  backup:
+    image: postgres:15-alpine
+    container_name: procurement-backup
+    restart: "no"
+    
+    # Environment variables
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-procurement_prod}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    
+    # Volume mounts
+    volumes:
+      - ./backups:/backups
+      - ./scripts:/scripts:ro
+      - /etc/localtime:/etc/localtime:ro
+    
+    # Dependencies
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    # Backup command
+    entrypoint: ["/scripts/backup.sh"]
+
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  
+  # Commented out unused volumes (enable when needed)
+  # redis_data:
+  #   driver: local
+  # 
+  # nginx_logs:
+  #   driver: local
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  default:
+    name: procurement-network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
