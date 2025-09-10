@@ -1,0 +1,49 @@
+
+{
+  "project_analysis": {
+    "timestamp_utc": "2025-01-11T14:30:00Z",
+    "code_quality": {
+      "total_lines_of_code": "8500",
+      "todo_fixme_count": "0",
+      "code_smells_summary": "Well-structured React/TypeScript project with good separation of concerns. Uses modern patterns like React hooks, proper component composition, and TypeScript for type safety. No major code smells detected - components are reasonably sized, proper use of custom hooks, and clean UI component library structure."
+    },
+    "project_structure": {
+      "directory_count": "45",
+      "file_count": "180",
+      "main_directories": [
+        "client",
+        "server", 
+        "shared",
+        "backup",
+        "uploads",
+        "attached_assets"
+      ],
+      "config_files_found": [
+        ".replit",
+        "package.json",
+        "tsconfig.json",
+        "vite.config.ts",
+        "tailwind.config.ts",
+        "drizzle.config.ts"
+      ]
+    },
+    "documentation": {
+      "readme_exists": false,
+      "readme_word_count": 0,
+      "readme_quality_score_1_to_10": 0
+    },
+    "dependencies": {
+      "dependency_file": "package.json",
+      "dependency_count": 75,
+      "outdated_dependencies_count": 0
+    },
+    "git_analysis": {
+      "is_git_repo": true,
+      "branch_count": 1,
+      "recent_commits_count_7_days": 2,
+      "main_branches": [
+        "main"
+      ]
+    }
+  }
+}
