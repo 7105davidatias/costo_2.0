@@ -7,8 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure multer for handling multipart/form-data
-app.use(multer().none());
+// Configure multer - removed global .none() that was blocking file uploads
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -47,8 +46,9 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    console.error('Server error:', err);
     res.status(status).json({ message });
-    throw err;
+    // Removed throw err - this was causing process crashes
   });
 
   // importantly only setup vite in development and after
