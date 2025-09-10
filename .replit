@@ -4,6 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["psmisc"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -32,8 +33,8 @@ args = "Start application"
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
+mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
+args = "run npm dev"
