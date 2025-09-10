@@ -182,7 +182,7 @@ describe('Complete Procurement Workflow E2E', () => {
 
     it('should handle workflow with multiple cost estimations', async () => {
       // Create base request
-      const request = {
+      const requestData = {
         itemName: 'פרויקטור לחדר ישיבות',
         category: 'ציוד אודיו ויזואלי',
         quantity: 1,
@@ -191,7 +191,7 @@ describe('Complete Procurement Workflow E2E', () => {
 
       const createResponse = await request(app)
         .post('/api/procurement-requests')
-        .send(request)
+        .send(requestData)
         .expect(201)
 
       const requestId = createResponse.body.id

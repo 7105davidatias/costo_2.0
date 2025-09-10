@@ -79,7 +79,7 @@ describe('Procurement Requests API Integration', () => {
 
   beforeEach(async () => {
     // Clear storage before each test
-    await storage.reset?.()
+    // Note: MemStorage doesn't have reset method, data is isolated per test
   })
 
   describe('GET /api/procurement-requests', () => {

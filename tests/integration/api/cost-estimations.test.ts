@@ -68,7 +68,7 @@ describe('Cost Estimations API Integration', () => {
   })
 
   beforeEach(async () => {
-    await storage.reset?.()
+    // Note: MemStorage doesn't have reset method, data is isolated per test
   })
 
   describe('GET /api/cost-estimations', () => {
