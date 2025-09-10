@@ -21,6 +21,45 @@ const API_MESSAGES = {
   INVALID_REQUEST_DATA: 'Invalid request data'
 } as const;
 
+// Helper functions for better error handling
+const asyncRoute = (handler: (req: any, res: any) => Promise<void>) => {
+  return async (req: any, res: any) => {
+    try {
+      await handler(req, res);
+    } catch (error: any) {
+      console.error('Route error:', error);
+      
+      // Handle Zod validation errors
+      if (error?.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          message: API_MESSAGES.INVALID_REQUEST_DATA,
+          errors: error.issues
+        });
+      }
+      
+      // Handle other known errors
+      const status = error?.status || error?.statusCode || 500;
+      const message = error?.message || 'Internal server error';
+      
+      return res.status(status).json({
+        success: false,
+        message
+      });
+    }
+  };
+};
+
+const parseId = (idStr: string): number => {
+  const id = parseInt(idStr);
+  if (isNaN(id) || id <= 0) {
+    const error = new Error('Invalid ID provided') as any;
+    error.status = 400;
+    throw error;
+  }
+  return id;
+};
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configure multer for file uploads with extracted constants
@@ -41,127 +80,78 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Procurement Requests
-  app.get("/api/procurement-requests", async (req, res) => {
-    try {
-      const requests = await storage.getProcurementRequests();
-      res.json(requests);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch procurement requests" });
-    }
-  });
+  app.get("/api/procurement-requests", asyncRoute(async (req, res) => {
+    const requests = await storage.getProcurementRequests();
+    res.json(requests);
+  }));
 
-  app.get("/api/procurement-requests/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const request = await storage.getProcurementRequest(id);
-      if (!request) {
-        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
-      }
-      res.json(request);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch procurement request" });
+  app.get("/api/procurement-requests/:id", asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    const request = await storage.getProcurementRequest(id);
+    if (!request) {
+      return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
     }
-  });
+    res.json(request);
+  }));
 
-  app.post("/api/procurement-requests", async (req, res) => {
-    try {
-      const validatedData = insertProcurementRequestSchema.parse(req.body);
-      const request = await storage.createProcurementRequest(validatedData);
-      res.status(201).json(request);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid request data", error });
-    }
-  });
+  app.post("/api/procurement-requests", asyncRoute(async (req, res) => {
+    const validatedData = insertProcurementRequestSchema.parse(req.body);
+    const request = await storage.createProcurementRequest(validatedData);
+    res.status(201).json(request);
+  }));
 
-  app.patch("/api/procurement-requests/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const request = await storage.updateProcurementRequest(id, req.body);
-      if (!request) {
-        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
-      }
-      res.json(request);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update procurement request" });
+  app.patch("/api/procurement-requests/:id", asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    const request = await storage.updateProcurementRequest(id, req.body);
+    if (!request) {
+      return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
     }
-  });
+    res.json(request);
+  }));
 
   // Suppliers
-  app.get("/api/suppliers", async (req, res) => {
-    try {
-      const suppliers = await storage.getSuppliers();
-      res.json(suppliers);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch suppliers" });
-    }
-  });
+  app.get("/api/suppliers", asyncRoute(async (req, res) => {
+    const suppliers = await storage.getSuppliers();
+    res.json(suppliers);
+  }));
 
   // Get completed procurement requests (requests with status 'completed')
-  app.get("/api/procurement-requests/completed", async (req, res) => {
-    try {
-      const allRequests = await storage.getProcurementRequests();
-      const completedRequests = allRequests.filter(request => request.status === 'completed');
-      res.json(completedRequests);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch completed procurement requests" });
-    }
-  });
+  app.get("/api/procurement-requests/completed", asyncRoute(async (req, res) => {
+    const allRequests = await storage.getProcurementRequests();
+    const completedRequests = allRequests.filter(request => request.status === 'completed');
+    res.json(completedRequests);
+  }));
 
   // Cost Estimations
-  app.get("/api/cost-estimations", async (req, res) => {
-    try {
-      const estimations = await storage.getCostEstimations();
-      res.json(estimations);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch cost estimations" });
-    }
-  });
+  app.get("/api/cost-estimations", asyncRoute(async (req, res) => {
+    const estimations = await storage.getCostEstimations();
+    res.json(estimations);
+  }));
 
-  app.get("/api/cost-estimations/request/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const estimation = await storage.getCostEstimationByRequestId(requestId);
-      if (!estimation) {
-        return res.status(404).json({ message: "Cost estimation not found" });
-      }
-      res.json(estimation);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch cost estimation" });
+  app.get("/api/cost-estimations/request/:requestId", asyncRoute(async (req, res) => {
+    const requestId = parseId(req.params.requestId);
+    const estimation = await storage.getCostEstimationByRequestId(requestId);
+    if (!estimation) {
+      return res.status(404).json({ message: "Cost estimation not found" });
     }
-  });
+    res.json(estimation);
+  }));
 
-  // Get specific cost estimation by ID
-  app.get("/api/cost-estimates/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const estimation = await storage.getCostEstimation(id);
-      if (!estimation) {
-        return res.status(404).json({ message: "Cost estimation not found" });
-      }
-      res.json(estimation);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch cost estimation" });
+  // Get specific cost estimation by ID (consolidated to cost-estimations)
+  app.get("/api/cost-estimations/:id", asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    const estimation = await storage.getCostEstimation(id);
+    if (!estimation) {
+      return res.status(404).json({ message: "Cost estimation not found" });
     }
-  });
+    res.json(estimation);
+  }));
 
-  // Get cost estimation by procurement request ID  
-  app.get("/api/cost-estimates/request/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const estimation = await storage.getCostEstimationByRequestId(requestId);
-      if (!estimation) {
-        return res.status(404).json({ message: "Cost estimation not found" });
-      }
-      res.json(estimation);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch cost estimation" });
-    }
-  });
+  // REMOVED - duplicate of /api/cost-estimations/request/:requestId
 
   // Create cost estimation for specific procurement request
-  app.post("/api/procurement-requests/:id/cost-estimate", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.id);
+  app.post("/api/procurement-requests/:id/cost-estimation", asyncRoute(async (req, res) => {
+      const requestId = parseId(req.params.id);
       const request = await storage.getProcurementRequest(requestId);
       if (!request) {
         return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
@@ -193,24 +183,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.status(201).json(estimation);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid estimation data", error });
-    }
-  });
+  }));
 
-  app.post("/api/cost-estimations", async (req, res) => {
-    try {
-      const validatedData = insertCostEstimationSchema.parse(req.body);
-      const estimation = await storage.createCostEstimation(validatedData);
-      res.status(201).json(estimation);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid estimation data", error });
-    }
-  });
+  app.post("/api/cost-estimations", asyncRoute(async (req, res) => {
+    const validatedData = insertCostEstimationSchema.parse(req.body);
+    const estimation = await storage.createCostEstimation(validatedData);
+    res.status(201).json(estimation);
+  }));
 
   // Approve cost estimation and update procurement request status
-  app.post("/api/cost-estimations/approve", async (req, res) => {
-    try {
+  app.post("/api/cost-estimations/approve", asyncRoute(async (req, res) => {
       const { requestId, estimationData } = req.body;
       
       if (!requestId || !estimationData) {
@@ -249,23 +231,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estimation,
         requestId
       });
-    } catch (error) {
-      console.error('Cost estimation approval error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      res.status(500).json({ message: "Failed to approve cost estimation", error: errorMessage });
-    }
-  });
+  }));
 
   // Supplier Quotes
-  app.get("/api/supplier-quotes/request/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const quotes = await storage.getQuotesByRequestId(requestId);
-      res.json(quotes);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch supplier quotes" });
-    }
-  });
+  app.get("/api/supplier-quotes/request/:requestId", asyncRoute(async (req, res) => {
+    const requestId = parseId(req.params.requestId);
+    const quotes = await storage.getQuotesByRequestId(requestId);
+    res.json(quotes);
+  }));
 
   // Get estimation methods for a request
   app.get("/api/estimation-methods/:id", async (req, res) => {
@@ -401,8 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Calculate estimate based on selected methods
-  app.post("/api/calculate-estimate", async (req, res) => {
-    try {
+  app.post("/api/calculate-estimate", asyncRoute(async (req, res) => {
       const { requestId, selectedMethods } = req.body;
       const request = await storage.getProcurementRequest(requestId);
       
@@ -448,30 +420,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pricePosition: determinePricePosition(finalEstimate, request)
         }
       });
-    } catch (error) {
-      console.error('Error calculating estimate:', error);
-      res.status(500).json({ error: 'שגיאה בחישוב האומדן' });
-    }
-  });
+  }));
 
   // Documents
-  app.get("/api/documents/request/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      const documents = await storage.getDocumentsByRequestId(requestId);
-      res.json(documents);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch documents" });
-    }
-  });
+  app.get("/api/documents/request/:requestId", asyncRoute(async (req, res) => {
+    const requestId = parseId(req.params.requestId);
+    const documents = await storage.getDocumentsByRequestId(requestId);
+    res.json(documents);
+  }));
 
-  app.post("/api/documents/upload/:requestId", upload.single('document'), async (req, res) => {
-    try {
+  app.post("/api/documents/upload/:requestId", upload.single('document'), asyncRoute(async (req, res) => {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const requestId = parseInt(req.params.requestId);
+      const requestId = parseId(req.params.requestId);
       const documentData = {
         procurementRequestId: requestId,
         fileName: req.file.originalname,
@@ -507,15 +470,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, 3000);
 
       res.status(201).json(document);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to upload document", error });
-    }
-  });
+  }));
 
   // Market Research - contextual based on procurement request
-  app.get("/api/market-research/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
+  app.get("/api/market-research/:requestId", asyncRoute(async (req, res) => {
+      const requestId = parseId(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
       
       if (!request) {
@@ -538,21 +497,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         informationSources: marketResearch.informationSources,
         recommendations: marketResearch.recommendations
       });
-    } catch (error) {
-      console.error('Error generating market research:', error);
-      res.status(500).json({ error: 'שגיאה ביצירת מחקר השוק' });
-    }
-  });
+  }));
 
   // Market Insights (legacy)
-  app.get("/api/market-insights", async (req, res) => {
-    try {
+  app.get("/api/market-insights", asyncRoute(async (req, res) => {
       const insights = await storage.getMarketInsights();
       res.json(insights);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch market insights" });
-    }
-  });
+  }));
 
   app.get("/api/market-insights/:category", async (req, res) => {
     try {
@@ -568,9 +519,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Analysis with contextual data based on request type
-  app.post("/api/ai-analysis/:requestId", async (req, res) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
+  app.post("/api/ai-analysis/:requestId", asyncRoute(async (req, res) => {
+      const requestId = parseId(req.params.requestId);
       const request = await storage.getProcurementRequest(requestId);
       
       if (!request) {
@@ -606,15 +556,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateProcurementRequest(requestId, { status: 'processing' });
 
       res.json(analysisResults);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to process AI analysis" });
-    }
-  });
+  }));
 
   // Get extracted data for a procurement request
-  app.get("/api/procurement-requests/:id/extracted-data", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
+  app.get("/api/procurement-requests/:id/extracted-data", asyncRoute(async (req, res) => {
+      const id = parseId(req.params.id);
       const extractedData = await storage.getExtractedData(id);
       
       if (extractedData) {
@@ -632,35 +578,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: null
         });
       }
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch extracted data"
-      });
-    }
-  });
+  }));
 
   // Clear extracted data for a procurement request
-  app.delete("/api/procurement-requests/:id/extracted-data", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
+  app.delete("/api/procurement-requests/:id/extracted-data", asyncRoute(async (req, res) => {
+      const id = parseId(req.params.id);
       await storage.clearExtractedData(id);
       
       res.json({
         success: true,
         message: "נתונים שחולצו נמחקו בהצלחה"
       });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: "Failed to clear extracted data"
-      });
-    }
-  });
+  }));
 
   // Dashboard statistics
-  app.get("/api/dashboard/stats", async (req, res) => {
-    try {
+  app.get("/api/dashboard/stats", asyncRoute(async (req, res) => {
       const requests = await storage.getProcurementRequests();
       const estimations = await storage.getCostEstimations();
       
@@ -703,10 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
-    }
-  });
+  }));
 
   // Generate cost estimation endpoint
   app.post("/api/generate-cost-estimation/:requestId", async (req, res) => {
