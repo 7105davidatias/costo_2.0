@@ -162,6 +162,9 @@ export class MemStorage implements IStorage {
           display: "15.6 FHD",
           warranty: "3 שנים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-15"),
         updatedAt: new Date("2024-01-20"),
@@ -187,6 +190,9 @@ export class MemStorage implements IStorage {
           adjustable: true,
           warranty: "5 שנים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-18"),
         updatedAt: new Date("2024-02-10"),
@@ -212,6 +218,9 @@ export class MemStorage implements IStorage {
           storage: "2x 1TB NVMe SSD",
           network: "4x 1GbE + 2x 10GbE"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-20"),
         updatedAt: new Date("2024-01-20"),
@@ -238,6 +247,9 @@ export class MemStorage implements IStorage {
           technologies: ["React", "Node.js", "PostgreSQL", "AWS"],
           complexity: "גבוהה"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-25"),
         updatedAt: new Date("2024-02-01"),
@@ -267,6 +279,9 @@ export class MemStorage implements IStorage {
           duration: "6 חודשים",
           consultantLevel: "senior"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-26"),
         updatedAt: new Date("2024-02-15"),
@@ -292,6 +307,9 @@ export class MemStorage implements IStorage {
           responseTime: "15 דקות",
           duration: "12 חודשים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-27"),
         updatedAt: new Date("2024-02-05"),
@@ -317,6 +335,9 @@ export class MemStorage implements IStorage {
           duration: "12 חודשים",
           coverage: "מערכות קריטיות"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-28"),
         updatedAt: new Date("2024-01-28"),
@@ -343,6 +364,9 @@ export class MemStorage implements IStorage {
           graphics: "מובנה",
           warranty: "3 שנים"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-29"),
         updatedAt: new Date("2024-02-03"),
@@ -369,6 +393,9 @@ export class MemStorage implements IStorage {
           cargoCapacity: 800,
           seatingCapacity: 2
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-30"),
         updatedAt: new Date("2024-01-30"),
@@ -394,6 +421,9 @@ export class MemStorage implements IStorage {
           components: "עבודות עפר, יציקת בטון, מבנה פלדה, קירות וגגות",
           contingency: "15%"
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-01-31"),
         updatedAt: new Date("2024-02-20"),
@@ -420,6 +450,9 @@ export class MemStorage implements IStorage {
             { name: "פלסטיק PVC", quantity: 10, unit: "טון", grade: "רגיל" }
           ]
         },
+        extractedData: null,
+        extractionDate: null,
+        extractionStatus: "not_extracted",
         userId: defaultUser.id,
         createdAt: new Date("2024-02-01"),
         updatedAt: new Date("2024-02-07"),
@@ -811,7 +844,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role: insertUser.role || "user",
+      createdAt: new Date() 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -829,10 +867,21 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const now = new Date();
     const request: ProcurementRequest = { 
-      ...insertRequest, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
+      ...insertRequest,
+      status: insertRequest.status ?? "new",
+      priority: insertRequest.priority ?? "medium",
+      id,
+      description: insertRequest.description ?? null,
+      targetDate: insertRequest.targetDate ?? null,
+      emf: insertRequest.emf ?? null,
+      estimatedCost: insertRequest.estimatedCost ?? null,
+      specifications: insertRequest.specifications || null,
+      extractedData: insertRequest.extractedData || null,
+      extractionDate: insertRequest.extractionDate || null,
+      extractionStatus: insertRequest.extractionStatus || "not_extracted",
+      userId: insertRequest.userId || null,
+      createdAt: now,
+      updatedAt: now
     };
     this.procurementRequests.set(id, request);
     return request;
@@ -862,7 +911,18 @@ export class MemStorage implements IStorage {
 
   async createSupplier(insertSupplier: InsertSupplier): Promise<Supplier> {
     const id = this.currentId++;
-    const supplier: Supplier = { ...insertSupplier, id, createdAt: new Date() };
+    const supplier: Supplier = { 
+      ...insertSupplier, 
+      id, 
+      rating: insertSupplier.rating || null,
+      reliability: insertSupplier.reliability || null,
+      deliveryTime: insertSupplier.deliveryTime || null,
+      discountPolicy: insertSupplier.discountPolicy || null,
+      warrantyTerms: insertSupplier.warrantyTerms || null,
+      isPreferred: insertSupplier.isPreferred || false,
+      contactInfo: insertSupplier.contactInfo || null,
+      createdAt: new Date() 
+    };
     this.suppliers.set(id, supplier);
     return supplier;
   }
@@ -884,7 +944,19 @@ export class MemStorage implements IStorage {
 
   async createCostEstimation(insertEstimation: InsertCostEstimation): Promise<CostEstimation> {
     const id = this.currentId++;
-    const estimation: CostEstimation = { ...insertEstimation, id, createdAt: new Date() };
+    const estimation: CostEstimation = { 
+      ...insertEstimation, 
+      id, 
+      procurementRequestId: insertEstimation.procurementRequestId || null,
+      shippingCost: insertEstimation.shippingCost || null,
+      discountAmount: insertEstimation.discountAmount || null,
+      marketPrice: insertEstimation.marketPrice || null,
+      potentialSavings: insertEstimation.potentialSavings || null,
+      justifications: insertEstimation.justifications || null,
+      recommendedSupplierId: insertEstimation.recommendedSupplierId || null,
+      aiAnalysisResults: insertEstimation.aiAnalysisResults || null,
+      createdAt: new Date() 
+    };
     this.costEstimations.set(id, estimation);
     return estimation;
   }
@@ -902,7 +974,17 @@ export class MemStorage implements IStorage {
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
     const id = this.currentId++;
-    const document: Document = { ...insertDocument, id, uploadedAt: new Date() };
+    const document: Document = { 
+      ...insertDocument, 
+      id,
+      procurementRequestId: insertDocument.procurementRequestId || null,
+      fileSize: insertDocument.fileSize || null,
+      filePath: insertDocument.filePath || null,
+      isAnalyzed: insertDocument.isAnalyzed || false,
+      analysisResults: insertDocument.analysisResults || null,
+      extractedSpecs: insertDocument.extractedSpecs || null,
+      uploadedAt: new Date() 
+    };
     this.documents.set(id, document);
     return document;
   }
@@ -910,6 +992,12 @@ export class MemStorage implements IStorage {
   // Market Insights
   async getMarketInsights(): Promise<MarketInsight[]> {
     return Array.from(this.marketInsights.values());
+  }
+
+  async getMarketInsightByCategory(category: string): Promise<MarketInsight | undefined> {
+    return Array.from(this.marketInsights.values()).find(
+      insight => insight.category === category
+    );
   }
 
   async getMarketInsightsByCategory(category: string): Promise<MarketInsight[]> {
@@ -920,7 +1008,18 @@ export class MemStorage implements IStorage {
 
   async createMarketInsight(insertInsight: InsertMarketInsight): Promise<MarketInsight> {
     const id = this.currentId++;
-    const insight: MarketInsight = { ...insertInsight, id, updatedAt: new Date() };
+    const insight: MarketInsight = { 
+      ...insertInsight, 
+      id,
+      averagePrice: insertInsight.averagePrice || null,
+      priceStability: insertInsight.priceStability || null,
+      supplierCount: insertInsight.supplierCount || null,
+      minPrice: insertInsight.minPrice || null,
+      maxPrice: insertInsight.maxPrice || null,
+      riskAssessment: insertInsight.riskAssessment || null,
+      priceHistory: insertInsight.priceHistory || null,
+      updatedAt: new Date() 
+    };
     this.marketInsights.set(id, insight);
     return insight;
   }
@@ -930,15 +1029,29 @@ export class MemStorage implements IStorage {
     return Array.from(this.supplierQuotes.values());
   }
 
-  async getQuotesByRequestId(requestId: number): Promise<SupplierQuote[]> {
+  async getSupplierQuotesByRequestId(requestId: number): Promise<SupplierQuote[]> {
     return Array.from(this.supplierQuotes.values()).filter(
       quote => quote.procurementRequestId === requestId
     );
   }
 
+  async getQuotesByRequestId(requestId: number): Promise<SupplierQuote[]> {
+    return this.getSupplierQuotesByRequestId(requestId);
+  }
+
   async createSupplierQuote(insertQuote: InsertSupplierQuote): Promise<SupplierQuote> {
     const id = this.currentId++;
-    const quote: SupplierQuote = { ...insertQuote, id, createdAt: new Date() };
+    const quote: SupplierQuote = { 
+      ...insertQuote, 
+      id,
+      supplierId: insertQuote.supplierId || null,
+      procurementRequestId: insertQuote.procurementRequestId || null,
+      deliveryTime: insertQuote.deliveryTime || null,
+      validUntil: insertQuote.validUntil || null,
+      terms: insertQuote.terms || null,
+      discounts: insertQuote.discounts || null,
+      createdAt: new Date() 
+    };
     this.supplierQuotes.set(id, quote);
     return quote;
   }
@@ -986,9 +1099,10 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async resetAllCostEstimations(): Promise<{ totalEstimations: number }> {
+  async resetAllCostEstimations(): Promise<{ totalEstimations: number; clearedEstimations: number }> {
+    const totalBefore = this.costEstimations.size;
     this.costEstimations.clear();
-    return { totalEstimations: 0 };
+    return { totalEstimations: totalBefore, clearedEstimations: totalBefore };
   }
 
   // Historical data access

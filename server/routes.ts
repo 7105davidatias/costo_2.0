@@ -953,9 +953,9 @@ function calculateDeliverableBased(request: any) {
   
   const deliverableCosts = [150000, 200000, 100000, 180000];
   let totalCost = 0;
-  let breakdown = [];
+  let breakdown: Array<{ component: string; cost: number; description: string }> = [];
   
-  deliverables.forEach((deliverable, index) => {
+  deliverables.forEach((deliverable: string, index: number) => {
     const cost = deliverableCosts[index] || 100000;
     totalCost += cost;
     breakdown.push({
@@ -1060,7 +1060,7 @@ async function calculateAnalogous(request: any) {
   // Calculate weighted average based on similarity and recency
   let weightedSum = 0;
   let totalWeight = 0;
-  const breakdown = [];
+  const breakdown: Array<{ reference: string; originalQuantity: number; originalUnitCost: number; adjustedCost: number; weight: number }> = [];
   
   relevantPurchases.forEach(purchase => {
     const similarity = calculateSimilarity(request, purchase);

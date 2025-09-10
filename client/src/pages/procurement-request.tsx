@@ -25,12 +25,12 @@ export default function ProcurementRequest() {
     enabled: !!id,
   });
 
-  const { data: documents } = useQuery({
+  const { data: documents } = useQuery<any[]>({
     queryKey: ["/api/documents/request", id],
     enabled: !!id,
   });
 
-  const { data: extractedData, refetch: refetchExtractedData } = useQuery({
+  const { data: extractedData, refetch: refetchExtractedData } = useQuery<any>({
     queryKey: ["/api/procurement-requests", id, "extracted-data"],
     enabled: !!id,
   });
@@ -3907,6 +3907,7 @@ export default function ProcurementRequest() {
             variant="outline" 
             className="border-secondary text-secondary hover:bg-secondary/10"
             onClick={() => {
+              if (!id) return;
               console.log('Market Research button clicked with ID:', id);
               // Store the request ID in localStorage for context
               localStorage.setItem('currentRequestId', id.toString());
@@ -4103,7 +4104,7 @@ export default function ProcurementRequest() {
                     <div>
                       <p className="text-sm text-foreground font-medium">מסמכים הועלו</p>
                       <p className="text-xs text-muted-foreground">
-                        {documents.length} קבצים
+                        {documents?.length ?? 0} קבצים
                       </p>
                     </div>
                   </div>
