@@ -1,0 +1,51 @@
+
+{
+  "project_analysis": {
+    "timestamp_utc": "2025-01-18T10:30:00Z",
+    "code_quality": {
+      "total_lines_of_code": "8500",
+      "todo_fixme_count": "3",
+      "code_smells_summary": "1. Large files in procurement-request.tsx (1000+ lines) should be split into smaller components. 2. Duplicate AI analysis logic between server routes and client components. 3. Long functions in server/routes.ts for cost estimation (200+ lines per function). 4. Mixed Hebrew and English comments creating inconsistent documentation. 5. Hard-coded mock data in multiple places instead of centralized configuration."
+    },
+    "project_structure": {
+      "directory_count": "45",
+      "file_count": "156",
+      "main_directories": [
+        "client",
+        "server", 
+        "shared",
+        "backup",
+        "uploads",
+        "attached_assets"
+      ],
+      "config_files_found": [
+        ".replit",
+        "package.json",
+        "tsconfig.json",
+        "vite.config.ts",
+        "tailwind.config.ts",
+        "drizzle.config.ts",
+        "components.json",
+        "postcss.config.js"
+      ]
+    },
+    "documentation": {
+      "readme_exists": true,
+      "readme_word_count": "2847",
+      "readme_quality_score_1_to_10": "9"
+    },
+    "dependencies": {
+      "dependency_file": "package.json",
+      "dependency_count": "67",
+      "outdated_dependencies_count": "0"
+    },
+    "git_analysis": {
+      "is_git_repo": true,
+      "branch_count": "1",
+      "recent_commits_count_7_days": "15",
+      "main_branches": [
+        "main"
+      ]
+    }
+  }
+}
