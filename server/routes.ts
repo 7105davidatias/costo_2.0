@@ -6,21 +6,35 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 
+// Constants 
+const UPLOAD_CONFIG = {
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  ALLOWED_EXTENSIONS: ['.pdf', '.doc', '.docx', '.xls', '.xlsx'],
+  UPLOAD_DIR: '../uploads/'
+} as const;
+
+const API_MESSAGES = {
+  PROCUREMENT_FETCH_ERROR: 'Failed to fetch procurement requests',
+  PROCUREMENT_NOT_FOUND: 'Procurement request not found',
+  PROCUREMENT_UPDATE_ERROR: 'Failed to update procurement request',
+  INVALID_FILE_TYPE: 'Invalid file type. Only PDF, DOC, and XLS files are allowed.',
+  INVALID_REQUEST_DATA: 'Invalid request data'
+} as const;
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Configure multer for file uploads
+// Configure multer for file uploads with extracted constants
 const upload = multer({
-  dest: path.join(__dirname, '../uploads/'),
+  dest: path.join(__dirname, UPLOAD_CONFIG.UPLOAD_DIR),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE,
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
     const fileExt = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.includes(fileExt)) {
+    if (UPLOAD_CONFIG.ALLOWED_EXTENSIONS.includes(fileExt as any)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF, DOC, and XLS files are allowed.'));
+      cb(new Error(API_MESSAGES.INVALID_FILE_TYPE));
     }
   },
 });
@@ -41,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const request = await storage.getProcurementRequest(id);
       if (!request) {
-        return res.status(404).json({ message: "Procurement request not found" });
+        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
       }
       res.json(request);
     } catch (error) {
@@ -64,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const request = await storage.updateProcurementRequest(id, req.body);
       if (!request) {
-        return res.status(404).json({ message: "Procurement request not found" });
+        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
       }
       res.json(request);
     } catch (error) {
@@ -150,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestId = parseInt(req.params.id);
       const request = await storage.getProcurementRequest(requestId);
       if (!request) {
-        return res.status(404).json({ message: "Procurement request not found" });
+        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
       }
 
       // Create a realistic cost estimation
@@ -206,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the procurement request
       const request = await storage.getProcurementRequest(requestId);
       if (!request) {
-        return res.status(404).json({ message: "Procurement request not found" });
+        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
       }
 
       // Create the cost estimation
@@ -701,7 +715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const request = await storage.getProcurementRequest(requestId);
       
       if (!request) {
-        return res.status(404).json({ message: "Procurement request not found" });
+        return res.status(404).json({ message: API_MESSAGES.PROCUREMENT_NOT_FOUND });
       }
 
       // Simulate AI cost estimation calculation
