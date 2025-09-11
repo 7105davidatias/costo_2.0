@@ -157,6 +157,10 @@ export const insertMarketInsightSchema = createInsertSchema(marketInsights).omit
 export const insertBuildInfoSchema = createInsertSchema(buildInfo).omit({
   id: true,
   createdAt: true,
+}).extend({
+  environment: z.enum(['development', 'staging', 'production'], {
+    errorMap: () => ({ message: 'Environment must be development, staging, or production' }),
+  }),
 });
 
 // Types

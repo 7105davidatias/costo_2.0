@@ -6,6 +6,7 @@ import {
   type SupplierQuote, type InsertSupplierQuote, type Document, type InsertDocument,
   type MarketInsight, type InsertMarketInsight, type BuildInfo, type InsertBuildInfo
 } from "@shared/schema";
+import { detectCurrentEnvironment } from "@shared/environment";
 
 export interface IStorage {
   // Users
@@ -1121,7 +1122,7 @@ export class MemStorage implements IStorage {
   // Build Info
   async getCurrentBuildInfo(): Promise<BuildInfo | undefined> {
     // החזר את ה-build הנוכחי של הסביבה הנוכחית
-    const environment = process.env.NODE_ENV || 'development';
+    const environment = detectCurrentEnvironment();
     const builds = Array.from(this.buildInfoRecords.values())
       .filter(build => build.environment === environment)
       .sort((a, b) => new Date(b.buildDate).getTime() - new Date(a.buildDate).getTime());
@@ -1130,10 +1131,20 @@ export class MemStorage implements IStorage {
   }
 
   async getBuildInfo(): Promise<BuildInfo[]> {
-    return Array.from(this.buildInfoRecords.values());
+    // החזר רשימה ממוינת לפי תאריך בניה (החדשים ראשונים)
+    return Array.from(this.buildInfoRecords.values())
+      .sort((a, b) => new Date(b.buildDate).getTime() - new Date(a.buildDate).getTime());
   }
 
   async createBuildInfo(buildInfoData: InsertBuildInfo): Promise<BuildInfo> {
+    // בדיקת uniqueness של buildNumber (כמו בבסיס הנתונים)
+    const existingBuildNumber = Array.from(this.buildInfoRecords.values())
+      .find(build => build.buildNumber === buildInfoData.buildNumber);
+    
+    if (existingBuildNumber) {
+      throw new Error(`Build number ${buildInfoData.buildNumber} already exists`);
+    }
+
     const buildInfo: BuildInfo = {
       id: this.currentId++,
       ...buildInfoData,
