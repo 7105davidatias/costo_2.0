@@ -1,10 +1,10 @@
 import { 
   users, suppliers, procurementRequests, costEstimations, 
-  supplierQuotes, documents, marketInsights,
+  supplierQuotes, documents, marketInsights, buildInfo,
   type User, type InsertUser, type ProcurementRequest, type InsertProcurementRequest,
   type Supplier, type InsertSupplier, type CostEstimation, type InsertCostEstimation,
   type SupplierQuote, type InsertSupplierQuote, type Document, type InsertDocument,
-  type MarketInsight, type InsertMarketInsight
+  type MarketInsight, type InsertMarketInsight, type BuildInfo, type InsertBuildInfo
 } from "@shared/schema";
 
 export interface IStorage {
@@ -55,6 +55,12 @@ export interface IStorage {
 
   // Historical data access
   getHistoricalData(): Promise<any[]>;
+
+  // Build Info
+  getCurrentBuildInfo(): Promise<BuildInfo | undefined>;
+  getBuildInfo(): Promise<BuildInfo[]>;
+  createBuildInfo(buildInfo: InsertBuildInfo): Promise<BuildInfo>;
+  getBuildInfoByEnvironment(environment: string): Promise<BuildInfo | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -65,6 +71,7 @@ export class MemStorage implements IStorage {
   private supplierQuotes: Map<number, SupplierQuote>;
   private documents: Map<number, Document>;
   private marketInsights: Map<number, MarketInsight>;
+  private buildInfoRecords: Map<number, BuildInfo>;
   private historicalData: any[];
   private currentId: number;
 
@@ -76,6 +83,7 @@ export class MemStorage implements IStorage {
     this.supplierQuotes = new Map();
     this.documents = new Map();
     this.marketInsights = new Map();
+    this.buildInfoRecords = new Map();
     this.historicalData = [];
     this.currentId = 1;
     this.seedData();
@@ -1108,6 +1116,40 @@ export class MemStorage implements IStorage {
   // Historical data access
   async getHistoricalData(): Promise<any[]> {
     return this.historicalData;
+  }
+
+  // Build Info
+  async getCurrentBuildInfo(): Promise<BuildInfo | undefined> {
+    // החזר את ה-build הנוכחי של הסביבה הנוכחית
+    const environment = process.env.NODE_ENV || 'development';
+    const builds = Array.from(this.buildInfoRecords.values())
+      .filter(build => build.environment === environment)
+      .sort((a, b) => new Date(b.buildDate).getTime() - new Date(a.buildDate).getTime());
+    
+    return builds[0];
+  }
+
+  async getBuildInfo(): Promise<BuildInfo[]> {
+    return Array.from(this.buildInfoRecords.values());
+  }
+
+  async createBuildInfo(buildInfoData: InsertBuildInfo): Promise<BuildInfo> {
+    const buildInfo: BuildInfo = {
+      id: this.currentId++,
+      ...buildInfoData,
+      deploymentDate: buildInfoData.deploymentDate || null,
+      sapDataVersion: buildInfoData.sapDataVersion || null,
+      metadata: buildInfoData.metadata || null,
+      createdAt: new Date(),
+    };
+    this.buildInfoRecords.set(buildInfo.id, buildInfo);
+    return buildInfo;
+  }
+
+  async getBuildInfoByEnvironment(environment: string): Promise<BuildInfo | undefined> {
+    return Array.from(this.buildInfoRecords.values())
+      .filter(build => build.environment === environment)
+      .sort((a, b) => new Date(b.buildDate).getTime() - new Date(a.buildDate).getTime())[0];
   }
 }
 

@@ -104,6 +104,19 @@ export const marketInsights = pgTable("market_insights", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const buildInfo = pgTable("build_info", {
+  id: serial("id").primaryKey(),
+  buildNumber: text("build_number").notNull().unique(),
+  version: text("version").notNull(),
+  gitCommit: text("git_commit").notNull(),
+  environment: text("environment").notNull(), // development, staging, production
+  buildDate: timestamp("build_date").notNull(),
+  deploymentDate: timestamp("deployment_date"),
+  sapDataVersion: text("sap_data_version"),
+  metadata: jsonb("metadata"), // נתונים נוספים כמו branch, author, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -141,6 +154,11 @@ export const insertMarketInsightSchema = createInsertSchema(marketInsights).omit
   updatedAt: true,
 });
 
+export const insertBuildInfoSchema = createInsertSchema(buildInfo).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -162,3 +180,6 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
 export type MarketInsight = typeof marketInsights.$inferSelect;
 export type InsertMarketInsight = z.infer<typeof insertMarketInsightSchema>;
+
+export type BuildInfo = typeof buildInfo.$inferSelect;
+export type InsertBuildInfo = z.infer<typeof insertBuildInfoSchema>;
