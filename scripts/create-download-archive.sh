@@ -70,10 +70,21 @@ cat > "$TEMP_DIR/QUICK_START.md" << 'EOF'
 הפרויקט מוכן לשימוש מיידי!
 EOF
 
+# בדיקת זמינות zip
+if ! command -v zip &> /dev/null; then
+    echo "⚠️  כלי zip לא מותקן. מתקין..."
+    sudo apt-get update && sudo apt-get install -y zip
+fi
+
 # יצירת הארכיון
 echo "🗜️ יוצר קובץ ZIP..."
 cd /tmp
-zip -r "$ARCHIVE_NAME" "${PROJECT_NAME}_archive" -x "*/node_modules/*" "*/.git/*" "*/dist/*" "*/build/*"
+if zip -r "$ARCHIVE_NAME" "${PROJECT_NAME}_archive" -x "*/node_modules/*" "*/.git/*" "*/dist/*" "*/build/*"; then
+    echo "✅ קובץ ZIP נוצר בהצלחה"
+else
+    echo "❌ שגיאה ביצירת קובץ ZIP"
+    exit 1
+fi
 
 # העברת הארכיון לתיקיית הפרויקט
 mv "$ARCHIVE_NAME" "/home/runner/$PROJECT_NAME/"
