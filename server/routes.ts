@@ -1,10 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema } from "@shared/schema";
+import { insertProcurementRequestSchema, insertCostEstimationSchema, insertDocumentSchema, type BuildInfo } from "@shared/schema";
+import { detectCurrentEnvironment } from "@shared/environment";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 
 // Constants 
 const UPLOAD_CONFIG = {
@@ -822,6 +824,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Build Information & Version API
+  app.get("/api/version", asyncRoute(async (req, res) => {
+    try {
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const projectRoot = path.join(__dirname, '..');
+      
+      // נסה לקרוא build-info.json מכמה מקומות
+      const possiblePaths = [
+        path.join(projectRoot, 'build-info.json'),
+        path.join(projectRoot, 'dist', 'build-info.json'),
+        path.join(projectRoot, 'public', 'build-info.json'),
+      ];
+      
+      let buildInfo = null;
+      for (const filePath of possiblePaths) {
+        try {
+          const content = readFileSync(filePath, 'utf8');
+          buildInfo = JSON.parse(content);
+          break;
+        } catch {
+          // לפני למקום הבא
+          continue;
+        }
+      }
+      
+      if (buildInfo) {
+        // החזר רק השדות הרלוונטיים לפי הschema
+        res.json({
+          buildNumber: buildInfo.buildNumber,
+          version: buildInfo.version,
+          environment: buildInfo.environment,
+          buildDate: buildInfo.buildDate,
+          gitCommit: buildInfo.git?.commit || 'unknown',
+          deploymentDate: buildInfo.deployment?.deploymentDate || null,
+          sapDataVersion: buildInfo.sap?.dataVersion || null,
+        });
+      } else {
+        // fallback כשאין build-info.json
+        const currentBuild = await storage.getCurrentBuildInfo();
+        if (currentBuild) {
+          res.json(currentBuild);
+        } else {
+          // fallback אחרון
+          res.json({
+            buildNumber: 'dev-build',
+            version: '1.0.0',
+            environment: detectCurrentEnvironment(),
+            buildDate: new Date().toISOString(),
+            gitCommit: 'unknown',
+            deploymentDate: null,
+            sapDataVersion: null,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error reading build info:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve version information',
+      });
+    }
+  }));
+
+  // Get all build information (admin endpoint)
+  app.get("/api/builds", asyncRoute(async (req, res) => {
+    const builds = await storage.getBuildInfo();
+    res.json(builds);
+  }));
 
   const httpServer = createServer(app);
   return httpServer;
