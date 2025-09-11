@@ -1,0 +1,248 @@
+Market Research & Insights
+GET /api/market-research/:requestId
+מחקר שוק מתקדם לבקשת רכש ספציפית.
+
+Response:
+
+{
+  "success": true,
+  "data": {
+    "requestId": 5,
+    "marketAnalysis": {
+      "category": "מחשבים ניידים עסקיים",
+      "marketTrends": {
+        "priceDirection": "עליה קלה", 
+        "changePercent": 2.3,
+        "lastQuarter": "Q3 2024",
+        "forecast": "יציבות במחירים הבאים 6 חודשים"
+      },
+      "competitorProducts": [
+        {
+          "brand": "Dell",
+          "model": "Latitude 5530",
+          "estimatedPrice": "8,900",
+          "marketShare": 23
+        },
+        {
+          "brand": "Lenovo", 
+          "model": "ThinkPad T15",
+          "estimatedPrice": "9,400",
+          "marketShare": 19
+        },
+        {
+          "brand": "HP",
+          "model": "EliteBook 850",
+          "estimatedPrice": "9,200", 
+          "marketShare": 18
+        }
+      ],
+      "supplierLandscape": {
+        "totalSuppliers": 12,
+        "preferredSuppliers": 5,
+        "averageDeliveryTime": "2.1 שבועות",
+        "paymentTerms": "30 ימים ממוצע"
+      }
+    },
+    "riskAssessment": {
+      "supplyRisk": "נמוך",
+      "priceVolatility": "נמוך-בינוני", 
+      "qualityRisk": "נמוך",
+      "deliveryRisk": "נמוך",
+      "overallRisk": "נמוך"
+    },
+    "opportunities": [
+      "הנחת כמות אפשרית מעל 10 יחידות",
+      "מחירים תחרותיים בסוף הרבעון",
+      "חבילות שירות מורחבות זמינות"
+    ]
+  }
+}
+GET /api/market-insights
+תובנות שוק כלליות בכל הקטגוריות.
+
+Query Parameters:
+
+?category=טכנולוגיה    # סינון לפי קטגוריה
+&timeframe=3months     # נקודת זמן (1month, 3months, 6months, 1year)
+&metric=price          # מדד (price, availability, risk)
+Response:
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "category": "טכנולוגיה",
+      "subcategory": "מחשבים ניידים",
+      "insights": {
+        "averagePrice": "8,750",
+        "priceChange": "+2.1%",
+        "availability": "גבוהה",
+        "leadTime": "1-3 שבועות",
+        "topBrands": ["HP", "Dell", "Lenovo"],
+        "marketLeader": "HP (23% נתח שוק)"
+      },
+      "trends": {
+        "last6Months": [
+          {"month": "2024-04", "avgPrice": 8400},
+          {"month": "2024-05", "avgPrice": 8520},
+          {"month": "2024-06", "avgPrice": 8630},
+          {"month": "2024-07", "avgPrice": 8720},
+          {"month": "2024-08", "avgPrice": 8750},
+          {"month": "2024-09", "avgPrice": 8750}
+        ]
+      },
+      "recommendations": [
+        "מחירים יציבים - זמן טוב לרכישה",
+        "זמינות גבוהה מספקים מרובים",
+        "שקול רכישת דור קודם בהנחה"
+      ],
+      "updatedAt": "2024-09-10T12:00:00Z"
+    }
+  ]
+}
+GET /api/market-insights/:category
+תובנות שוק לקטגוריה ספציפית.
+
+Response:
+
+{
+  "success": true,
+  "data": {
+    "category": "טכנולוגיה",
+    "overview": {
+      "totalProducts": 247,
+      "averagePrice": "12,340",
+      "priceRange": "800-85,000", 
+      "volatilityIndex": 2.3,
+      "demandLevel": "גבוה"
+    },
+    "subcategories": [
+      {
+        "name": "מחשבים ניידים",
+        "count": 89,
+        "avgPrice": "8,750",
+        "trend": "יציב"
+      },
+      {
+        "name": "שרתים",
+        "count": 34,
+        "avgPrice": "45,200", 
+        "trend": "עליה"
+      },
+      {
+        "name": "ציוד רשת",
+        "count": 67,
+        "avgPrice": "3,400",
+        "trend": "ירידה"
+      }
+    ],
+    "keyInsights": [
+      "עליה של 3.2% במחירי השרתים בגלל מחסור בשבבים",
+      "ירידה של 1.8% בציוד רשת בגלל תחרות מוגברת",
+      "מחשבים ניידים - מחירים יציבים, זמינות טובה"
+    ],
+    "forecast": {
+      "nextQuarter": "יציבות במחירי מחשבים, עליה קלה בשרתים",
+      "confidence": 78
+    }
+  }
+}
+GET /api/suppliers
+רשימת כל הספקים במערכת עם דירוגים.
+
+Query Parameters:
+
+?category=טכנולוגיה      # סינון לפי קטגוריה
+&rating=4              # דירוג מינימלי (1-5)
+&reliability=80        # אמינות מינימלית (0-100)
+&location=תל-אביב       # מיקום גיאוגרפי
+Response:
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "טכנולוגיות מתקדמות בע\"מ",
+      "category": "טכנולוגיה",
+      "contactEmail": "sales@tech-advanced.co.il",
+      "phone": "03-1234567",
+      "website": "https://tech-advanced.co.il",
+      "rating": 4.2,
+      "reliabilityScore": 89,
+      "specialties": [
+        "מחשבים ניידים",
+        "שרתים", 
+        "ציוד רשת"
+      ],
+      "businessTerms": {
+        "paymentTerms": "30 ימים",
+        "deliveryTime": "1-2 שבועות",
+        "warranty": "3 שנים סטנדרט",
+        "minimumOrder": "5,000"
+      },
+      "performance": {
+        "onTimeDelivery": 94,
+        "qualityRating": 4.1,
+        "customerService": 4.3,
+        "priceCompetitiveness": 3.8
+      },
+      "recentOrders": 23,
+      "totalValue": "₪1,245,000",
+      "lastOrderDate": "2024-09-08T10:00:00Z",
+      "createdAt": "2023-01-15T08:00:00Z"
+    }
+  ]
+}
+GET /api/supplier-quotes/:requestId
+קבלת הצעות מחיר מספקים לבקשת רכש.
+
+Response:
+
+{
+  "success": true,
+  "data": [
+    {
+      "id": 8,
+      "supplierId": 1,
+      "supplierName": "טכנולוגיות מתקדמות בע\"מ",
+      "procurementRequestId": 5,
+      "quotedPrice": "48,900",
+      "unitPrice": "9,780",
+      "quantity": 5,
+      "deliveryTime": "2 שבועות",
+      "validUntil": "2024-09-24T23:59:59Z",
+      "terms": [
+        "30 ימי תשלום",
+        "אחריות 3 שנים",
+        "התקנה חינם",
+        "הדרכת משתמשים כלולה"
+      ],
+      "additionalServices": [
+        "תמיכה טכנית 24/7",
+        "גיבוי מידע חינם לשנה ראשונה"
+      ],
+      "notes": "מחיר מיוחד לכמות, זמין למשלוח מיידי",
+      "createdAt": "2024-09-10T14:20:00Z"
+    },
+    {
+      "id": 9,
+      "supplierId": 2, 
+      "supplierName": "מחשבים ישראל",
+      "procurementRequestId": 5,
+      "quotedPrice": "46,750",
+      "unitPrice": "9,350", 
+      "quantity": 5,
+      "deliveryTime": "3 שבועות",
+      "validUntil": "2024-09-20T23:59:59Z",
+      "terms": [
+        "45 ימי תשלום",
+        "אחריות שנתיים",
+        "משלוח חינם"
+      ],
+      "notes": "מחיר תחרותי, זמני אספקה גמישים",
+      "createdAt": "2024-09-10T15:10:00Z"
+    }
+  ]
+}
