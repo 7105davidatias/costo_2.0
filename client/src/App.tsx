@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import Dashboard from "@/pages/dashboard";
 import ProcurementRequest from "@/pages/procurement-request";
 import ProcurementRequestsList from "@/pages/procurement-requests-list";
@@ -13,9 +14,9 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Switch>
           <Route path="/" component={ProcurementRequestsList} />
           <Route path="/dashboard" component={Dashboard} />
@@ -26,6 +27,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      <Footer />
     </div>
   );
 }

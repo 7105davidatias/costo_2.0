@@ -605,7 +605,7 @@ Response: {"buildNumber":"2025.09.11.0824","version":"1.0.0",...}
 **פתרון**: בדוק middleware order ב-server/index.ts
 
 **בעיה**: Build info לא נמצא  
-**פתרון**: הרץ `node scripts/generate-build-info.js`
+**פתרון**: הרץ `node scripts/generate-build-ifnfo.js`
 
 ---
 
