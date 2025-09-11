@@ -1,0 +1,48 @@
+{
+  "buildNumber": "2025.09.11.0824",
+  "version": "1.0.0",
+  "environment": "development",
+  "buildDate": "2025-09-11T08:24:07.006Z",
+  "git": {
+    "commit": "5533df80d638ba63fe33d6b446ffd32d63577b4c",
+    "shortCommit": "5533df8",
+    "branch": "main",
+    "tag": null,
+    "isDirty": false,
+    "lastCommitDate": "2025-09-11T08:20:32Z",
+    "lastCommitMessage": "Add environment detection for build information tracking",
+    "author": "7105davida",
+    "authorEmail": "44433668-7105davida@users.noreply.replit.com"
+  },
+  "build": {
+    "platform": "linux",
+    "architecture": "x64",
+    "nodeVersion": "v20.19.3",
+    "npmVersion": "11.6.0",
+    "buildTool": "vite+esbuild",
+    "ci": false,
+    "ciProvider": "local"
+  },
+  "dependencies": {
+    "nodeVersion": "v20.19.3",
+    "npmVersion": "11.6.0",
+    "mainDependencies": 74,
+    "devDependencies": 22,
+    "keyFrameworks": {
+      "react": "^18.3.1",
+      "typescript": "5.6.3",
+      "vite": "^5.4.19",
+      "express": "^4.21.2"
+    }
+  },
+  "deployment": {
+    "deploymentDate": null,
+    "sapDataVersion": null,
+    "deployedBy": "runner"
+  },
+  "sap": {
+    "dataVersion": null,
+    "lastSyncDate": null,
+    "compatibilityLevel": "v1.0"
+  }
+}
